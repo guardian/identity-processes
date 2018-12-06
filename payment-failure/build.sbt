@@ -1,4 +1,4 @@
-name := "payment-failure"
+name := "payment-failure-lambda"
 
 organization := "com.gu"
 
