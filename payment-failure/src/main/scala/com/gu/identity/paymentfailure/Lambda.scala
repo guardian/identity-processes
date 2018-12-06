@@ -6,4 +6,3 @@ object Lambda {
     println("Hello world!")
   }
 }
-
