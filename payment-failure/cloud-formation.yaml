@@ -34,7 +34,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: identity-lambda
-        S3Key: !Sub identity/${Stage}/payment-failure-lambda/main.zip
+        S3Key: !Sub identity/${Stage}/payment-failure-lambda/main.jar
       Description: Lambda to send emails to customers with a recurring payment plan whos card is about to expire
       Environment:
         Variables:

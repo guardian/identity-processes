@@ -13,5 +13,5 @@ deployments:
     parameters:
       bucket: identity-lambda
       functionNames: [PaymentFailureLambda-]
-      fileName: main.zip
+      fileName: main.jar
       prefixStack: false
