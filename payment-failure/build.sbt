@@ -4,6 +4,10 @@ organization := "com.gu"
 
 scalaVersion := "2.12.6"
 
+libraryDependencies ++= Seq(
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
+)
+
 assemblyJarName := "main.jar"
 
 enablePlugins(RiffRaffArtifact)
