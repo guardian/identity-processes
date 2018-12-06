@@ -1,3 +1,2 @@
-target/
+**/target/
 project/project/
-project/target/
