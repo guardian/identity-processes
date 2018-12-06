@@ -8,6 +8,15 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
+  PaymentFailureQueueName:
+    Description: Payment failure queue name
+    Type: String
+    Default: 'CODE-payment-failure'
+  PaymentFailureDeadLetterQueueName:
+    Description: Payment failure dead letter queue name
+    Type: String
+    Default: 'CODE-payment-failure-dead-letter'
+
 
 Resources:
   PaymentFailureLambdaRole:
@@ -47,4 +56,41 @@ Resources:
       Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
       Runtime: java8
-      Timeout: 60
+      Timeout: 15
+
+  PaymentFailureDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref PaymentFailureDeadLetterQueueName
+
+  PaymentFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref PaymentFailureQueueName
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PaymentFailureDeadLetterQueue.Arn
+        maxReceiveCount: 5
+
+  PaymentFailureQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: '*'
+            Action:
+              - SQS:SendMessage
+              - SQS:ReceiveMessage
+              - SQS:DeleteMessage
+              - SQS:GetQueueAttributes
+            Resource: !GetAtt PaymentFailureQueue.Arn
+      Queues:
+        - !Ref PaymentFailureQueue
+
+  PaymentFailureLambdaEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt PaymentFailureQueue.Arn
+      FunctionName: !GetAtt PaymentFailureLambda.Arn
