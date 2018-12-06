@@ -8,6 +8,10 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
+  LambdaName:
+    Description: Name of the lambda.
+    Type: String
+    Default: !Sub PaymentFailureLambda-${Stage}
 
 Resources:
   PaymentFailureLambdaRole:
@@ -23,13 +27,16 @@ Resources:
           Action:
           - sts:AssumeRole
       Policies:
-      - PolicyName: PaymentFailureLambdaPolicy
+      - PolicyName: LambdaPolicy
         PolicyDocument:
           Statement:
             Effect: Allow
             Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
             - lambda:InvokeFunction
-            Resource: '*'
+            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${LambdaName}:log-stream:*
   PaymentFailureLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -40,7 +47,7 @@ Resources:
       Environment:
         Variables:
           Stage: !Sub ${Stage}
-      FunctionName: !Sub PaymentFailureLambda-${Stage}
+      FunctionName: !Sub ${LambdaName}
       Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
       Runtime: java8
