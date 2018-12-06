@@ -1,5 +1,6 @@
-Parameters:
+AWSTemplateFormatVersion: 2010-09-09
 
+Parameters:
   Stage:
     Description: environment name
     Type: String
@@ -8,12 +9,11 @@ Parameters:
       - PROD
 
 Resources:
-
   PaymentFailureLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: 2012-10-17
         Statement:
         - Effect: Allow
           Principal:
@@ -29,12 +29,6 @@ Resources:
             Action:
             - lambda:InvokeFunction
             Resource: '*'
-
-  PaymentFailureQueue:
-    Type: AWS::SQS:Queue
-    Properties:
-      QueueName: !Sub PaymentFailureQueue${Stage}
-
   PaymentFailureLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -46,8 +40,7 @@ Resources:
         Variables:
           Stage: !Sub ${Stage}
       FunctionName: PaymentFailureLambda-${Stage}
-      Handler: "TODO"
+      Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
       Runtime: java8
       Timeout: 60
-
