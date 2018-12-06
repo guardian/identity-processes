@@ -39,7 +39,7 @@ Resources:
       Environment:
         Variables:
           Stage: !Sub ${Stage}
-      FunctionName: PaymentFailureLambda-${Stage}
+      FunctionName: !Sub PaymentFailureLambda-${Stage}
       Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
       Runtime: java8
