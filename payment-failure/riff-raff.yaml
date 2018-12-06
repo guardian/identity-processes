@@ -1,17 +1,17 @@
-stacks:
-  - identity
+stacks: [identity]
 
-regions:
-  - eu-west-1
+regions: [eu-west-1]
 
 deployments:
-
   payment-failure-cfn:
     type: cloud-formation
+    parameters:
+      templatePath: cloud-formation.yaml
 
   payment-failure-lambda:
     type: aws-lambda
-    bucket: identity-lambda
-    functionNames: PaymentFailureLambda-
-    fileName: main.zip
-    prefixStack: false
+    parameters:
+      bucket: identity-lambda
+      functionNames: [PaymentFailureLambda-]
+      fileName: main.zip
+      prefixStack: false
