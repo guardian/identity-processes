@@ -4,7 +4,7 @@ organization := "com.gu"
 
 scalaVersion := "2.12.6"
 
-assemblyJarName := "main.jar"
+assemblyJarName in assembly := "main.jar"
 
 enablePlugins(RiffRaffArtifact)
 riffRaffPackageType := assembly.value
