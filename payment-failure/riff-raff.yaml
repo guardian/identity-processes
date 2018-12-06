@@ -12,6 +12,6 @@ deployments:
   payment-failure-lambda:
     type: aws-lambda
     bucket: identity-lambda
-    functionNames: PaymentFailureLambda
+    functionNames: PaymentFailureLambda-
     fileName: main.zip
     prefixStack: false

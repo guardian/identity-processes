@@ -1,0 +1,53 @@
+Parameters:
+
+  Stage:
+    Description: environment name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
+
+Resources:
+
+  PaymentFailureLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: PaymentFailureLambdaPolicy
+        PolicyDocument:
+          Statement:
+            Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: '*'
+
+  PaymentFailureQueue:
+    Type: AWS::SQS:Queue
+    Properties:
+      QueueName: !Sub PaymentFailureQueue${Stage}
+
+  PaymentFailureLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: identity-lambda
+        S3Key: !Sub identity/${Stage}/payment-failure-lambda/main.zip
+      Description: Lambda to send emails to customers with a recurring payment plan whos card is about to expire
+      Environment:
+        Variables:
+          Stage: !Sub ${Stage}
+      FunctionName: PaymentFailureLambda-${Stage}
+      Handler: "TODO"
+      Role: !GetAtt PaymentFailureLambdaRole.Arn
+      Runtime: java8
+      Timeout: 60
+
