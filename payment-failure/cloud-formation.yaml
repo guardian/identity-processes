@@ -8,6 +8,10 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
+  MembershipAccountId:
+    Description: Membership account Id
+    Type: String
+    Default: ***REMOVED***
 
 Resources:
   PaymentFailureLambdaRole:
@@ -23,7 +27,14 @@ Resources:
           Action:
           - sts:AssumeRole
       Policies:
-      - PolicyName: LambdaPolicy
+      - PolicyName: PaymentFailureLambdaPolicy
+        PolicyDocument:
+          Statement:
+            Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PaymentFailureLambda-${Stage}
+      - PolicyName: PaymentFailureLambdaLoggingPolicy
         PolicyDocument:
           Statement:
             Effect: Allow
@@ -31,8 +42,17 @@ Resources:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
-            - lambda:InvokeFunction
             Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PaymentFailureLambda-${Stage}:log-stream:*
+      - PolicyName: PaymentFailureQueueReadPolicy
+        PolicyDocument:
+          Statement:
+            Effect: Allow
+            Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            Resource: !GetAtt PaymentFailureQueue.Arn
+
   PaymentFailureLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -47,4 +67,44 @@ Resources:
       Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
       Runtime: java8
-      Timeout: 60
+      Timeout: 15
+
+  PaymentFailureDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Stage}-payment-failure-dead-letter
+
+  PaymentFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub  ${Stage}-payment-failure
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PaymentFailureDeadLetterQueue.Arn
+        maxReceiveCount: 5
+
+  PaymentFailureSqsWriteRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action: sts:AssumeRole
+          Principal:
+            AWS: !Sub arn:aws:iam::${MembershipAccountId}:root
+      Policies:
+      - PolicyName: payment-failure-sqs-write-access-policy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Resource: !GetAtt PaymentFailureQueue.Arn
+            Action:
+             - sqs:SendMessage
+
+  PaymentFailureLambdaEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt PaymentFailureQueue.Arn
+      FunctionName: !GetAtt PaymentFailureLambda.Arn
