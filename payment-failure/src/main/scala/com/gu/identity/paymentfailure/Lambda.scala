@@ -1,8 +1,10 @@
 package com.gu.identity.paymentfailure
 
-object Lambda {
+import com.typesafe.scalalogging.StrictLogging
+
+object Lambda extends StrictLogging {
 
   def handler(): Unit = {
-    println("Hello world!")
+    logger.info("executing lambda")
   }
 }

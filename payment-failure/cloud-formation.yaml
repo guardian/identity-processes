@@ -23,13 +23,16 @@ Resources:
           Action:
           - sts:AssumeRole
       Policies:
-      - PolicyName: PaymentFailureLambdaPolicy
+      - PolicyName: LambdaPolicy
         PolicyDocument:
           Statement:
             Effect: Allow
             Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
             - lambda:InvokeFunction
-            Resource: '*'
+            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PaymentFailureLambda-${Stage}:log-stream:*
   PaymentFailureLambda:
     Type: AWS::Lambda::Function
     Properties:
