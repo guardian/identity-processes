@@ -8,15 +8,9 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
-  PaymentFailureQueueName:
-    Description: Payment failure queue name
+  MembershipAccountId:
+    Description: Membership account Id
     Type: String
-    Default: 'CODE-payment-failure'
-  PaymentFailureDeadLetterQueueName:
-    Description: Payment failure dead letter queue name
-    Type: String
-    Default: 'CODE-payment-failure-dead-letter'
-
 
 Resources:
   PaymentFailureLambdaRole:
@@ -32,7 +26,14 @@ Resources:
           Action:
           - sts:AssumeRole
       Policies:
-      - PolicyName: LambdaPolicy
+      - PolicyName: PaymentFailureLambdaPolicy
+        PolicyDocument:
+          Statement:
+            Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PaymentFailureLambda-${Stage}
+      - PolicyName: PaymentFailureLambdaLoggingPolicy
         PolicyDocument:
           Statement:
             Effect: Allow
@@ -40,8 +41,17 @@ Resources:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
-            - lambda:InvokeFunction
             Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PaymentFailureLambda-${Stage}:log-stream:*
+      - PolicyName: PaymentFailureQueueReadPolicy
+        PolicyDocument:
+          Statement:
+            Effect: Allow
+            Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            Resource: '*'
+
   PaymentFailureLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -61,33 +71,36 @@ Resources:
   PaymentFailureDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Ref PaymentFailureDeadLetterQueueName
+      QueueName: !Sub ${Stage}-payment-failure-dead-letter
 
   PaymentFailureQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Ref PaymentFailureQueueName
+      QueueName: !Sub  ${Stage}-payment-failure
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PaymentFailureDeadLetterQueue.Arn
         maxReceiveCount: 5
 
-  PaymentFailureQueuePolicy:
-    Type: AWS::SQS::QueuePolicy
+  PaymentFailureSqsWriteRole:
+    Type: AWS::IAM::Role
     Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
         Statement:
+        - Effect: Allow
+          Action: sts:AssumeRole
+          Principal:
+            AWS: !Sub arn:aws:iam::${MembershipAccountId}:root
+      Policies:
+      - PolicyName: payment-failure-sqs-write-access-policy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
           - Effect: Allow
-            Principal:
-              AWS: '*'
-            Action:
-              - SQS:SendMessage
-              - SQS:ReceiveMessage
-              - SQS:DeleteMessage
-              - SQS:GetQueueAttributes
             Resource: !GetAtt PaymentFailureQueue.Arn
-      Queues:
-        - !Ref PaymentFailureQueue
+            Action:
+             - sqs:SendMessage
 
   PaymentFailureLambdaEventSource:
     Type: AWS::Lambda::EventSourceMapping
