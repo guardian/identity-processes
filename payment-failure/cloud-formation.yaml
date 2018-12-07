@@ -11,6 +11,7 @@ Parameters:
   MembershipAccountId:
     Description: Membership account Id
     Type: String
+    Default: ***REMOVED***
 
 Resources:
   PaymentFailureLambdaRole:
@@ -50,7 +51,7 @@ Resources:
             - sqs:ReceiveMessage
             - sqs:DeleteMessage
             - sqs:GetQueueAttributes
-            Resource: '*'
+            Resource: !GetAtt PaymentFailureQueue.Arn
 
   PaymentFailureLambda:
     Type: AWS::Lambda::Function
