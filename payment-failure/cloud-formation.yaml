@@ -8,13 +8,9 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
-
-Mappings:
-  StageMap:
-    CODE:
-      MembershipAppRole: arn:aws:iam::***REMOVED***:role/Workflow-CODE-MembershipAppRole-BR2CJ3AACTNY
-    PROD:
-      MembershipAppRole: arn:aws:iam::***REMOVED***:role/Workflow-MembershipAppRole-Q4O0MAAL9OB9
+  MembershipAppRole:
+    Description: Arn of the membership app role
+    Type: String
 
 Resources:
   PaymentFailureLambdaRole:
@@ -96,7 +92,7 @@ Resources:
           - Effect: Allow
             Action: sqs:SendMessage
             Principal:
-              AWS: !FindInMap [StageMap, !Ref Stage, MembershipAppRole]
+              AWS: !Ref MembershipAppRole
             Resource: !GetAtt PaymentFailureQueue.Arn
 
   PaymentFailureLambdaEventSource:
