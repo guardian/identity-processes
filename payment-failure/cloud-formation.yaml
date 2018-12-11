@@ -8,10 +8,13 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
-  MembershipAccountId:
-    Description: Membership account Id
-    Type: String
-    Default: ***REMOVED***
+
+Mappings:
+  StageMap:
+    CODE:
+      MembershipAppRole: arn:aws:iam::***REMOVED***:role/Workflow-CODE-MembershipAppRole-BR2CJ3AACTNY
+    PROD:
+      MembershipAppRole: arn:aws:iam::***REMOVED***:role/Workflow-MembershipAppRole-Q4O0MAAL9OB9
 
 Resources:
   PaymentFailureLambdaRole:
@@ -83,25 +86,17 @@ Resources:
         maxReceiveCount: 5
 
   PaymentFailureSqsWriteRole:
-    Type: AWS::IAM::Role
+    Type: AWS::SQS:QueuePolicy
     Properties:
-      Path: /
-      AssumeRolePolicyDocument:
+      Queues: !Ref PaymentFailureQueue
+      PolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Action: sts:AssumeRole
-          Principal:
-            AWS: !Sub arn:aws:iam::${MembershipAccountId}:root
-      Policies:
-      - PolicyName: payment-failure-sqs-write-access-policy
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
           - Effect: Allow
+            Action: sqs:SendMessage
+            Principal:
+              AWS: !FindInMap [StageMap, !Sub ${Stage}, MembershipAppRole]
             Resource: !GetAtt PaymentFailureQueue.Arn
-            Action:
-             - sqs:SendMessage
 
   PaymentFailureLambdaEventSource:
     Type: AWS::Lambda::EventSourceMapping
