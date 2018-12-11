@@ -86,7 +86,7 @@ Resources:
         maxReceiveCount: 5
 
   PaymentFailureSqsWriteRole:
-    Type: AWS::SQS:QueuePolicy
+    Type: AWS::SQS::QueuePolicy
     Properties:
       Queues: !Ref PaymentFailureQueue
       PolicyDocument:
@@ -95,7 +95,7 @@ Resources:
           - Effect: Allow
             Action: sqs:SendMessage
             Principal:
-              AWS: !FindInMap [StageMap, !Sub ${Stage}, MembershipAppRole]
+              AWS: !FindInMap [StageMap, !Ref Stage, MembershipAppRole]
             Resource: !GetAtt PaymentFailureQueue.Arn
 
   PaymentFailureLambdaEventSource:
