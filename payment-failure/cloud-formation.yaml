@@ -92,7 +92,7 @@ Resources:
           - Effect: Allow
             Action: sqs:SendMessage
             Principal:
-              AWS: *
+              AWS: '*'
             Resource: !GetAtt PaymentFailureQueue.Arn
             Condition:
               ArnEquals:
