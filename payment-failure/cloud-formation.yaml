@@ -8,8 +8,8 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
-  MembershipAppRole:
-    Description: Arn of the membership app role
+  IdentityPaymentFailureTopic:
+    Description: Arn of topic that membership workflow publishes payment failure events to
     Type: String
 
 Resources:
@@ -76,7 +76,7 @@ Resources:
   PaymentFailureQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub  ${Stage}-payment-failure
+      QueueName: !Sub ${Stage}-payment-failure
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PaymentFailureDeadLetterQueue.Arn
         maxReceiveCount: 5
@@ -92,8 +92,11 @@ Resources:
           - Effect: Allow
             Action: sqs:SendMessage
             Principal:
-              AWS: !Ref MembershipAppRole
+              AWS: *
             Resource: !GetAtt PaymentFailureQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref IdentityPaymentFailureTopic
 
   PaymentFailureLambdaEventSource:
     Type: AWS::Lambda::EventSourceMapping
