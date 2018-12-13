@@ -8,8 +8,8 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
-  MembershipAccountId:
-    Description: Membership account Id
+  IdentityPaymentFailureTopic:
+    Description: Arn of topic that membership workflow publishes payment failure events to
     Type: String
 
 Resources:
@@ -76,31 +76,27 @@ Resources:
   PaymentFailureQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub  ${Stage}-payment-failure
+      QueueName: !Sub ${Stage}-payment-failure
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PaymentFailureDeadLetterQueue.Arn
         maxReceiveCount: 5
 
   PaymentFailureSqsWriteRole:
-    Type: AWS::IAM::Role
+    Type: AWS::SQS::QueuePolicy
     Properties:
-      Path: /
-      AssumeRolePolicyDocument:
+      Queues:
+      - !Ref PaymentFailureQueue
+      PolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Action: sts:AssumeRole
-          Principal:
-            AWS: !Sub arn:aws:iam::${MembershipAccountId}:root
-      Policies:
-      - PolicyName: payment-failure-sqs-write-access-policy
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
           - Effect: Allow
+            Action: sqs:SendMessage
+            Principal:
+              AWS: '*'
             Resource: !GetAtt PaymentFailureQueue.Arn
-            Action:
-             - sqs:SendMessage
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref IdentityPaymentFailureTopic
 
   PaymentFailureLambdaEventSource:
     Type: AWS::Lambda::EventSourceMapping
