@@ -4,11 +4,9 @@ import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import scala.collection.JavaConverters._
-import com.gu.identity.paymentfailure.Model.BrazeResponse
+import com.gu.identity.paymentfailure.Model.{BrazeResponse, Config}
 
 object Lambda extends StrictLogging {
-
-  case class Config(idapiHost: String, brazeApiHost: String, idapiAccessToken: String)
 
   def configFromEnvVariables: Option[Config] = {
     for {
@@ -25,18 +23,17 @@ object Lambda extends StrictLogging {
     logger.info(s"context :  $context")
     logger.info(s"event :  $event")
 
-//    val config = configFromEnvVariables
+    val config = configFromEnvVariables
 
-//    if(config.isDefined) {
-    if(true) {
-      process(event).fold(err => throw err, _ => logger.info("process successful"))
+    if(config.isDefined) {
+      process(event, config.get).fold(err => throw err, _ => logger.info("process successful"))
     } else {
       logger.error("Missing or incorrect config. Please check environment variables")
       System.exit(1)
     }
   }
 
-  def process(event: SQSEvent): Either[Throwable, BrazeResponse]= {
+  def process(event: SQSEvent, config: Config): Either[Throwable, BrazeResponse]= {
     val messages = event.getRecords.asScala.map(mes => mes).toList
 
     val identityClient = new IdentityClient
@@ -47,7 +44,7 @@ object Lambda extends StrictLogging {
     messages.map( mes => {
       for {
         emailData <- sqsParsingService.parseSingleMessage(mes)
-        brazeResponse <- sendEmailService.sendEmail(emailData)
+        brazeResponse <- sendEmailService.sendEmail(emailData, config)
       } yield brazeResponse
     }).head
   }

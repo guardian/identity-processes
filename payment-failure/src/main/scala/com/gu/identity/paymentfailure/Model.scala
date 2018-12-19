@@ -6,4 +6,6 @@ object Model {
 
   case class BrazeResponse(msg: String)
 
+  case class Config(idapiHost: String, brazeApiHost: String, idapiAccessToken: String)
+
 }

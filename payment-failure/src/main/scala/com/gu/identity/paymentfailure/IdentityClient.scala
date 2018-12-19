@@ -5,6 +5,7 @@ import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 import io.circe.syntax._
 import scalaj.http._
+import com.gu.identity.paymentfailure.Model.Config
 
 case class IdentityConfig(identityApiHost: String = "https://idapi.thegulocal.com", clientAccessToken: String)
 
@@ -16,10 +17,10 @@ class IdentityClient extends StrictLogging {
   implicit val identityEmailTokenEncoder: Encoder[IdentityEmailTokenRequest] = deriveEncoder[IdentityEmailTokenRequest]
   implicit val identityEmailTokenDecoder: Decoder[IdentityEmailTokenResponse] = deriveDecoder[IdentityEmailTokenResponse]
 
-  def encryptEmail(email: String): Either[Throwable, IdentityEmailTokenResponse] = {
+  def encryptEmail(email: String, config: Config): Either[Throwable, IdentityEmailTokenResponse] = {
     logger.info(s"retrieving encrypted token for email : $email")
-    val identityApiHost = Option(System.getenv("apiHost")).getOrElse("https://idapi.thegulocal.com")
-    val identityClientToken = Option(System.getenv("identityClientToken")).getOrElse("dev-login-token")
+    val identityApiHost = config.idapiHost
+    val identityClientToken = config.idapiAccessToken
 
     val identityEmailTokenRequest: HttpRequest = Http(s"$identityApiHost/signin-token/email")
 
