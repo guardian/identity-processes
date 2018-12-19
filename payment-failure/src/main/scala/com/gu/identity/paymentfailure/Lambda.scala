@@ -3,61 +3,52 @@ package com.gu.identity.paymentfailure
 import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import io.circe.{Decoder, Encoder, Json, ParsingFailure}
-
 import scala.collection.JavaConverters._
-import io.circe.parser._
-import io.circe.generic.semiauto._
-
+import com.gu.identity.paymentfailure.Model.BrazeResponse
 
 object Lambda extends StrictLogging {
 
-  case class IdentityBrazeEmailData(externalId: String, emailAddress: String, templateId: String, customFields: Map[String, String])
+  case class Config(idapiHost: String, brazeApiHost: String, idapiAccessToken: String)
+
+  def configFromEnvVariables: Option[Config] = {
+    for {
+      idapiHost <- Option(System.getenv("idapiHost"))
+      brazeApiHost <- Option(System.getenv("brazeApiHost"))
+      idapiAccessToken <- Option(System.getenv("idapiAccessToken"))
+    } yield {
+      Config(idapiHost, brazeApiHost, idapiAccessToken)
+    }
+  }
 
   def handler(event: SQSEvent, context: Context): Unit = {
 
     logger.info(s"context :  $context")
     logger.info(s"event :  $event")
 
-    parseMessage(event).fold(error => {
-      logger.info(s"problem parsing, failed with errors ${error.map(_.message)}")
-    }, r => {
-      logger.info(s"success with $r")
-    })
-  }
+//    val config = configFromEnvVariables
 
-  private def parseMessage(sqsEvent: SQSEvent): Either[List[io.circe.DecodingFailure], List[IdentityBrazeEmailData]] = {
-
-    implicit val identityBrazeEmailDataDecoder: Decoder[IdentityBrazeEmailData] = deriveDecoder[IdentityBrazeEmailData]
-    implicit val identityBrazeEmailDataEncoder: Encoder[IdentityBrazeEmailData] = deriveEncoder[IdentityBrazeEmailData]
-
-    val messages = sqsEvent.getRecords.asScala.map(mes => mes).toList
-
-    val parseMessageJson: List[Either[ParsingFailure, Json]] = messages.map(mes => {
-      logger.info(s"attempting to parse message body : ${mes.getBody}")
-      parseJson(mes.getBody)
-    })
-
-    val successfullyParsedJson = parseMessageJson.collect{ case Right(v) => v}
-
-    val jsonToEmailData  = successfullyParsedJson.map(json => json.as[IdentityBrazeEmailData])
-
-    val emailData = jsonToEmailData.collect{ case Right(v) => v}
-    val decodeFailures = jsonToEmailData.collect{ case Left(failure) => failure }
-
-    decodeFailures match {
-      case Nil => Right(emailData)
-      case _ => Left(decodeFailures)
+//    if(config.isDefined) {
+    if(true) {
+      process(event).fold(err => throw err, _ => logger.info("process successful"))
+    } else {
+      logger.error("Missing or incorrect config. Please check environment variables")
+      System.exit(1)
     }
   }
 
-  def parseJson(messageBody: String): Either[io.circe.ParsingFailure, Json] = parse(messageBody) match {
-    case Left(failure) => {
-      logger.info(s"invalid json in message : $messageBody failed with error :  ${failure.message}")
-      Left(failure)
-    }
-    case Right(json) =>
-      logger.info(s"succesfuly parsed json:  $json")
-      Right(json)
+  def process(event: SQSEvent): Either[Throwable, BrazeResponse]= {
+    val messages = event.getRecords.asScala.map(mes => mes).toList
+
+    val identityClient = new IdentityClient
+    val sqsParsingService = new SqsParsingService
+    val brazeClient = new BrazeClient
+    val sendEmailService = new SendEmailService(identityClient,brazeClient)
+
+    messages.map( mes => {
+      for {
+        emailData <- sqsParsingService.parseSingleMessage(mes)
+        brazeResponse <- sendEmailService.sendEmail(emailData)
+      } yield brazeResponse
+    }).head
   }
 }

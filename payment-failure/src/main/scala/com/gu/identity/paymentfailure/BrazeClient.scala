@@ -1,0 +1,17 @@
+package com.gu.identity.paymentfailure
+
+import com.typesafe.scalalogging.StrictLogging
+import com.gu.identity.paymentfailure.Model.IdentityBrazeEmailData
+import com.gu.identity.paymentfailure.Model.BrazeResponse
+
+class BrazeClient extends StrictLogging{
+
+  def sendEmail(emailData: IdentityBrazeEmailData, emailToken: String) : Either[Throwable, BrazeResponse] = {
+    val isSuccess = true
+    logger.info(s"Sending payment failure request to braze for email ${emailData.emailAddress} with token $emailToken")
+    isSuccess match {
+      case true => Right(BrazeResponse("testing"))
+      case false => Left(new Exception( s"Failed to send email from Braze"))
+    }
+  }
+}
