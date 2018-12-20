@@ -1,7 +1,5 @@
 package com.gu.identity.paymentfailure
 
-import com.gu.identity.paymentfailure.Model._
-
 object Main extends App {
 
   val testIdentityClient = new IdentityClient

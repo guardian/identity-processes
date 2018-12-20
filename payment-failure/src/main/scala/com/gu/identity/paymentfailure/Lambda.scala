@@ -4,7 +4,6 @@ import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import scala.collection.JavaConverters._
-import com.gu.identity.paymentfailure.Model.{BrazeResponse, Config}
 
 object Lambda extends StrictLogging {
 
@@ -25,6 +24,7 @@ object Lambda extends StrictLogging {
 
     val config = configFromEnvVariables
 
+    // do a fold?
     if(config.isDefined) {
       process(event, config.get).fold(err => throw err, _ => logger.info("process successful"))
     } else {

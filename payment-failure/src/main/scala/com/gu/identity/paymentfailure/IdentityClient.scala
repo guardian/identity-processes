@@ -5,7 +5,6 @@ import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 import io.circe.syntax._
 import scalaj.http._
-import com.gu.identity.paymentfailure.Model.Config
 
 case class IdentityConfig(identityApiHost: String = "https://idapi.thegulocal.com", clientAccessToken: String)
 

@@ -1,5 +1,4 @@
 package com.gu.identity.paymentfailure
-import com.gu.identity.paymentfailure.Model.{BrazeResponse, IdentityBrazeEmailData, Config}
 
 class SendEmailService (identityClient: IdentityClient, brazeClient: BrazeClient){
 

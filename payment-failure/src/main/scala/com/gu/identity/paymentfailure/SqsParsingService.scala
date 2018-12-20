@@ -5,7 +5,6 @@ import com.typesafe.scalalogging.StrictLogging
 import io.circe.Decoder
 import io.circe.parser.decode
 import io.circe.generic.semiauto.deriveDecoder
-import com.gu.identity.paymentfailure.Model.IdentityBrazeEmailData
 
 
 class SqsParsingService extends StrictLogging {

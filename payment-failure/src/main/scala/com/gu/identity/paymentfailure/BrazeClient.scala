@@ -1,8 +1,6 @@
 package com.gu.identity.paymentfailure
 
 import com.typesafe.scalalogging.StrictLogging
-import com.gu.identity.paymentfailure.Model.IdentityBrazeEmailData
-import com.gu.identity.paymentfailure.Model.BrazeResponse
 
 class BrazeClient extends StrictLogging{
 
