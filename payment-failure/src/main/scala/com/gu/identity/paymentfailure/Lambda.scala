@@ -21,15 +21,15 @@ object Lambda extends StrictLogging {
 
     logger.info(s"context :  $context")
     logger.info(s"event :  $event")
+    logger.info(s"received message batch of size: ${event.getRecords.size()}")
 
     val config = configFromEnvVariables
 
-    // do a fold?
-    if(config.isDefined) {
-      process(event, config.get).fold(err => throw err, _ => logger.info("process successful"))
-    } else {
+    config.fold({
       logger.error("Missing or incorrect config. Please check environment variables")
       System.exit(1)
+    }) { configuration =>
+      process(event, configuration).fold(err => throw err, _ => logger.info("process successful"))
     }
   }
 
