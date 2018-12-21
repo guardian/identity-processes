@@ -4,5 +4,5 @@ case class IdentityBrazeEmailData(externalId: String, emailAddress: String, temp
 
 case class BrazeResponse(msg: String)
 
-case class Config(idapiHost: String, brazeApiHost: String, idapiAccessToken: String)
+case class Config(idapiHost: String, brazeApiHost: String, idapiAccessToken: String, queueURL: String)
 

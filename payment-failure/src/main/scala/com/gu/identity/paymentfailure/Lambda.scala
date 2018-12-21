@@ -7,13 +7,15 @@ import scala.collection.JavaConverters._
 
 object Lambda extends StrictLogging {
 
+  //GET CONFIG = EIther[Error, Config]
   def configFromEnvVariables: Option[Config] = {
     for {
       idapiHost <- Option(System.getenv("idapiHost"))
       brazeApiHost <- Option(System.getenv("brazeApiHost"))
       idapiAccessToken <- Option(System.getenv("idapiAccessToken"))
+      sqsQueueUrl <- Option(System.getenv("sqsQueueUrl"))
     } yield {
-      Config(idapiHost, brazeApiHost, idapiAccessToken)
+      Config(idapiHost, brazeApiHost, idapiAccessToken, sqsQueueUrl)
     }
   }
 
@@ -29,23 +31,28 @@ object Lambda extends StrictLogging {
       logger.error("Missing or incorrect config. Please check environment variables")
       System.exit(1)
     }) { configuration =>
-      process(event, configuration).fold(err => throw err, _ => logger.info("process successful"))
+      process(event, configuration).foreach{
+        case Left(throwable) => throw throwable
+        case _ => logger.info("process successful")
+      }
     }
   }
 
-  def process(event: SQSEvent, config: Config): Either[Throwable, BrazeResponse]= {
+  def process(event: SQSEvent, config: Config): List[Either[Throwable, BrazeResponse]]= {
     val messages = event.getRecords.asScala.map(mes => mes).toList
 
     val identityClient = new IdentityClient
-    val sqsParsingService = new SqsParsingService
+    val sqsService = new SqsService
     val brazeClient = new BrazeClient
     val sendEmailService = new SendEmailService(identityClient,brazeClient)
 
     messages.map( mes => {
       for {
-        emailData <- sqsParsingService.parseSingleMessage(mes)
+        emailData <- sqsService.parseSingleMessage(mes)
         brazeResponse <- sendEmailService.sendEmail(emailData, config)
+        result <- sqsService.deleteMessage(mes,config)
+        _ <- sqsService.processDeleteMessageResult(result)
       } yield brazeResponse
-    }).head
+    })
   }
 }
