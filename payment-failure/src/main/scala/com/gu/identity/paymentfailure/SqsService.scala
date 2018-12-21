@@ -15,6 +15,7 @@ import cats.syntax.either._
 class SqsService extends StrictLogging {
 
   def parseSingleMessage(sqsMessage: SQSMessage): Either[Throwable, IdentityBrazeEmailData] = {
+    logger.info(s"attempting to parse message body ${sqsMessage.getBody}")
     implicit val identityBrazeEmailDataDecoder: Decoder[IdentityBrazeEmailData] = deriveDecoder[IdentityBrazeEmailData]
     decode[IdentityBrazeEmailData](sqsMessage.getBody)
   }
