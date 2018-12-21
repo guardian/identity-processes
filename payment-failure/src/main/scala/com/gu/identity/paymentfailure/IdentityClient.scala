@@ -6,26 +6,28 @@ import io.circe.generic.semiauto._
 import io.circe.syntax._
 import scalaj.http._
 
-case class IdentityConfig(identityApiHost: String = "https://idapi.thegulocal.com", clientAccessToken: String)
+case class IdentityConfig(identityApiHost: String, clientAccessToken: String)
 
 case class IdentityEmailTokenRequest(email: String)
+
+object IdentityEmailTokenRequest {
+  implicit val identityEmailTokenEncoder: Encoder[IdentityEmailTokenRequest] = deriveEncoder[IdentityEmailTokenRequest]
+}
+
 case class IdentityEmailTokenResponse(status: String, encryptedEmail: String)
+
+object IdentityEmailTokenResponse {
+  implicit val identityEmailTokenDecoder: Decoder[IdentityEmailTokenResponse] = deriveDecoder[IdentityEmailTokenResponse]
+}
 
 class IdentityClient extends StrictLogging {
 
-  implicit val identityEmailTokenEncoder: Encoder[IdentityEmailTokenRequest] = deriveEncoder[IdentityEmailTokenRequest]
-  implicit val identityEmailTokenDecoder: Decoder[IdentityEmailTokenResponse] = deriveDecoder[IdentityEmailTokenResponse]
-
-  def encryptEmail(email: String, config: Config): Either[Throwable, IdentityEmailTokenResponse] = {
+  def encryptEmail(email: String, config:Config): Either[Throwable, IdentityEmailTokenResponse] = {
     logger.info(s"retrieving encrypted token for email : $email")
-    val identityApiHost = config.idapiHost
-    val identityClientToken = config.idapiAccessToken
 
-    val identityEmailTokenRequest: HttpRequest = Http(s"$identityApiHost/signin-token/email")
-
-    val postResponse = identityEmailTokenRequest
+    val postResponse = Http(s"${config.idapiHost}/signin-token/email")
       .postData(IdentityEmailTokenRequest(email).asJson.toString())
-      .header("X-GU-ID-Client-Access-Token", s"Bearer $identityClientToken")
+      .header("X-GU-ID-Client-Access-Token", s"Bearer ${config.idapiAccessToken}")
       .header("content-type", "application/json")
       .asString
 

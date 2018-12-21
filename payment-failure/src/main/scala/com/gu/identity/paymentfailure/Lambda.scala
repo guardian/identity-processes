@@ -36,12 +36,12 @@ object Lambda extends StrictLogging {
   }
 
   def process(event: SQSEvent): List[Either[Throwable, BrazeResponse]]= {
-    val messages = event.getRecords.asScala.map(mes => mes).toList
+    val messages = event.getRecords.asScala.toList
 
     val identityClient = new IdentityClient
     val sqsService = new SqsService
     val brazeClient = new BrazeClient
-    val sendEmailService = new SendEmailService(identityClient,brazeClient)
+    val sendEmailService = new SendEmailService(identityClient, brazeClient)
 
     messages.map( mes => {
       for {
