@@ -8,7 +8,7 @@ class BrazeClient extends StrictLogging{
     val isSuccess = true
     logger.info(s"Sending payment failure request to braze for email ${emailData.emailAddress} with token $emailToken")
     isSuccess match {
-      case true => Right(BrazeResponse("testing"))
+      case true => Right(BrazeResponse("example success response"))
       case false => Left(new Exception( s"Failed to send email from Braze"))
     }
   }

@@ -7,9 +7,8 @@ import scala.collection.JavaConverters._
 
 object Lambda extends StrictLogging {
 
-  //GET CONFIG = EIther[Error, Config]
-  def configFromEnvVariables: Option[Config] = {
-    for {
+  def getConfig: Either[Throwable, Config] = {
+    val optionConfig = for {
       idapiHost <- Option(System.getenv("idapiHost"))
       brazeApiHost <- Option(System.getenv("brazeApiHost"))
       idapiAccessToken <- Option(System.getenv("idapiAccessToken"))
@@ -17,28 +16,26 @@ object Lambda extends StrictLogging {
     } yield {
       Config(idapiHost, brazeApiHost, idapiAccessToken, sqsQueueUrl)
     }
+
+    optionConfig match {
+      case Some(config) => Right(config)
+      case _ => Left(new Exception(s"Missing or incorrect config. Please check environment variables"))
+    }
   }
 
   def handler(event: SQSEvent, context: Context): Unit = {
 
     logger.info(s"context :  $context")
     logger.info(s"event :  $event")
-    logger.info(s"received message batch of size: ${event.getRecords.size()}")
+    logger.info(s"received message batch of size: ${event.getRecords.size}")
 
-    val config = configFromEnvVariables
-
-    config.fold({
-      logger.error("Missing or incorrect config. Please check environment variables")
-      System.exit(1)
-    }) { configuration =>
-      process(event, configuration).foreach{
-        case Left(throwable) => throw throwable
-        case _ => logger.info("process successful")
-      }
+    process(event).foreach {
+      case Left(throwable) => throw throwable
+      case _ => logger.info("process successful")
     }
   }
 
-  def process(event: SQSEvent, config: Config): List[Either[Throwable, BrazeResponse]]= {
+  def process(event: SQSEvent): List[Either[Throwable, BrazeResponse]]= {
     val messages = event.getRecords.asScala.map(mes => mes).toList
 
     val identityClient = new IdentityClient
@@ -48,6 +45,7 @@ object Lambda extends StrictLogging {
 
     messages.map( mes => {
       for {
+        config <- getConfig
         emailData <- sqsService.parseSingleMessage(mes)
         brazeResponse <- sendEmailService.sendEmail(emailData, config)
         result <- sqsService.deleteMessage(mes,config)
