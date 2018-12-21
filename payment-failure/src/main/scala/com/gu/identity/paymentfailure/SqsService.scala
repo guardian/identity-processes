@@ -10,7 +10,7 @@ import io.circe.parser.decode
 import cats.syntax.either._
 import io.circe.parser._
 
-class SqsService extends StrictLogging {
+class SqsService(config: Config) extends StrictLogging {
 
   val credentialsProvider = new AWSCredentialsProviderChain(
     new DefaultAWSCredentialsProviderChain,
@@ -27,7 +27,7 @@ class SqsService extends StrictLogging {
     } yield identityEmailData
   }
 
-  def deleteMessage(message: SQSEvent.SQSMessage, config: Config): Either[Throwable, DeleteMessageResult] = {
+  def deleteMessage(message: SQSEvent.SQSMessage): Either[Throwable, DeleteMessageResult] = {
     Either.catchNonFatal(sqsClient.deleteMessage(new DeleteMessageRequest(config.queueURL, message.getReceiptHandle)))
   }
 

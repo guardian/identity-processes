@@ -20,7 +20,7 @@ object IdentityEmailTokenResponse {
   implicit val identityEmailTokenDecoder: Decoder[IdentityEmailTokenResponse] = deriveDecoder[IdentityEmailTokenResponse]
 }
 
-class IdentityClient extends StrictLogging {
+class IdentityClient(config: Config) extends StrictLogging {
 
   def encryptEmail(email: String, config:Config): Either[Throwable, IdentityEmailTokenResponse] = {
     logger.info(s"retrieving encrypted token for email : $email")
