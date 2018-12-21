@@ -11,13 +11,18 @@ import io.circe.Decoder
 import io.circe.parser.decode
 import io.circe.generic.semiauto.deriveDecoder
 import cats.syntax.either._
+import io.circe.parser._
 
 class SqsService extends StrictLogging {
 
   def parseSingleMessage(sqsMessage: SQSMessage): Either[Throwable, IdentityBrazeEmailData] = {
     logger.info(s"attempting to parse message body ${sqsMessage.getBody}")
     implicit val identityBrazeEmailDataDecoder: Decoder[IdentityBrazeEmailData] = deriveDecoder[IdentityBrazeEmailData]
-    decode[IdentityBrazeEmailData](sqsMessage.getBody)
+    for {
+      jsonMessage <- parse(sqsMessage.getBody)
+      body <- jsonMessage.hcursor.downField("Message").as[String]
+      identityEmailData <- decode[IdentityBrazeEmailData](body)
+    } yield identityEmailData
   }
 
   def deleteMessage(message: SQSEvent.SQSMessage, config: Config): Either[Throwable, DeleteMessageResult] = {
