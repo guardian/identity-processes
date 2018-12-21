@@ -1,7 +1,7 @@
 package com.gu.identity.paymentfailure
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{AWSCredentialsProviderChain, InstanceProfileCredentialsProvider}
+import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain, InstanceProfileCredentialsProvider}
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
@@ -28,10 +28,10 @@ class SqsService extends StrictLogging {
   def deleteMessage(message: SQSEvent.SQSMessage, config: Config): Either[Throwable, DeleteMessageResult] = {
 
     val credentialsProvider = new AWSCredentialsProviderChain(
-      new ProfileCredentialsProvider("identity"),
+      new DefaultAWSCredentialsProviderChain,
       new InstanceProfileCredentialsProvider(false)
     )
-    val sqsClient = AmazonSQSClientBuilder.standard().withCredentials(credentialsProvider).build()
+    val sqsClient = AmazonSQSClientBuilder.standard().withCredentials(credentialsProvider).withRegion("eu-west-1").build()
     Either.catchNonFatal(sqsClient.deleteMessage(new DeleteMessageRequest(config.queueURL, message.getReceiptHandle)))
   }
 
