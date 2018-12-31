@@ -7,19 +7,21 @@ import scala.collection.JavaConverters._
 
 object Lambda extends StrictLogging {
 
+  def getEnvironmentVariable(env: String): Either[Throwable, String] = {
+    Option(System.getenv(env)) match {
+      case Some(variable) => Right(variable)
+      case _ => Left(new Exception(s"Missing or incorrect config. Please check environment variables"))
+    }
+  }
+
   def getConfig: Either[Throwable, Config] = {
-    val optionConfig = for {
-      idapiHost <- Option(System.getenv("idapiHost"))
-      brazeApiHost <- Option(System.getenv("brazeApiHost"))
-      idapiAccessToken <- Option(System.getenv("idapiAccessToken"))
-      sqsQueueUrl <- Option(System.getenv("sqsQueueUrl"))
+    for {
+      idapiHost <- getEnvironmentVariable("yrst")
+      brazeApiHost <- getEnvironmentVariable("brazeApiHost")
+      idapiAccessToken <- getEnvironmentVariable("idapiAccessToken")
+      sqsQueueUrl <- getEnvironmentVariable("sqsQueueUrl")
     } yield {
       Config(idapiHost, brazeApiHost, idapiAccessToken, sqsQueueUrl)
-    }
-
-    optionConfig match {
-      case Some(config) => Right(config)
-      case _ => Left(new Exception(s"Missing or incorrect config. Please check environment variables"))
     }
   }
 
