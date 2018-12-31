@@ -16,7 +16,7 @@ object Lambda extends StrictLogging {
 
   def getConfig: Either[Throwable, Config] = {
     for {
-      idapiHost <- getEnvironmentVariable("yrst")
+      idapiHost <- getEnvironmentVariable("idapiHost")
       brazeApiHost <- getEnvironmentVariable("brazeApiHost")
       idapiAccessToken <- getEnvironmentVariable("idapiAccessToken")
       sqsQueueUrl <- getEnvironmentVariable("sqsQueueUrl")
