@@ -67,6 +67,7 @@ Resources:
       Role: !GetAtt PaymentFailureLambdaRole.Arn
       Runtime: java8
       Timeout: 15
+      MemorySize: 512
 
   PaymentFailureDeadLetterQueue:
     Type: AWS::SQS::Queue
