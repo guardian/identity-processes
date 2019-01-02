@@ -3,6 +3,7 @@ package com.gu.identity.paymentfailure
 import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import cats.syntax.either._
 import scala.collection.JavaConverters._
 
 object Lambda extends StrictLogging {
@@ -25,6 +26,12 @@ object Lambda extends StrictLogging {
     }
   }
 
+  val config =  getConfig.valueOr(throw _)
+  val identityClient = new IdentityClient(config)
+  val sqsService = new SqsService(config)
+  val brazeClient = new BrazeClient
+  val sendEmailService = new SendEmailService(identityClient, brazeClient)
+
   def handler(event: SQSEvent, context: Context): Unit = {
 
     logger.info(s"context :  $context")
@@ -42,13 +49,6 @@ object Lambda extends StrictLogging {
 
     messages.map( mes => {
       for {
-        config <- getConfig
-
-        identityClient = new IdentityClient(config)
-        sqsService = new SqsService(config)
-        brazeClient = new BrazeClient
-        sendEmailService = new SendEmailService(identityClient, brazeClient)
-
         emailData <- sqsService.parseSingleMessage(mes)
         brazeResponse <- sendEmailService.sendEmail(emailData, config)
         result <- sqsService.deleteMessage(mes)
