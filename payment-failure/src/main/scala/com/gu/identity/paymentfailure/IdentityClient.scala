@@ -32,7 +32,7 @@ class IdentityClient(config: Config) extends StrictLogging {
       .asString
 
     if(postResponse.isSuccess) {
-      logger.info(s"Sucesfully retrieved an encrypted token from Identity - body: ${postResponse.body}")
+      logger.info(s"Successfully retrieved an encrypted token from Identity - body: ${postResponse.body}")
       io.circe.parser.decode[IdentityEmailTokenResponse](postResponse.body)
     } else {
       Left(new Exception( s"Failed to retrieve an encrypted token from Identity - error ${postResponse.code}   ${postResponse.statusLine}"))
