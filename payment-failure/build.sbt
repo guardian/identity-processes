@@ -14,7 +14,10 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
-  "org.scalaj" %% "scalaj-http" % "2.3.0"
+  "org.scalaj" %% "scalaj-http" % "2.3.0",
+  "org.scalactic" %% "scalactic" % "3.0.5",
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+  "org.mockito" % "mockito-all" % "1.10.19" % "test"
 )
 
 assemblyJarName := "main.jar"
