@@ -20,7 +20,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
       val emailData = IdentityBrazeEmailData("1111", "test@test.com", "templateIdMock", Map("first name" -> "test name"))
 
       when(identityClient.encryptEmail("test@test.com", config)).thenReturn(Right(IdentityEmailTokenResponse("OK", "encryptedEmailString")))
-      when(brazeClient.sendEmail(emailData, "encryptedEmailString", config)).thenReturn(Right(BrazeUnitResponse("success")))
+      when(brazeClient.sendEmail(emailData, "encryptedEmailString", config)).thenReturn(Right(BrazeResponse("success")))
       sendEmailService.sendEmail(emailData, config)
 
       verify(identityClient, times(1)).encryptEmail("test@test.com", config)

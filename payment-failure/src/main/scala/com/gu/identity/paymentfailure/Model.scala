@@ -29,14 +29,8 @@ object BrazeSendRequest {
   }
 }
 
-sealed trait BrazeResponse {
-  def message: String
-  // queued is only returned when Braze is performing maintenance
-  def isSuccess: Boolean = message == "success" || message == "queued"
-}
+case class BrazeResponse(message: String)
 
-case class BrazeUnitResponse(message: String) extends BrazeResponse
-
-object BrazeUnitResponse {
-  implicit val BrazeUnitResponseDecoder: Decoder[BrazeUnitResponse] = deriveDecoder[BrazeUnitResponse]
+object BrazeResponse {
+  implicit val BrazeUnitResponseDecoder: Decoder[BrazeResponse] = deriveDecoder[BrazeResponse]
 }

@@ -19,7 +19,7 @@ class BrazeClient extends StrictLogging{
 
     if (postResponse.isSuccess) {
       logger.info(s"Successfully sent email from Braze for email: ${emailData.emailAddress} with templateId ${emailData.templateId}")
-      io.circe.parser.decode[BrazeUnitResponse](postResponse.body)
+      io.circe.parser.decode[BrazeResponse](postResponse.body)
     } else {
       logger.info(s"Failed to send email from Braze, error with status ${postResponse.code} - error ${postResponse.body}")
       Left( new Exception(s"sendEmail error with status ${postResponse.code} - error ${postResponse.body}"))
