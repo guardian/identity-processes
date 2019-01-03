@@ -21,8 +21,9 @@ object Lambda extends StrictLogging {
       brazeApiHost <- getEnvironmentVariable("brazeApiHost")
       idapiAccessToken <- getEnvironmentVariable("idapiAccessToken")
       sqsQueueUrl <- getEnvironmentVariable("sqsQueueUrl")
+      brazeApiKey <- getEnvironmentVariable("brazeApiKey")
     } yield {
-      Config(idapiHost, brazeApiHost, idapiAccessToken, sqsQueueUrl)
+      Config(idapiHost, brazeApiHost, idapiAccessToken, sqsQueueUrl, brazeApiKey)
     }
   }
 
