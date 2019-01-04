@@ -1,8 +1,9 @@
 package com.gu.identity.paymentfailure
 
 import com.typesafe.scalalogging.StrictLogging
-import scalaj.http.Http
+import cats.syntax.either._
 import io.circe.syntax._
+import scalaj.http.Http
 
 
 class BrazeClient(config: Config) extends StrictLogging {
@@ -11,19 +12,21 @@ class BrazeClient(config: Config) extends StrictLogging {
 
     logger.info(s"send BrazeEmail for email ${emailData.emailAddress} with token $emailToken with templateId ${emailData.templateId}")
 
-    val sendRequest = BrazeSendRequest(emailData.externalId, config.brazeApiKey, emailData.templateId, emailData.customFields + ("emailToken" -> emailToken))
+    val sendRequest = BrazeSendRequest(config.brazeApiKey, emailData.templateId, List(BrazeRecipient(emailData.externalId, emailData.customFields + ("emailToken" -> emailToken))))
 
-    val postResponse = Http(s"${config.brazeApiHost}/campaigns/trigger/send")
-        .header("content-type", "application/json")
-        .postData(sendRequest.asJson.toString)
-        .asString
-
-    if (postResponse.isSuccess) {
-      logger.info(s"Successfully sent email from Braze for email: ${emailData.emailAddress} with templateId ${emailData.templateId}")
-      io.circe.parser.decode[BrazeResponse](postResponse.body)
-    } else {
-      logger.error(s"Failed to send email from Braze, error with status ${postResponse.code} - error ${postResponse.body}")
-      Left( new Exception(s"sendEmail error with status ${postResponse.code} - error ${postResponse.body}"))
-    }
+    Either.catchNonFatal(
+      Http(s"${config.brazeApiHost}/campaigns/trigger/send")
+      .header("content-type", "application/json")
+      .postData(sendRequest.asJson.toString)
+      .asString
+    ).flatMap(postResponse =>
+        if (postResponse.isSuccess) {
+          logger.info(s"Successfully sent email from Braze for email: ${emailData.emailAddress} with templateId ${emailData.templateId}")
+          io.circe.parser.decode[BrazeResponse](postResponse.body)
+        } else {
+          logger.error(s"Failed to send email from Braze, error with status ${postResponse.code} - error ${postResponse.body}")
+          Left( new Exception(s"sendEmail error with status ${postResponse.code} - error ${postResponse.body}"))
+        }
+    )
   }
 }
