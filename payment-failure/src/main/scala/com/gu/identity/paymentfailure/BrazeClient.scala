@@ -5,9 +5,9 @@ import scalaj.http.Http
 import io.circe.syntax._
 
 
-class BrazeClient extends StrictLogging{
+class BrazeClient(config: Config) extends StrictLogging {
 
-  def sendEmail(emailData: IdentityBrazeEmailData, emailToken: String, config: Config) : Either[Throwable, BrazeResponse] = {
+  def sendEmail(emailData: IdentityBrazeEmailData, emailToken: String) : Either[Throwable, BrazeResponse] = {
 
     logger.info(s"send BrazeEmail for email ${emailData.emailAddress} with token $emailToken with templateId ${emailData.templateId}")
 

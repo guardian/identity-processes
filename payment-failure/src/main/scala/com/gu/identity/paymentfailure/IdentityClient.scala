@@ -22,7 +22,7 @@ object IdentityEmailTokenResponse {
 
 class IdentityClient(config: Config) extends StrictLogging {
 
-  def encryptEmail(email: String, config:Config): Either[Throwable, IdentityEmailTokenResponse] = {
+  def encryptEmail(email: String): Either[Throwable, IdentityEmailTokenResponse] = {
     logger.info(s"retrieving encrypted token for email : $email")
 
     val postResponse = Http(s"${config.idapiHost}/signin-token/email")
