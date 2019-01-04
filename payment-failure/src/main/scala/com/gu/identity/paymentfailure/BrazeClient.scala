@@ -8,6 +8,7 @@ import io.circe.syntax._
 class BrazeClient extends StrictLogging{
 
   def sendEmail(emailData: IdentityBrazeEmailData, emailToken: String, config: Config) : Either[Throwable, BrazeResponse] = {
+    
     logger.info(s"send BrazeEmail for email ${emailData.emailAddress} with token $emailToken with templateId ${emailData.templateId}")
 
     val sendRequest = BrazeSendRequest(emailData.externalId, config.brazeApiKey, emailData.templateId, emailData.customFields + ("emailToken" -> emailToken))
