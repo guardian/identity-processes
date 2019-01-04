@@ -3,7 +3,7 @@ package com.gu.identity.paymentfailure
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 
-case class Config(idapiHost: String, brazeApiHost: String, idapiAccessToken: String, queueURL: String, brazeApiKey:String)
+case class Config(idapiHost: String, brazeApiHost: String, idapiAccessToken: String, queueURL: String, brazeApiKey: String)
 
 case class IdentityBrazeEmailData(externalId: String, emailAddress: String, templateId: String, customFields: Map[String, String])
 
