@@ -11,7 +11,18 @@ Parameters:
   IdentityPaymentFailureTopic:
     Description: Arn of topic that membership workflow publishes payment failure events to
     Type: String
+  TopicPagerDutyAlerts:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: PagerDutyTopic
+      Subscription:
+      - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
+        Protocol: https
 
+Conditions:
+  IsProd: !Equals
+    - !Ref 'Stage'
+    - PROD
 Resources:
   PaymentFailureLambdaRole:
     Type: AWS::IAM::Role
@@ -104,3 +115,29 @@ Resources:
     Properties:
       EventSourceArn: !GetAtt PaymentFailureQueue.Arn
       FunctionName: !GetAtt PaymentFailureLambda.Arn
+
+  PaymentFailureDeadLetterQueueAlert:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm if payment failure dead letter queue grows beyond 1
+        message
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt 'PaymentFailureQueue.QueueName'
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '0'
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions: !If
+        - IsProd
+        - - !Ref 'TopicPagerDutyAlerts'
+        - !Ref 'AWS::NoValue'
+      InsufficientDataActions: !If
+        - IsProd
+        - - !Ref 'AlarmInfoSNS'
+        - !Ref 'AWS::NoValue'
+      OKActions:
+      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
