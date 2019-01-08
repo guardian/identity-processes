@@ -77,7 +77,7 @@ Resources:
       Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
       Runtime: java8
-      Timeout: 15
+      Timeout: 30
       MemorySize: 512
 
   PaymentFailureDeadLetterQueue:
