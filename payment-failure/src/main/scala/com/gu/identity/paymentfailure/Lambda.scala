@@ -21,16 +21,17 @@ object Lambda extends StrictLogging {
       brazeApiHost <- getEnvironmentVariable("brazeApiHost")
       idapiAccessToken <- getEnvironmentVariable("idapiAccessToken")
       sqsQueueUrl <- getEnvironmentVariable("sqsQueueUrl")
+      brazeApiKey <- getEnvironmentVariable("brazeApiKey")
     } yield {
-      Config(idapiHost, brazeApiHost, idapiAccessToken, sqsQueueUrl)
+      Config(idapiHost, brazeApiHost, idapiAccessToken, sqsQueueUrl, brazeApiKey)
     }
   }
 
   val config =  getConfig.valueOr(throw _)
   val identityClient = new IdentityClient(config)
   val sqsService = new SqsService(config)
-  val brazeClient = new BrazeClient
-  val sendEmailService = new SendEmailService(identityClient, brazeClient)
+  val brazeClient = new BrazeClient(config)
+  val sendEmailService = new SendEmailService(identityClient, brazeClient, config)
 
   def handler(event: SQSEvent, context: Context): Unit = {
 
@@ -50,7 +51,7 @@ object Lambda extends StrictLogging {
     messages.map( mes => {
       for {
         emailData <- sqsService.parseSingleMessage(mes)
-        brazeResponse <- sendEmailService.sendEmail(emailData, config)
+        brazeResponse <- sendEmailService.sendEmail(emailData)
         result <- sqsService.deleteMessage(mes)
         _ <- sqsService.processDeleteMessageResult(result)
       } yield brazeResponse
