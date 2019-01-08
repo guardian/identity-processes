@@ -133,8 +133,6 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
       - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
-      InsufficientDataActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
       OKActions:
       - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
 
@@ -154,8 +152,6 @@ Resources:
       Threshold: '300'
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
-      InsufficientDataActions:
       - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
       OKActions:
       - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
