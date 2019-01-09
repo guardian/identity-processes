@@ -11,6 +11,25 @@ Parameters:
   IdentityPaymentFailureTopic:
     Description: Arn of topic that membership workflow publishes payment failure events to
     Type: String
+  IdentityApiEndpoint:
+    Description: endpoint for the identity API
+    Type: String
+    AllowedValues:
+      - https://idapi.theguardian.com
+      - https://idapi.code.dev-theguardian.com
+  IdentityAPIKey:
+    Description: key used to authenticate against the identity API
+    Type: String
+  BrazeAPIEndpoint:
+    Description: endpoint for the Braze API
+    Type: String
+    Default: https://rest.fra-01.braze.eu
+  BrazeAPIKey:
+    Description: key used to authenticate against the Braze API
+    Type: String
+  SQSQueueUrl:
+    Description: url of the queue that contains payment failure messages
+    Type: String
 
 Conditions:
   IsProd: !Equals
@@ -72,7 +91,11 @@ Resources:
       Description: Lambda to send emails to customers with a recurring payment plan whos card is about to expire or failed
       Environment:
         Variables:
-          Stage: !Sub ${Stage}
+          idapiHost: !Sub ${IdentityApiEndpoint}
+          idapiAccessToken: !Sub ${IdentityAPIKey}
+          brazeApiHost: !Sub ${BrazeAPIEndpoint}
+          brazeApiKey: !Sub ${BrazeAPIKey}
+          sqsQueueUrl: !Sub ${SQSQueueUrl}
       FunctionName: !Sub PaymentFailureLambda-${Stage}
       Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
