@@ -4,7 +4,6 @@ import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import cats.syntax.either._
-import scala.collection.JavaConverters._
 
 object Lambda extends StrictLogging {
 
@@ -33,30 +32,14 @@ object Lambda extends StrictLogging {
     logger.info(s"event :  $event")
     logger.info(s"received message batch of size: ${event.getRecords.size}")
 
-    logger.info("initialising config and services")
+    logger.info("initialising config and lambda service")
     val config =  getConfig.valueOr(throw _)
-    val identityClient = new IdentityClient(config)
-    val sqsService = new SqsService(config)
-    val brazeClient = new BrazeClient(config)
-    val sendEmailService = new SendEmailService(identityClient, brazeClient, config)
+    val lambdaService = LambdaService.fromConfig(config)
 
     logger.info("config and services successfully initialised - processing events")
-    process(event).foreach {
+    lambdaService.processEvent(event).foreach {
       case Left(throwable) => throw throwable
       case _ => logger.info("process successful")
     }
-  }
-
-  def process(event: SQSEvent): List[Either[Throwable, BrazeResponse]]= {
-    val messages = event.getRecords.asScala.toList
-
-    messages.map( mes => {
-      for {
-        emailData <- sqsService.parseSingleMessage(mes)
-        brazeResponse <- sendEmailService.sendEmail(emailData)
-        result <- sqsService.deleteMessage(mes)
-        _ <- sqsService.processDeleteMessageResult(result)
-      } yield brazeResponse
-    })
   }
 }
