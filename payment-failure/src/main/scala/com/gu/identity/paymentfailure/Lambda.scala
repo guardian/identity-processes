@@ -7,12 +7,11 @@ import cats.syntax.either._
 
 object Lambda extends StrictLogging {
 
-  def getEnvironmentVariable(env: String): Either[Throwable, String] = {
-    Option(System.getenv(env)) match {
-      case Some(variable) => Right(variable)
-      case _ => Left(new Exception(s"Missing or incorrect config. Please check environment variables"))
-    }
-  }
+  def getEnvironmentVariable(env: String): Either[Throwable, String] =
+    Either.fromOption(
+      Option(System.getenv(env)),
+      new Exception(s"environment variable $env not defined")
+    )
 
   def getConfig: Either[Throwable, Config] = {
     for {
