@@ -13,6 +13,8 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
+  // This provides a logback appender which can be used to ensure that multi-line log messages
+  // are considered as single log events in cloudwatch. The logback.xml defines a root logger using this appender.
   "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalaj" %% "scalaj-http" % "2.3.0",
@@ -30,7 +32,7 @@ assemblyJarName := "main.jar"
 // https://stackoverflow.com/questions/25144484/sbt-assembly-deduplication-found-error
 assemblyMergeStrategy in assembly := {
   case PathList("module-info.class") => MergeStrategy.discard
-  case x => 
+  case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
 }
