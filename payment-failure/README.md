@@ -4,7 +4,8 @@ The lambda is responsible for sending emails (via Braze) related to payment fail
 In particular, it includes the user's (encrypted) email in any links in payment failure emails, so that the data can
 be used to facilitate login.
 
-The lambda is invoked by the following series of events:
+The following diagram illustrates how a payment failure event flows through our AWS infrastructure, resulting in the 
+lambda being invoked.
 
 event => email queue => [workflow](https://github.com/guardian/membership-workflow) => sns topic => identity queue => identity lambda
 
