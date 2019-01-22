@@ -50,7 +50,7 @@ object Lambda extends StrictLogging {
         // since we explicitly delete them from the queue (see LambdaService::processMessage()).
         errors => {
           val lambdaError = Error(errors)
-          logger.error(s"error occurred whilst processing event - $lambdaError")
+          logger.error(s"error occurred whilst processing event", lambdaError)
           throw lambdaError
         },
         _ => logger.info("event successfully processed")
