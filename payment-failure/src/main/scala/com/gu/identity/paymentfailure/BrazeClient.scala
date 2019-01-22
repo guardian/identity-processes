@@ -10,7 +10,7 @@ class BrazeClient(config: Config) extends StrictLogging {
 
   def sendEmail(emailData: IdentityBrazeEmailData, emailToken: String) : Either[Throwable, BrazeResponse] = {
 
-    logger.info(s"send BrazeEmail for email ${emailData.emailAddress} with token $emailToken with templateId ${emailData.templateId}")
+    logger.info(s"sending email via Braze - email data: $emailData")
 
     val sendRequest = BrazeSendRequest(config.brazeApiKey, emailData.templateId, List(BrazeRecipient(emailData.externalId, emailData.customFields + ("emailToken" -> emailToken))))
 
