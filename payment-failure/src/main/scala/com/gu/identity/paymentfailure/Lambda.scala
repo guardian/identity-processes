@@ -45,7 +45,7 @@ object Lambda extends StrictLogging {
       .fold(
         // If there are any errors in processing the event, throw an exception.
         // In which case, AWS will automatically put any messages handled by the respective lambda invocation
-        // back on the queue (so they can be retried).
+        // back on the queue (so they can be retried), or dead letter queue if max retries have been exceeded.
         // Note that messages that have been successfully processed won't be put back on the queue,
         // since we explicitly delete them from the queue (see LambdaService::processMessage()).
         errors => {
