@@ -27,3 +27,6 @@ event => email queue => [workflow](https://github.com/guardian/membership-workfl
   1. set the main SQS queue as the DLQ for the actual DLQ with Maximum Receives as 1
   2. view the content in DLQ (this will move the messages to the main queue as this is the DLQ for the actual DLQ)
   3. remove the setting so that the main queue is no more the DLQ of the actual DLQ
+  
+  __Note:__ you won't always want to put messages from the dead letter queue back on the main queue. For example, if
+  email validation fails, it will continue to fail.
