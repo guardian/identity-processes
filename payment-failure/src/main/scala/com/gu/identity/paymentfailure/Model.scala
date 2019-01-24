@@ -20,6 +20,7 @@ object BrazeRecipient {
 case class BrazeSendRequest(api_key: String, campaign_id: String, recipients: Seq[BrazeRecipient])
 
 object BrazeSendRequest {
+
   implicit val BrazeSendRequestEncoder: Encoder[BrazeSendRequest] = deriveEncoder[BrazeSendRequest]
 }
 
