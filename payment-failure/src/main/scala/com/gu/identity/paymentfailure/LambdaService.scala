@@ -9,7 +9,7 @@ import org.slf4j.MDC
 
 import scala.collection.JavaConverters._
 
-class LambdaService private (sqsService: SqsService, sendEmailService: SendEmailService) {
+class LambdaService(sqsService: SqsService, sendEmailService: SendEmailService) {
 
   def processMessage(message: SQSMessage): Either[Throwable, BrazeResponse] =
     for {
