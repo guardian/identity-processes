@@ -23,10 +23,10 @@ class IdentityClient(config: Config) extends StrictLogging {
       .header("content-type", "application/json")
 
     Either.catchNonFatal(request.asString)
-      .leftMap[Throwable](err => new RuntimeException(s"POST $path failed", err))
+      .leftMap[Throwable](err => networkError(path, err))
       .flatMap {
-        case res if res.isSuccess => decode[Res](res.body).leftMap(err => DecodingError(path, err))
-        case res => Left(new RuntimeException(s"POST $path failed with status code ${res.code}"))
+        case res if res.is2xx => decode[Res](res.body).leftMap(err => decodingError(path, err))
+        case res => Left(non2xxError(path, res.code, res.body))
       }
   }
 
@@ -47,7 +47,24 @@ object IdentityClient {
 
   @JsonCodec case class AutoSignInLinkResponseBody(token: String)
 
-  case class DecodingError(path: String, cause: io.circe.Error) extends Exception {
-    override def getMessage: String = s"unable to decode response body for path $path - ${cause.getMessage}"
+  // Used to model non 2xx responses
+  case class Non2xx(path: String, statusCode: Int, body: String) extends Exception {
+
+    override def getMessage: String = s"POST $path failed with status code $statusCode and body $body"
   }
+
+  // Utility methods for creating exceptions related to the identity client.
+  // Since these are only getting called in the context of POST requests,
+  // can augment the messages with this information.
+  // Also, no point creating specific subtypes to model these errors at the moment,
+  // since the lambda takes the same action, regardless of the error.
+
+  def networkError(path: String, cause: Throwable): Exception =
+    new Exception(s"POST $path failed", cause)
+
+  def non2xxError(path: String, statusCode: Int, body: String): Exception =
+    new Exception(s"POST $path failed with status code $statusCode and body $body")
+
+  def decodingError(path: String, cause: io.circe.Error): Exception =
+    new Exception(s"unable to decode response body for path $path", cause)
 }
