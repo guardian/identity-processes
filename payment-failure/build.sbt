@@ -22,6 +22,11 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
 
+// Enables the @JsonCodec - https://circe.github.io/circe/
+addCompilerPlugin(
+  "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
+)
+
 assemblyJarName := "main.jar"
 
 // Fixes the clashes caused by:

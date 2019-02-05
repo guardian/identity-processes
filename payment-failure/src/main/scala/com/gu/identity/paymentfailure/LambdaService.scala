@@ -12,7 +12,7 @@ class LambdaService private (sqsService: SqsService, sendEmailService: SendEmail
     event.getRecords.asScala.toList.map { message =>
       for {
         emailData <- sqsService.parseSingleMessage(message)
-        brazeResponse <- sendEmailService.sendEmail(emailData)
+        brazeResponse <- sendEmailService.sendEmailWithAutoSignInLink(emailData)
         result <- sqsService.deleteMessage(message)
         _ <- sqsService.processDeleteMessageResult(result)
       } yield brazeResponse
