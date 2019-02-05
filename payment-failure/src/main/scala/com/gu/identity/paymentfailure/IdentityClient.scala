@@ -47,12 +47,6 @@ object IdentityClient {
 
   @JsonCodec case class AutoSignInLinkResponseBody(token: String)
 
-  // Used to model non 2xx responses
-  case class Non2xx(path: String, statusCode: Int, body: String) extends Exception {
-
-    override def getMessage: String = s"POST $path failed with status code $statusCode and body $body"
-  }
-
   // Utility methods for creating exceptions related to the identity client.
   // Since these are only getting called in the context of POST requests,
   // can augment the messages with this information.
