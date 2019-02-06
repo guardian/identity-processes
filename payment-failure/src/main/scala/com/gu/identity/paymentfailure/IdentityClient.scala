@@ -34,7 +34,7 @@ class IdentityClient(config: Config) extends StrictLogging {
     executePostRequest[IdentityEmailTokenRequest, IdentityEmailTokenResponse]("/signin-token/email", requestBody)
 
   def createAutoSignInToken(requestBody: AutoSignInLinkRequestBody): Either[Throwable, AutoSignInLinkResponseBody] =
-    executePostRequest[AutoSignInLinkRequestBody, AutoSignInLinkResponseBody]("/magic-link/generate", requestBody)
+    executePostRequest[AutoSignInLinkRequestBody, AutoSignInLinkResponseBody]("/auto-signin-token", requestBody)
 }
 
 object IdentityClient {
