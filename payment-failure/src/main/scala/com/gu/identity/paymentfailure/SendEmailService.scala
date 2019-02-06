@@ -19,15 +19,6 @@ class SendEmailService(identityClient: IdentityClient, brazeClient: BrazeClient,
       response => Some(response.encryptedEmail)
     )
 
-  // Note: this is deprecated in favour of sending an email with an auto sign-in link.
-  // Keep in the code base whilst auto sign-in link hasn't been used / verified as something we want to do,
-  // with a view to possibly removing it in the future.
-  def sendEmailWithEncryptedEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
-    val encryptedEmail = encryptEmail(emailData.emailAddress)
-    val request = SendEmailService.brazeSendRequest(config.brazeApiKey, emailData, encryptedEmail, autoSignInToken = None)
-    brazeClient.sendEmail(request)
-  }
-
   // Recover from error by allowing for the auto sign in token to be optional.
   // Would rather send an email without a token than not at all.
   def createAutoSignInToken(identityId: String, email: String): Option[String] =
@@ -41,9 +32,14 @@ class SendEmailService(identityClient: IdentityClient, brazeClient: BrazeClient,
         response => Some(response.token)
       )
 
-  def sendEmailWithAutoSignInLink(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
+  // Whilst we migrate from encrypted email tokens to auto sign-in tokens,
+  // send both tokens to Braze to be embedded into payment failure links.
+  // Identity frontend can then decide which piece of information to utilise.
+  // TODO: remove encrypted email token once migration is complete.
+  def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
+    val encryptedEmailToken = encryptEmail(emailData.emailAddress)
     val autoSignInToken = createAutoSignInToken(emailData.externalId, emailData.emailAddress)
-    val request = SendEmailService.brazeSendRequest(config.brazeApiKey, emailData, encryptedEmail = None, autoSignInToken)
+    val request = SendEmailService.brazeSendRequest(config.brazeApiKey, emailData, encryptedEmailToken, autoSignInToken)
     brazeClient.sendEmail(request)
   }
 }

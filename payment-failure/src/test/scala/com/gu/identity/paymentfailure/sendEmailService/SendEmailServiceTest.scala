@@ -20,70 +20,17 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
 
   "The SendEmailService" when {
 
-    "it is used to send an email with an encrypted email token" should {
+    "it is used to send an email with auto sign-in and email tokens" should {
 
-      "trigger an email in Braze with the emailToken trigger property, if email is successfully encrypted" in new TestFixture {
-
-        val emailData = IdentityBrazeEmailData("1111", "test@test.com", "templateIdMock", Map("first name" -> "test name"))
-
-        when(identityClient.encryptEmail(IdentityEmailTokenRequest("test@test.com"))).thenReturn(Right(IdentityEmailTokenResponse("OK", "encryptedEmailString")))
-
-        val brazeRequest = BrazeSendRequest(
-          api_key = "braze-api-key",
-          campaign_id = "templateIdMock",
-          recipients = List(
-            BrazeRecipient(
-              external_user_id = "1111",
-              trigger_properties = Map(
-                "first name" -> "test name",
-                "emailToken" -> "encryptedEmailString"
-              )
-            )
-          )
-        )
-
-        sendEmailService.sendEmailWithEncryptedEmail(emailData)
-
-        verify(identityClient, times(1)).encryptEmail(IdentityEmailTokenRequest("test@test.com"))
-        verify(brazeClient, times(1)).sendEmail(brazeRequest)
-      }
-
-      "trigger an email in Braze without the emailToken trigger property, if email encryption fails" in new TestFixture {
-
-        val emailData = IdentityBrazeEmailData("1111", "test@test.com", "templateIdMock", Map("first name" -> "test name"))
-
-        val mockException = mock[Exception]
-        when(identityClient.encryptEmail(IdentityEmailTokenRequest("test@test.com"))).thenReturn(Left(mockException))
-
-        val brazeRequest = BrazeSendRequest(
-          api_key = "braze-api-key",
-          campaign_id = "templateIdMock",
-          recipients = List(
-            BrazeRecipient(
-              external_user_id = "1111",
-              trigger_properties = Map(
-                "first name" -> "test name"
-              )
-            )
-          )
-        )
-
-        sendEmailService.sendEmailWithEncryptedEmail(emailData)
-
-        verify(identityClient, times(1)).encryptEmail(IdentityEmailTokenRequest("test@test.com"))
-        verify(brazeClient, times(1)).sendEmail(brazeRequest)
-
-      }
-    }
-
-    "it is used to send an email with an auth sign-in link" should {
-
-      "trigger an email in Braze with the autoSignInToken trigger property if an auto sign in token is generated" in new TestFixture {
+      "send the email with both tokens if they have both been created" in new TestFixture {
 
         when(identityClient.createAutoSignInToken(any[AutoSignInLinkRequestBody]))
-          .thenReturn(Right(AutoSignInLinkResponseBody("token")))
+          .thenReturn(Right(AutoSignInLinkResponseBody("auto-signin-token")))
 
-        sendEmailService.sendEmailWithAutoSignInLink(
+        when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
+            .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
+
+        sendEmailService.sendEmail(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -105,7 +52,8 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
                   external_user_id = "identity-id",
                   trigger_properties = Map(
                     "name" -> "test-user",
-                    "autoSignInToken" -> "token"
+                    "autoSignInToken" -> "auto-signin-token",
+                    "emailToken" -> "email-token"
                   )
                 )
               )
@@ -113,12 +61,91 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
           )
       }
 
-      "trigger an email in Braze without the autoSignInToken trigger property if an auto sign in token isn't generated" in new TestFixture {
+      "still send them email with the auto sign-in token if the email token hasn't been created" in new TestFixture {
 
         when(identityClient.createAutoSignInToken(any[AutoSignInLinkRequestBody]))
-          .thenReturn(Left(any[Throwable]))
+          .thenReturn(Right(AutoSignInLinkResponseBody("auto-signin-token")))
 
-        sendEmailService.sendEmailWithAutoSignInLink(
+        when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
+          .thenReturn(Left(new Exception))
+
+        sendEmailService.sendEmail(
+          IdentityBrazeEmailData(
+            externalId = "identity-id",
+            emailAddress = "email",
+            templateId = "template-id",
+            customFields = Map("name" -> "test-user")
+          )
+        )
+
+        verify(identityClient, times(1))
+          .createAutoSignInToken(AutoSignInLinkRequestBody("identity-id", "email"))
+
+        verify(brazeClient, times(1))
+          .sendEmail(
+            BrazeSendRequest(
+              api_key = "braze-api-key",
+              campaign_id = "template-id",
+              recipients = List(
+                BrazeRecipient(
+                  external_user_id = "identity-id",
+                  trigger_properties = Map(
+                    "name" -> "test-user",
+                    "autoSignInToken" -> "auto-signin-token"
+                  )
+                )
+              )
+            )
+          )
+      }
+
+      "still send the email with the email token if the auto sign-in token hasn't been created" in new TestFixture {
+
+        when(identityClient.createAutoSignInToken(any[AutoSignInLinkRequestBody]))
+          .thenReturn(Left(new Exception))
+
+        when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
+          .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
+
+        sendEmailService.sendEmail(
+          IdentityBrazeEmailData(
+            externalId = "identity-id",
+            emailAddress = "email",
+            templateId = "template-id",
+            customFields = Map("name" -> "test-user")
+          )
+        )
+
+        verify(identityClient, times(1))
+          .createAutoSignInToken(AutoSignInLinkRequestBody("identity-id", "email"))
+
+        verify(brazeClient, times(1))
+          .sendEmail(
+            BrazeSendRequest(
+              api_key = "braze-api-key",
+              campaign_id = "template-id",
+              recipients = List(
+                BrazeRecipient(
+                  external_user_id = "identity-id",
+                  trigger_properties = Map(
+                    "name" -> "test-user",
+                    "emailToken" -> "email-token"
+                  )
+                )
+              )
+            )
+          )
+      }
+
+      "still send the email with no tokens if neither of them were created" in new TestFixture {
+
+        when(identityClient.createAutoSignInToken(any[AutoSignInLinkRequestBody]))
+          .thenReturn(Left(new Exception))
+
+        when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
+          .thenReturn(Left(new Exception))
+
+        sendEmailService.sendEmail(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
