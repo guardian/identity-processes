@@ -1,9 +1,8 @@
-package com.gu.identity.paymentfailure.sendEmailService
+package com.gu.identity.paymentfailure
 
-import com.gu.identity.paymentfailure._
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
 class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
 
