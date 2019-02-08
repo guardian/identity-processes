@@ -1,12 +1,11 @@
-package com.gu.identity.paymentfailure.sqsService
+package com.gu.identity.paymentfailure
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
-import com.gu.identity.paymentfailure.{Config, IdentityBrazeEmailData, SqsService}
 import io.circe.CursorOp.DownField
 import io.circe.DecodingFailure
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
 class SqsServiceTest extends WordSpec with Matchers with MockitoSugar {
 

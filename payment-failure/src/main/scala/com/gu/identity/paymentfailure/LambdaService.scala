@@ -1,22 +1,34 @@
 package com.gu.identity.paymentfailure
 
+import cats.data.ValidatedNel
+import cats.implicits._
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
 import org.slf4j.MDC
 
 import scala.collection.JavaConverters._
 
-class LambdaService private (sqsService: SqsService, sendEmailService: SendEmailService) {
+class LambdaService(sqsService: SqsService, sendEmailService: SendEmailService) {
 
-  def processEvent(event: SQSEvent): List[Either[Throwable, BrazeResponse]] =
-    event.getRecords.asScala.toList.map { message =>
-      for {
-        emailData <- sqsService.parseSingleMessage(message)
-        brazeResponse <- sendEmailService.sendEmail(emailData)
-        result <- sqsService.deleteMessage(message)
-        _ <- sqsService.processDeleteMessageResult(result)
-      } yield brazeResponse
-    }
+  def processMessage(message: SQSMessage): Either[Throwable, BrazeResponse] =
+    for {
+      emailData <- sqsService.parseSingleMessage(message)
+      brazeResponse <- sendEmailService.sendEmail(emailData)
+      // Deleting a message from the queue will mean that even if the lambda throws an error
+      // to signify that not all messages in the event have been processed successfully,
+      // messages that have been processed successfully will not be put back on the queue.
+      result <- sqsService.deleteMessage(message)
+      _ <- sqsService.processDeleteMessageResult(result)
+    } yield brazeResponse
+
+  // Returns a list of errors if there has been at least one error processing the messages.
+  // Otherwise returns a list of the successful Braze responses.
+  def processEvent(event: SQSEvent): ValidatedNel[Throwable, List[BrazeResponse]] =
+    event.getRecords.asScala.toList
+      .traverse[ValidatedNel[Throwable, ?], BrazeResponse] { message =>
+        processMessage(message).toValidatedNel
+      }
 }
 
 object LambdaService {

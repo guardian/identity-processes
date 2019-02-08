@@ -1,5 +1,6 @@
 package com.gu.identity.paymentfailure
 
+import cats.data.NonEmptyList
 import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
@@ -40,11 +41,25 @@ object Lambda extends StrictLogging {
     val lambdaService = LambdaService.fromConfig(config)
 
     logger.info("config and services successfully initialised - processing events")
-    lambdaService.processEvent(event).foreach {
-      case Left(err) =>
-        logger.error(s"unable to process event $event", err)
-        throw err
-      case _ => logger.info("process successful")
-    }
+    lambdaService.processEvent(event)
+      .fold(
+        // If there are any errors in processing the event, throw an exception.
+        // In which case, AWS will automatically put any messages handled by the respective lambda invocation
+        // back on the queue (so they can be retried), or dead letter queue if max retries have been exceeded.
+        // Note that messages that have been successfully processed won't be put back on the queue,
+        // since we explicitly delete them from the queue (see LambdaService::processMessage()).
+        errors => {
+          val lambdaError = Error(errors)
+          logger.error(s"error occurred whilst processing event", lambdaError)
+          throw lambdaError
+        },
+        _ => logger.info("event successfully processed")
+      )
+  }
+
+  // Utility class for wrapping any errors returned from LambdaService::processEvent()
+  // Facilitates throwing an error which includes everything that has gone wrong.
+  case class Error(messageErrors: NonEmptyList[Throwable]) extends Exception {
+    override def getMessage: String = s"Lambda.Error: ${messageErrors.toList.mkString(" and ")}"
   }
 }
