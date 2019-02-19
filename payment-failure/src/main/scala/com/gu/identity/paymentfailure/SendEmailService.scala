@@ -26,7 +26,7 @@ class SendEmailService(identityClient: IdentityClient, brazeClient: BrazeClient,
       .fold(
         err => {
           // TODO: monitor these errors
-          logger.error(s"unable to auto sign in token for identity id $identityId and email $email", err)
+          logger.error(s"unable to create auto sign in token for identity id $identityId and email $email", err)
           Option.empty[String]
         },
         response => Some(response.token)
