@@ -25,7 +25,7 @@ class LambdaServiceTest extends WordSpec with Matchers with MockitoSugar with Ei
   when(sqsService.parseSingleMessage(message)).thenReturn(Right(emailData))
 
   val brazeResponse = mock[BrazeResponse]
-  when(sendEmailService.sendEmail(emailData)).thenReturn(Right(brazeResponse))
+  when(sendEmailService.sendEmailSignInTokens(emailData)).thenReturn(Right(brazeResponse))
 
   val deleteMessageResult = mock[DeleteMessageResult]
   when(sqsService.deleteMessage(message)).thenReturn(Right(deleteMessageResult))

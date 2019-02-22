@@ -13,7 +13,8 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
     val config = mock[Config]
     val identityClient = mock[IdentityClient]
     val brazeClient = mock[BrazeClient]
-    val sendEmailService = new SendEmailService(identityClient, brazeClient, config)
+    val encryptedEmailTest = mock[EncryptedEmailTest]
+    val sendEmailService = new SendEmailService(identityClient, brazeClient, config, encryptedEmailTest)
 
     when(config.brazeApiKey).thenReturn("braze-api-key")
   }
@@ -30,7 +31,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
             .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
 
-        sendEmailService.sendEmail(
+        sendEmailService.sendEmailSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -69,7 +70,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Left(new Exception))
 
-        sendEmailService.sendEmail(
+        sendEmailService.sendEmailSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -107,7 +108,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
 
-        sendEmailService.sendEmail(
+        sendEmailService.sendEmailSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -145,7 +146,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Left(new Exception))
 
-        sendEmailService.sendEmail(
+        sendEmailService.sendEmailSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",

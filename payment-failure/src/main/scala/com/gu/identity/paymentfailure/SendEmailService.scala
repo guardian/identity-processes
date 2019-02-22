@@ -1,5 +1,8 @@
 package com.gu.identity.paymentfailure
 
+import BrazeClient.TriggerProperties
+import cats.syntax.either._
+import com.gu.identity.paymentfailure.EncryptedEmailTest.Variant
 import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, IdentityEmailTokenRequest}
 import com.typesafe.scalalogging.StrictLogging
 
@@ -9,6 +12,8 @@ class SendEmailService(
     config: Config,
     encryptedEmailTest: EncryptedEmailTest
 ) extends StrictLogging {
+
+  import SendEmailService._
 
   // Recover from error by allowing for the encrypted email token to be optional.
   // Would rather send an email without a token than not at all.
@@ -37,44 +42,57 @@ class SendEmailService(
         response => Some(response.token)
       )
 
+  def sendEmailWithCustomFields(emailData: IdentityBrazeEmailData, customFields: Map[String, String]): Either[Throwable, BrazeResponse] = {
+    val request = SendEmailService.brazeSendRequest(config.brazeApiKey, emailData, customFields)
+    brazeClient.sendEmail(request)
+  }
+
   // Whilst we migrate from encrypted email tokens to auto sign-in tokens,
   // send both tokens to Braze to be embedded into payment failure links.
   // Identity frontend can then decide which piece of information to utilise.
   // This method is currently be called by the lambda since an AB test is being run.
   // Keep it as it will most likely be used once the AB test is finished.
-  def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
+  def sendEmailSignInTokens(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
     val encryptedEmailToken = encryptEmail(emailData.emailAddress)
     val autoSignInToken = createAutoSignInToken(emailData.externalId, emailData.emailAddress)
-    val request = SendEmailService.brazeSendRequest(config.brazeApiKey, emailData, encryptedEmailToken, autoSignInToken)
-    brazeClient.sendEmail(request)
+    val tokenFields = List(
+      encryptedEmailToken.map(TriggerProperties.emailToken -> _),
+      autoSignInToken.map(TriggerProperties.autoSignInToken -> _)
+    ).flatten.toMap
+    sendEmailWithCustomFields(emailData, tokenFields)
   }
 
-
   def sendEmailWithEncryptedEmailTest(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
-    for {
+    (for {
       variant <- encryptedEmailTest.generateVariant(emailData.externalId, emailData.emailAddress)
-
+      customFields = testVariantToCustomFields(variant)
+      response <- sendEmailWithCustomFields(emailData, customFields)
+    } yield {
+      response
+    }).recoverWith { case _ =>
+      // Failure to send an email with the encrypted email test should not prevent the email being sent,
+      // so retry without the test data.
+      sendEmailWithCustomFields(emailData, customFields = Map.empty)
     }
   }
 }
 
 object SendEmailService {
 
+  def testVariantToCustomFields(variant: Variant): Map[String, String] = {
+    val customFields = Map(TriggerProperties.abName -> variant.testName, TriggerProperties.abVariant -> variant.name)
+    variant match {
+      case Variant.Control => customFields
+      case Variant.EncryptedEmail(token) => customFields + (TriggerProperties.emailToken -> token)
+    }
+  }
+
   def brazeSendRequest(
       brazeApiKey: String,
       emailData: IdentityBrazeEmailData,
-      encryptedEmail: Option[String],
-      autoSignInToken: Option[String]
+      customFields: Map[String, String]
   ): BrazeSendRequest = {
-    // If encryptedEmail or autoSignInToken are defined,
-    // add them to the trigger_properties so they can be utilised by templates in Braze.
-    // The keys of the respective values are what is expected in Braze e.g. emailToken
-    val tokenFields = List(
-      encryptedEmail.map("emailToken" -> _),
-      autoSignInToken.map("autoSignInToken" -> _)
-    ).flatten.toMap
-
-    val recipient = BrazeRecipient(emailData.externalId, emailData.customFields ++ tokenFields)
+    val recipient = BrazeRecipient(emailData.externalId, emailData.customFields ++ customFields)
     BrazeSendRequest(brazeApiKey, emailData.templateId, List(recipient))
   }
 }

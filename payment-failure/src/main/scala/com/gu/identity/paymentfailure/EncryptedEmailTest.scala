@@ -36,7 +36,7 @@ object EncryptedEmailTest {
       override val name: String = "control"
     }
 
-    case class EncryptedEmail private(token: String) extends Variant {
+    case class EncryptedEmail private (token: String) extends Variant {
       override val name: String = "email-token"
     }
   }
