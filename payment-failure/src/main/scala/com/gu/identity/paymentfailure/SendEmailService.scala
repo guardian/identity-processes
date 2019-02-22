@@ -3,7 +3,12 @@ package com.gu.identity.paymentfailure
 import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, IdentityEmailTokenRequest}
 import com.typesafe.scalalogging.StrictLogging
 
-class SendEmailService(identityClient: IdentityClient, brazeClient: BrazeClient, config: Config) extends StrictLogging {
+class SendEmailService(
+    identityClient: IdentityClient,
+    brazeClient: BrazeClient,
+    config: Config,
+    encryptedEmailTest: EncryptedEmailTest
+) extends StrictLogging {
 
   // Recover from error by allowing for the encrypted email token to be optional.
   // Would rather send an email without a token than not at all.
@@ -35,12 +40,21 @@ class SendEmailService(identityClient: IdentityClient, brazeClient: BrazeClient,
   // Whilst we migrate from encrypted email tokens to auto sign-in tokens,
   // send both tokens to Braze to be embedded into payment failure links.
   // Identity frontend can then decide which piece of information to utilise.
-  // TODO: remove encrypted email token once migration is complete.
+  // This method is currently be called by the lambda since an AB test is being run.
+  // Keep it as it will most likely be used once the AB test is finished.
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
     val encryptedEmailToken = encryptEmail(emailData.emailAddress)
     val autoSignInToken = createAutoSignInToken(emailData.externalId, emailData.emailAddress)
     val request = SendEmailService.brazeSendRequest(config.brazeApiKey, emailData, encryptedEmailToken, autoSignInToken)
     brazeClient.sendEmail(request)
+  }
+
+
+  def sendEmailWithEncryptedEmailTest(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
+    for {
+      variant <- encryptedEmailTest.generateVariant(emailData.externalId, emailData.emailAddress)
+
+    }
   }
 }
 
