@@ -94,6 +94,7 @@ class BrazeEmailServiceWithEncryptedBrazeEmailTest(
       customFields = testVariantToCustomFields(variant)
       response <- sendEmailWithCustomFields(emailData, customFields)
     } yield {
+      logger.info("braze email sent with encrypted email test data")
       response
     }).recoverWith { case err =>
       // Failure to send an email with the encrypted email test should not prevent the email being sent,
