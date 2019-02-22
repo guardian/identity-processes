@@ -13,7 +13,7 @@ import org.scalatest.{EitherValues, Matchers, WordSpec}
 class LambdaServiceTest extends WordSpec with Matchers with MockitoSugar with EitherValues {
 
   val sqsService = mock[SqsService]
-  val sendEmailService = mock[SendEmailService]
+  val sendEmailService = mock[DefaultBrazeEmailService]
 
   val lambdaService = new LambdaService(sqsService, sendEmailService)
 
@@ -25,7 +25,7 @@ class LambdaServiceTest extends WordSpec with Matchers with MockitoSugar with Ei
   when(sqsService.parseSingleMessage(message)).thenReturn(Right(emailData))
 
   val brazeResponse = mock[BrazeResponse]
-  when(sendEmailService.sendEmailWithSignInTokens(emailData)).thenReturn(Right(brazeResponse))
+  when(sendEmailService.sendEmail(emailData)).thenReturn(Right(brazeResponse))
 
   val deleteMessageResult = mock[DeleteMessageResult]
   when(sqsService.deleteMessage(message)).thenReturn(Right(deleteMessageResult))

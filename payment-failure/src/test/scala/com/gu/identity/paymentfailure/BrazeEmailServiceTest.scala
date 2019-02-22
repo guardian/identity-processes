@@ -7,14 +7,13 @@ import org.scalatest.mockito.MockitoSugar
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 
-class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
+class BrazeEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
 
   trait TestFixture {
     val config = mock[Config]
     val identityClient = mock[IdentityClient]
     val brazeClient = mock[BrazeClient]
-    val encryptedEmailTest = mock[EncryptedEmailTest]
-    val sendEmailService = new SendEmailService(identityClient, brazeClient, config, encryptedEmailTest)
+    val sendEmailService = new DefaultBrazeEmailService(identityClient, brazeClient, config)
 
     when(config.brazeApiKey).thenReturn("braze-api-key")
   }
@@ -31,7 +30,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
             .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
 
-        sendEmailService.sendEmailWithSignInTokens(
+        sendEmailService.sendEmail(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -70,7 +69,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Left(new Exception))
 
-        sendEmailService.sendEmailWithSignInTokens(
+        sendEmailService.sendEmail(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -108,7 +107,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
 
-        sendEmailService.sendEmailWithSignInTokens(
+        sendEmailService.sendEmail(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -146,7 +145,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Left(new Exception))
 
-        sendEmailService.sendEmailWithSignInTokens(
+        sendEmailService.sendEmail(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
