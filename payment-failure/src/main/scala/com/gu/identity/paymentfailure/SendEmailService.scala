@@ -52,7 +52,7 @@ class SendEmailService(
   // Identity frontend can then decide which piece of information to utilise.
   // This method is currently be called by the lambda since an AB test is being run.
   // Keep it as it will most likely be used once the AB test is finished.
-  def sendEmailSignInTokens(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
+  def sendEmailWithSignInTokens(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
     val encryptedEmailToken = encryptEmail(emailData.emailAddress)
     val autoSignInToken = createAutoSignInToken(emailData.externalId, emailData.emailAddress)
     val tokenFields = List(

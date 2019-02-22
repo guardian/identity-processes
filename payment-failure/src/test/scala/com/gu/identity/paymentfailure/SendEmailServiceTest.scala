@@ -31,7 +31,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
             .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
 
-        sendEmailService.sendEmailSignInTokens(
+        sendEmailService.sendEmailWithSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -70,7 +70,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Left(new Exception))
 
-        sendEmailService.sendEmailSignInTokens(
+        sendEmailService.sendEmailWithSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -108,7 +108,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
 
-        sendEmailService.sendEmailSignInTokens(
+        sendEmailService.sendEmailWithSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",
@@ -146,7 +146,7 @@ class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Left(new Exception))
 
-        sendEmailService.sendEmailSignInTokens(
+        sendEmailService.sendEmailWithSignInTokens(
           IdentityBrazeEmailData(
             externalId = "identity-id",
             emailAddress = "email",

@@ -14,7 +14,7 @@ class LambdaService(sqsService: SqsService, sendEmailService: SendEmailService) 
   def processMessage(message: SQSMessage): Either[Throwable, BrazeResponse] =
     for {
       emailData <- sqsService.parseSingleMessage(message)
-      brazeResponse <- sendEmailService.sendEmailSignInTokens(emailData)
+      brazeResponse <- sendEmailService.sendEmailWithSignInTokens(emailData)
       // Deleting a message from the queue will mean that even if the lambda throws an error
       // to signify that not all messages in the event have been processed successfully,
       // messages that have been processed successfully will not be put back on the queue.
