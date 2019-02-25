@@ -9,12 +9,12 @@ import org.slf4j.MDC
 
 import scala.collection.JavaConverters._
 
-class LambdaService(sqsService: SqsService, sendEmailService: SendEmailService) {
+class LambdaService(sqsService: SqsService, brazeEmailService: BrazeEmailService) {
 
   def processMessage(message: SQSMessage): Either[Throwable, BrazeResponse] =
     for {
       emailData <- sqsService.parseSingleMessage(message)
-      brazeResponse <- sendEmailService.sendEmail(emailData)
+      brazeResponse <- brazeEmailService.sendEmail(emailData)
       // Deleting a message from the queue will mean that even if the lambda throws an error
       // to signify that not all messages in the event have been processed successfully,
       // messages that have been processed successfully will not be put back on the queue.
@@ -33,11 +33,20 @@ class LambdaService(sqsService: SqsService, sendEmailService: SendEmailService) 
 
 object LambdaService {
 
-  def fromConfig(config: Config): LambdaService = {
+  def default(config: Config): LambdaService = {
     val identityClient = new IdentityClient(config)
     val sqsService = new SqsService(config)
     val brazeClient = new BrazeClient(config)
-    val sendEmailService = new SendEmailService(identityClient, brazeClient, config)
+    val sendEmailService = new DefaultBrazeEmailService(identityClient, brazeClient, config)
+    new LambdaService(sqsService, sendEmailService)
+  }
+
+  def encryptedEmailTest(config: Config): LambdaService = {
+    val identityClient = new IdentityClient(config)
+    val sqsService = new SqsService(config)
+    val brazeClient = new BrazeClient(config)
+    val encryptedEmailTest = new EncryptedEmailTest(identityClient)
+    val sendEmailService = new BrazeEmailServiceWithEncryptedBrazeEmailTest(brazeClient, encryptedEmailTest, config)
     new LambdaService(sqsService, sendEmailService)
   }
 

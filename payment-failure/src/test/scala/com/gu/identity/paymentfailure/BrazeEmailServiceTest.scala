@@ -7,13 +7,13 @@ import org.scalatest.mockito.MockitoSugar
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 
-class SendEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
+class BrazeEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
 
   trait TestFixture {
     val config = mock[Config]
     val identityClient = mock[IdentityClient]
     val brazeClient = mock[BrazeClient]
-    val sendEmailService = new SendEmailService(identityClient, brazeClient, config)
+    val sendEmailService = new DefaultBrazeEmailService(identityClient, brazeClient, config)
 
     when(config.brazeApiKey).thenReturn("braze-api-key")
   }

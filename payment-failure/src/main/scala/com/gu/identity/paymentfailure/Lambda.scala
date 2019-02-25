@@ -38,7 +38,9 @@ object Lambda extends StrictLogging {
       throw err
     }
 
-    val lambdaService = LambdaService.fromConfig(config)
+    // Currently running the encrypted email test
+    // TODO: switch back to using DefaultBrazeEmailService when test is finished
+    val lambdaService = LambdaService.encryptedEmailTest(config)
 
     logger.info("config and services successfully initialised - processing events")
     lambdaService.processEvent(event)

@@ -31,3 +31,14 @@ class BrazeClient(config: Config) extends StrictLogging {
     }
   }
 }
+
+object BrazeClient {
+
+  // Valid keys of trigger properties that are utilised in Braze templates.
+  object TriggerProperties {
+    val emailToken = "emailToken"
+    val autoSignInToken = "autoSignInToken"
+    val abName = "abName"
+    val abVariant = "abVariant"
+  }
+}
