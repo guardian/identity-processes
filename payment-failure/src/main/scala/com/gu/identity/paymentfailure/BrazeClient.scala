@@ -6,7 +6,6 @@ import io.circe.parser.decode
 import io.circe.syntax._
 import scalaj.http.Http
 
-
 class BrazeClient(config: Config) extends StrictLogging {
 
   def sendEmail(request: BrazeSendRequest) : Either[Throwable, BrazeResponse] = {

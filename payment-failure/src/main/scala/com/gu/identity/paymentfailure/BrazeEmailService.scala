@@ -2,8 +2,8 @@ package com.gu.identity.paymentfailure
 
 import BrazeClient.TriggerProperties
 import cats.syntax.either._
-import com.gu.identity.paymentfailure.EncryptedEmailTest.Variant
 import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, IdentityEmailTokenRequest}
+import com.gu.identity.paymentfailure.abtest.{EncryptedEmailTest, Variant, VariantGenerator}
 import com.typesafe.scalalogging.StrictLogging
 
 // Make this an abstract trait to allow different implementations of sending an email.
@@ -72,16 +72,16 @@ class DefaultBrazeEmailService(
   }
 }
 
-// (modulo errors) half of the emails sent will include the encrypted email token;
-// the other half will include no sign-in tokens.
-// There will be additional meta data (abName and abVariant) to facilitate tracking which segment a user is in.
-class BrazeEmailServiceWithEncryptedBrazeEmailTest(
+// Used to send an email with additional trigger properties (aka Braze metadata) derived from a variant in an AB test.
+// For example abName, abVariant and an additional token to facilitate sign-in.
+// See e.g. EncryptedEmailTest for a concrete example.
+class BrazeEmailServiceWithAbTest(
     brazeClient: BrazeClient,
-    encryptedEmailTest: EncryptedEmailTest,
+    variantGenerator: VariantGenerator,
     config: Config
 ) extends BrazeEmailService with StrictLogging {
 
-  import BrazeEmailServiceWithEncryptedBrazeEmailTest._
+  import BrazeEmailServiceWithAbTest._
 
   private def sendEmailWithCustomFields(emailData: IdentityBrazeEmailData, customFields: Map[String, String]): Either[Throwable, BrazeResponse] = {
     val request = BrazeEmailService.brazeSendRequest(config.brazeApiKey, emailData, customFields)
@@ -90,8 +90,8 @@ class BrazeEmailServiceWithEncryptedBrazeEmailTest(
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
     (for {
-      variant <- encryptedEmailTest.generateVariant(emailData.externalId, emailData.emailAddress)
-      customFields = testVariantToCustomFields(variant)
+      variant <- variantGenerator.generateVariant(emailData.externalId, emailData.emailAddress)
+      customFields = variantToCustomFields(variant)
       response <- sendEmailWithCustomFields(emailData, customFields)
     } yield {
       logger.info(s"braze email sent with encrypted email test data - variant data: $variant")
@@ -105,13 +105,11 @@ class BrazeEmailServiceWithEncryptedBrazeEmailTest(
   }
 }
 
-object BrazeEmailServiceWithEncryptedBrazeEmailTest {
+object BrazeEmailServiceWithAbTest {
 
-  def testVariantToCustomFields(variant: Variant): Map[String, String] = {
-    val customFields = Map(TriggerProperties.abName -> variant.testName, TriggerProperties.abVariant -> variant.name)
-    variant match {
-      case Variant.Control => customFields
-      case Variant.EncryptedEmail(token) => customFields + (TriggerProperties.emailToken -> token)
-    }
-  }
+  def variantToCustomFields(variant: Variant): Map[String, String] =
+    variant.metadata ++ Map(
+      TriggerProperties.abName -> variant.testName,
+      TriggerProperties.abVariant -> variant.variantName
+    )
 }

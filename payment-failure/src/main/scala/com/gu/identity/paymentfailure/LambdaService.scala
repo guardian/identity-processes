@@ -5,6 +5,7 @@ import cats.implicits._
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
+import com.gu.identity.paymentfailure.abtest.VariantGenerator
 import org.slf4j.MDC
 
 import scala.collection.JavaConverters._
@@ -41,12 +42,12 @@ object LambdaService {
     new LambdaService(sqsService, sendEmailService)
   }
 
-  def encryptedEmailTest(config: Config): LambdaService = {
-    val identityClient = new IdentityClient(config)
+  // Creates a lambda service which can be used to run an AB test.
+  // Test that is run is dependant on the VariantGenerator that is injected.
+  def withAbTest(config: Config, variantGenerator: VariantGenerator): LambdaService = {
     val sqsService = new SqsService(config)
     val brazeClient = new BrazeClient(config)
-    val encryptedEmailTest = new EncryptedEmailTest(identityClient)
-    val sendEmailService = new BrazeEmailServiceWithEncryptedBrazeEmailTest(brazeClient, encryptedEmailTest, config)
+    val sendEmailService = new BrazeEmailServiceWithAbTest(brazeClient, variantGenerator, config)
     new LambdaService(sqsService, sendEmailService)
   }
 
