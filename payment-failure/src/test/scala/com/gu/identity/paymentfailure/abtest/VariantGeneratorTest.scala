@@ -16,7 +16,7 @@ class VariantGeneratorTest extends WordSpec with Matchers with EitherValues {
       getSegmentId("1022333", from = 0.4, to = 0.5).isLeft shouldBe true
     }
 
-    "return a normalised ranged if the identity id falls within the test range" in {
+    "return a segment id if the identity id falls within the test range" in {
       getSegmentId(identityId = "10000400", from = 0, to = 0.8).right.value shouldEqual 0.4
       getSegmentId(identityId = "202821050", from = 0, to = 0.2).right.value shouldEqual 0.05
     }
