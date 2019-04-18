@@ -9,7 +9,9 @@ import scala.util.Random
 class EncryptedEmailTest(identityClient: IdentityClient) extends VariantGenerator {
   import EncryptedEmailTest._
 
-  def generateVariant(identityId: String, email: String): Either[Throwable, Variant] = {
+  override val abTest: String = testName
+
+  override def generateVariant(identityId: String, email: String): Either[Throwable, Variant] = {
     if (Random.nextDouble() < 1d / 2d) {
       Right(controlVariant)
     } else {
@@ -25,11 +27,13 @@ class EncryptedEmailTest(identityClient: IdentityClient) extends VariantGenerato
 
 object EncryptedEmailTest {
 
-  val controlVariant = Variant(testName = "auto-sign-in-test", variantName = "control")
+  val testName = "auto-sign-in-test"
+
+  val controlVariant = Variant(testName, variantName = "control")
 
   def emailTokenVariant(token: String): Variant =
     Variant(
-      testName = "auto-sign-in-test",
+      testName ,
       variantName = "email-token",
       metadata = Map(
         BrazeClient.TriggerProperties.emailToken -> token

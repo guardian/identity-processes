@@ -4,23 +4,23 @@ import cats.syntax.either._
 import com.gu.identity.paymentfailure.{BrazeClient, IdentityClient}
 import com.gu.identity.paymentfailure.IdentityClient.AutoSignInLinkRequestBody
 
-import scala.util.Random
-
 class AutoSignInTest(identityClient: IdentityClient) extends VariantGenerator {
   import AutoSignInTest._
 
-  override def generateVariant(identityId: String, email: String): Either[Throwable, Variant] = {
-    if (Random.nextDouble() < 1d / 2d) {
-      Right(controlVariant)
-    } else {
-      val body = AutoSignInLinkRequestBody(identityId, email)
-      identityClient.createAutoSignInToken(body)
-        .bimap(
-          err => new RuntimeException("unable to create auto sign-in token", err),
-          response => autoSignInTokenVariant(response.token)
-        )
-    }
-  }
+  override def abTest: String = testName
+
+  override def generateVariant(identityId: String, email: String): Either[Throwable, Variant] =
+    VariantGenerator.getSegmentId(identityId, from = 0, to = 0.2)
+      .flatMap {
+        case id if id < 0.1 => Right(controlVariant)
+        case _ =>
+          val body = AutoSignInLinkRequestBody(identityId, email)
+          identityClient.createAutoSignInToken(body)
+            .bimap(
+              err => new RuntimeException("unable to create auto sign-in token", err),
+              response => autoSignInTokenVariant(response.token)
+            )
+      }
 }
 
 object AutoSignInTest {

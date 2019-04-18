@@ -89,6 +89,7 @@ class BrazeEmailServiceWithAbTest(
   }
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
+    logger.info(s"sending email for test ${variantGenerator.abTest}")
     (for {
       variant <- variantGenerator.generateVariant(emailData.externalId, emailData.emailAddress)
       customFields = variantToCustomFields(variant)
@@ -99,7 +100,7 @@ class BrazeEmailServiceWithAbTest(
     }).recoverWith { case err =>
       // Failure to send an email with the encrypted email test should not prevent the email being sent,
       // so retry without the test data.
-      logger.error("failed to send email with encrypted email test data, retrying without", err)
+      logger.error(s"failed to send email with variant data for test ${variantGenerator.abTest}, retrying without", err)
       sendEmailWithCustomFields(emailData, customFields = Map.empty)
     }
   }
