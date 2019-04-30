@@ -38,3 +38,44 @@ object AutoSignInTest {
       )
     )
 }
+
+// Test to run before releasing AutoSignInTest.
+// By only send emails with the auto sign-in token to specific identity ids,
+// we can test end-to-end in production, before releasing to Guardian readers.
+class AutoSignInTestPreRelease(identityClient: IdentityClient) extends VariantGenerator {
+  import AutoSignInTestPreRelease._
+
+  override def abTest: String = testName
+
+  override def generateVariant(identityId: String, email: String): Either[Throwable, Variant] =
+    if (!autoSignInIdentityIds.contains(identityId)) {
+      Right(controlVariant)
+    } else {
+      val body = AutoSignInLinkRequestBody(identityId, email)
+      identityClient.createAutoSignInToken(body)
+        .bimap(
+          err => new RuntimeException("unable to create auto sign-in token", err),
+          response => autoSignInTokenVariant(response.token)
+        )
+    }
+}
+
+object AutoSignInTestPreRelease {
+
+  val autoSignInIdentityIds = Set(
+    "101284047"
+  )
+
+  val testName = "auto-sign-in-token-test-pre-release"
+
+  val controlVariant = Variant(testName, variantName = "control")
+
+  def autoSignInTokenVariant(token: String): Variant =
+    Variant(
+      testName,
+      variantName = "auto-sign-in-token",
+      metadata = Map(
+        BrazeClient.TriggerProperties.autoSignInToken -> token
+      )
+    )
+}
