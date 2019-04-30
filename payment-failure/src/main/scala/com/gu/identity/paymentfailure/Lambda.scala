@@ -27,6 +27,26 @@ object Lambda extends StrictLogging {
     }
   }
 
+  // Utility class for wrapping any errors returned from LambdaService::processEvent()
+  // Facilitates throwing an error which includes everything that has gone wrong.
+  case class Error(messageErrors: NonEmptyList[Throwable]) extends Exception {
+    override val getMessage: String = {
+      val messages = messageErrors.toList.map(_.getMessage)
+      s"Lambda.Error: ${messages.mkString(" and ")}"
+    }
+  }
+
+  // See handler function for why we want to throw errors.
+  def logAndThrowErrors(errors: NonEmptyList[Throwable]): Unit = {
+    logger.error("error(s) occurred whilst processing event")
+    errors.zipWithIndex.map { case (err, i) =>
+      // Log each error separately rather than building composite error message as string.
+      // Easier to get full information about each error (cause, stack trace etc).
+      logger.error(s"error ${i + 1}", err)
+    }
+    throw Error(errors)
+  }
+
   def handler(event: SQSEvent, context: Context): Unit = {
 
     LambdaService.setAWSRequestId(context)
@@ -57,24 +77,5 @@ object Lambda extends StrictLogging {
         logAndThrowErrors,
         _ => logger.info("event successfully processed")
       )
-  }
-
-  // Utility class for wrapping any errors returned from LambdaService::processEvent()
-  // Facilitates throwing an error which includes everything that has gone wrong.
-  case class Error(messageErrors: NonEmptyList[Throwable]) extends Exception {
-    override val getMessage: String = {
-      val messages = messageErrors.toList.map(_.getMessage)
-      s"Lambda.Error: ${messages.mkString(" and ")}"
-    }
-  }
-
-  def logAndThrowErrors(errors: NonEmptyList[Throwable]): Unit = {
-    logger.error("error(s) occurred whilst processing event")
-    errors.zipWithIndex.toList.foreach { case (err, i) =>
-      // Log each error separately rather than building composite error message as string.
-      // Easier to get full information about each error (cause, stack trace etc).
-      logger.error(s"error ${i + 1}", err)
-    }
-    throw Error(errors)
   }
 }
