@@ -54,11 +54,7 @@ object Lambda extends StrictLogging {
         // back on the queue (so they can be retried), or dead letter queue if max retries have been exceeded.
         // Note that messages that have been successfully processed won't be put back on the queue,
         // since we explicitly delete them from the queue (see LambdaService::processMessage()).
-        errors => {
-          val lambdaError = Error(errors)
-          logger.error(s"error occurred whilst processing event", lambdaError)
-          throw lambdaError
-        },
+        logAndThrowErrors,
         _ => logger.info("event successfully processed")
       )
   }
@@ -70,5 +66,15 @@ object Lambda extends StrictLogging {
       val messages = messageErrors.toList.map(_.getMessage)
       s"Lambda.Error: ${messages.mkString(" and ")}"
     }
+  }
+
+  def logAndThrowErrors(errors: NonEmptyList[Throwable]): Unit = {
+    logger.error("error(s) occurred whilst processing event")
+    errors.zipWithIndex.toList.foreach { case (err, i) =>
+      // Log each error separately rather than building composite error message as string.
+      // Easier to get full information about each error (cause, stack trace etc).
+      logger.error(s"error ${i + 1}", err)
+    }
+    throw Error(errors)
   }
 }
