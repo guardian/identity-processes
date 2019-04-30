@@ -66,6 +66,9 @@ object Lambda extends StrictLogging {
   // Utility class for wrapping any errors returned from LambdaService::processEvent()
   // Facilitates throwing an error which includes everything that has gone wrong.
   case class Error(messageErrors: NonEmptyList[Throwable]) extends Exception {
-    override def getMessage: String = s"Lambda.Error: ${messageErrors.toList.mkString(" and ")}"
+    override val getMessage: String = {
+      val messages = messageErrors.toList.map(_.getMessage)
+      s"Lambda.Error: ${messages.mkString(" and ")}"
+    }
   }
 }
