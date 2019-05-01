@@ -27,6 +27,26 @@ object Lambda extends StrictLogging {
     }
   }
 
+  // Utility class for wrapping any errors returned from LambdaService::processEvent()
+  // Facilitates throwing an error which includes everything that has gone wrong.
+  case class Error(messageErrors: NonEmptyList[Throwable]) extends Exception {
+    override val getMessage: String = {
+      val messages = messageErrors.toList.map(_.getMessage)
+      s"Lambda.Error: ${messages.mkString(" and ")}"
+    }
+  }
+
+  // See handler function for why we want to throw errors.
+  def logAndThrowErrors(errors: NonEmptyList[Throwable]): Unit = {
+    logger.error("error(s) occurred whilst processing event")
+    errors.zipWithIndex.map { case (err, i) =>
+      // Log each error separately rather than building composite error message as string.
+      // Easier to get full information about each error (cause, stack trace etc).
+      logger.error(s"error ${i + 1}", err)
+    }
+    throw Error(errors)
+  }
+
   def handler(event: SQSEvent, context: Context): Unit = {
 
     LambdaService.setAWSRequestId(context)
@@ -54,21 +74,8 @@ object Lambda extends StrictLogging {
         // back on the queue (so they can be retried), or dead letter queue if max retries have been exceeded.
         // Note that messages that have been successfully processed won't be put back on the queue,
         // since we explicitly delete them from the queue (see LambdaService::processMessage()).
-        errors => {
-          val lambdaError = Error(errors)
-          logger.error(s"error occurred whilst processing event", lambdaError)
-          throw lambdaError
-        },
+        logAndThrowErrors,
         _ => logger.info("event successfully processed")
       )
-  }
-
-  // Utility class for wrapping any errors returned from LambdaService::processEvent()
-  // Facilitates throwing an error which includes everything that has gone wrong.
-  case class Error(messageErrors: NonEmptyList[Throwable]) extends Exception {
-    override val getMessage: String = {
-      val messages = messageErrors.toList.map(_.getMessage)
-      s"Lambda.Error: ${messages.mkString(" and ")}"
-    }
   }
 }
