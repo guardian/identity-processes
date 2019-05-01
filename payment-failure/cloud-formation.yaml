@@ -103,6 +103,12 @@ Resources:
       Timeout: 30
       MemorySize: 512
 
+  PaymentFailureLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${PaymentFailureLambda}
+      RetentionInDays: 14
+
   PaymentFailureDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
