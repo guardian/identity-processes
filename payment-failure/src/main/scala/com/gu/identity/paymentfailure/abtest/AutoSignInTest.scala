@@ -63,7 +63,8 @@ class AutoSignInTestPreRelease(identityClient: IdentityClient) extends VariantGe
 object AutoSignInTestPreRelease {
 
   val autoSignInIdentityIds = Set(
-    "101284047"
+    "101284047",
+    "100717027"
   )
 
   val testName = "auto-sign-in-token-test-pre-release"
