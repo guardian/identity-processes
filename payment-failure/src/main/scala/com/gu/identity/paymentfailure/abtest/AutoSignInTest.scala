@@ -10,7 +10,7 @@ class AutoSignInTest(identityClient: IdentityClient) extends VariantGenerator {
   override def abTest: String = testName
 
   override def generateVariant(identityId: String, email: String): Either[Throwable, Variant] =
-    VariantGenerator.getSegmentId(identityId, from = 0, to = 0.9)
+    VariantGenerator.getSegmentId(identityId, from = 0, to = 0.2)
       .flatMap {
         case id if id < 0.1 => Right(controlVariant)
         case _ =>
