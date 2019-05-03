@@ -3,7 +3,7 @@ package com.gu.identity.paymentfailure
 import BrazeClient.TriggerProperties
 import cats.syntax.either._
 import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, IdentityEmailTokenRequest}
-import com.gu.identity.paymentfailure.abtest.{EncryptedEmailTest, Variant, VariantGenerator}
+import com.gu.identity.paymentfailure.abtest.{EncryptedEmailTest, Variant, VariantGenerator, UserNotInVariantRange}
 import com.typesafe.scalalogging.StrictLogging
 
 // Make this an abstract trait to allow different implementations of sending an email.
@@ -90,13 +90,15 @@ class BrazeEmailServiceWithAbTest(
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
     logger.info(s"sending email for test ${variantGenerator.abTest}")
-    for {
+    (for {
       variant <- variantGenerator.generateVariant(emailData.externalId, emailData.emailAddress)
       customFields = variantToCustomFields(variant)
       response <- sendEmailWithCustomFields(emailData, customFields)
     } yield {
-      logger.info(s"braze email sent with encrypted email test data - variant data: $variant")
+      logger.info(s"braze email sent with variant data for test - variant data: $variant")
       response
+    }).recoverWith {
+      case _: UserNotInVariantRange => sendEmailWithCustomFields(emailData, Map.empty)
     }
   }
 }

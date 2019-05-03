@@ -6,6 +6,10 @@ import cats.syntax.either._
 // See BrazeEmailServiceWithAbTest for more context.
 case class Variant(testName: String, variantName: String, metadata: Map[String, String] = Map.empty)
 
+case class UserNotInVariantRange(
+  message: String,
+  cause: Option[Throwable] = None) extends RuntimeException(message, cause.orNull)
+
 // Used to generate a variant for a test.
 trait VariantGenerator {
 
@@ -23,6 +27,6 @@ object VariantGenerator {
   // See test suite VariantGeneratorTest for examples.
   def getSegmentId(identityId: String, from: Double, to: Double): Either[Throwable, Double] =
     Either.catchNonFatal(identityId.takeRight(3).toDouble / 1000d)
-      .leftMap(err => new RuntimeException(s"unable to derive test segment from identity id $identityId", err))
-      .ensure(new RuntimeException(s"user not in range [$from, $to)"))(id => id >= from && id < to)
+      .leftMap(err => UserNotInVariantRange(s"unable to derive test segment from identity id $identityId", Some(err)))
+      .ensure(UserNotInVariantRange(s"user not in range [$from, $to)"))(id => id >= from && id < to)
 }
