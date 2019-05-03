@@ -4,7 +4,9 @@ import cats.syntax.either._
 
 // metadata in the variant is included in the metadata sent to Braze.
 // See BrazeEmailServiceWithAbTest for more context.
-case class Variant(testName: String, variantName: String, metadata: Map[String, String] = Map.empty)
+case class Variant(testName: String, variantName: String, metadata: Map[String, String] = Map.empty) {
+  override def toString: String = s"Test Name: $testName, Variant Name: $variantName"
+}
 
 case class UserNotInVariantRange(
   message: String,

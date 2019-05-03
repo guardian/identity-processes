@@ -89,7 +89,7 @@ class BrazeEmailServiceWithAbTest(
   }
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
-    logger.info(s"sending email for test ${variantGenerator.abTest}")
+    logger.info(s"attempting to send email for test ${variantGenerator.abTest}")
     (for {
       variant <- variantGenerator.generateVariant(emailData.externalId, emailData.emailAddress)
       customFields = variantToCustomFields(variant)
@@ -98,7 +98,10 @@ class BrazeEmailServiceWithAbTest(
       logger.info(s"braze email sent with variant data for test - variant data: $variant")
       response
     }).recoverWith {
-      case _: UserNotInVariantRange => sendEmailWithCustomFields(emailData, customFields = Map.empty)
+      case err: UserNotInVariantRange => {
+        logger.info("user not in test range, sending regular email", err)
+        sendEmailWithCustomFields(emailData, customFields = Map.empty)
+      }
     }
   }
 }
