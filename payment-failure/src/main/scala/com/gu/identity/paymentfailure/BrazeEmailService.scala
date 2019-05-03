@@ -98,7 +98,7 @@ class BrazeEmailServiceWithAbTest(
       logger.info(s"braze email sent with variant data for test - variant data: $variant")
       response
     }).recoverWith {
-      case _: UserNotInVariantRange => sendEmailWithCustomFields(emailData, Map.empty)
+      case _: UserNotInVariantRange => sendEmailWithCustomFields(emailData, customFields = Map.empty)
     }
   }
 }
