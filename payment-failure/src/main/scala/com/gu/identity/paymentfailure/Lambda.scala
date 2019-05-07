@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import cats.syntax.either._
-import com.gu.identity.paymentfailure.abtest.AutoSignInTest
+import com.gu.identity.paymentfailure.abtest.AutoSignInTestPreRelease
 
 object Lambda extends StrictLogging {
 
@@ -60,10 +60,11 @@ object Lambda extends StrictLogging {
     }
 
     // Currently running the encrypted email test
+    // TODO: switch to auto sign token test when pre release is finished
     // TODO: switch back to using DefaultBrazeEmailService when auto sign in token test is finished
     val identityClient = new IdentityClient(config)
-    val autoSignInTokenTest = new AutoSignInTest(identityClient)
-    val lambdaService = LambdaService.withAbTest(config, autoSignInTokenTest)
+    val autoSignInTokenTestPreRelease = new AutoSignInTestPreRelease(identityClient)
+    val lambdaService = LambdaService.withAbTest(config, autoSignInTokenTestPreRelease)
 
     logger.info("config and services successfully initialised - processing events")
     lambdaService.processEvent(event)
