@@ -89,13 +89,13 @@ class BrazeEmailServiceWithAbTest(
   }
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
-    logger.info(s"attempting to send email for test ${variantGenerator.abTest}")
-    (for {
+    logger.info(s"sending email for test ${variantGenerator.abTest}")
+    for {
       variant <- variantGenerator.generateVariant(emailData.externalId, emailData.emailAddress)
       customFields = variantToCustomFields(variant)
       response <- sendEmailWithCustomFields(emailData, customFields)
     } yield {
-      logger.info(s"braze email sent with variant data for test - variant data: $variant")
+      logger.info(s"braze email sent with encrypted email test data - variant data: $variant")
       response
     }).recoverWith {
       case err: UserIneligibleForAbTest => {
