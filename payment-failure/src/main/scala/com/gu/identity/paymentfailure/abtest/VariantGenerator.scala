@@ -8,7 +8,7 @@ case class Variant(testName: String, variantName: String, metadata: Map[String, 
   override def toString: String = s"Test Name: $testName, Variant Name: $variantName"
 }
 
-case class UserNotInVariantRange(
+case class UserIneligibleForAbTest(
   message: String,
   cause: Option[Throwable] = None) extends RuntimeException(message, cause.orNull)
 
@@ -29,6 +29,6 @@ object VariantGenerator {
   // See test suite VariantGeneratorTest for examples.
   def getSegmentId(identityId: String, from: Double, to: Double): Either[Throwable, Double] =
     Either.catchNonFatal(identityId.takeRight(3).toDouble / 1000d)
-      .leftMap(err => UserNotInVariantRange(s"unable to derive test segment from identity id $identityId", Some(err)))
-      .ensure(UserNotInVariantRange(s"user not in range [$from, $to)"))(id => id >= from && id < to)
+      .leftMap(err => UserIneligibleForAbTest(s"unable to derive test segment from identity id $identityId", Some(err)))
+      .ensure(UserIneligibleForAbTest(s"user not in range [$from, $to)"))(id => id >= from && id < to)
 }

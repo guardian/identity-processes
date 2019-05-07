@@ -3,7 +3,7 @@ package com.gu.identity.paymentfailure
 import BrazeClient.TriggerProperties
 import cats.syntax.either._
 import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, IdentityEmailTokenRequest}
-import com.gu.identity.paymentfailure.abtest.{EncryptedEmailTest, Variant, VariantGenerator, UserNotInVariantRange}
+import com.gu.identity.paymentfailure.abtest._
 import com.typesafe.scalalogging.StrictLogging
 
 // Make this an abstract trait to allow different implementations of sending an email.
@@ -98,7 +98,7 @@ class BrazeEmailServiceWithAbTest(
       logger.info(s"braze email sent with variant data for test - variant data: $variant")
       response
     }).recoverWith {
-      case err: UserNotInVariantRange => {
+      case err: UserIneligibleForAbTest => {
         logger.info("user not in test range, sending regular email", err)
         sendEmailWithCustomFields(emailData, customFields = Map.empty)
       }

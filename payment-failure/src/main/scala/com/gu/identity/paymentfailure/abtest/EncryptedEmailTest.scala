@@ -18,7 +18,7 @@ class EncryptedEmailTest(identityClient: IdentityClient) extends VariantGenerato
       val requestBody = IdentityEmailTokenRequest(email)
       identityClient.encryptEmail(requestBody)
         .bimap(
-          err => new RuntimeException("unable to create email token", err),
+          err => UserIneligibleForAbTest("unable to create email token", Some(err)),
           response => emailTokenVariant(response.encryptedEmail)
         )
     }

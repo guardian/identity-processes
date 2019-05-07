@@ -17,7 +17,7 @@ class AutoSignInTest(identityClient: IdentityClient) extends VariantGenerator {
           val body = AutoSignInLinkRequestBody(identityId, email)
           identityClient.createAutoSignInToken(body)
             .bimap(
-              err => new RuntimeException("unable to create auto sign-in token", err),
+              err => UserIneligibleForAbTest("unable to create auto sign-in token", Some(err)),
               response => autoSignInTokenVariant(response.token)
             )
       }
