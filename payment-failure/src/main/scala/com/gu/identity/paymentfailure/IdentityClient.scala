@@ -14,6 +14,13 @@ class IdentityClient(config: Config) extends StrictLogging {
   // Given a way of serialising the request body (Req) as JSON
   // and deserialising the response body to the target case class (Res)
   // execute a POST request against the given path.
+
+  private def decodeJson[A : Decoder](body: String): Either[IdentityClientError, A] =
+    decode[A](body).leftMap(err => IdentityClientError.fromCirceError(body, err))
+
+  private def decodeApiError(body: String): IdentityClientError =
+    decodeJson[ApiError](body).merge
+
   private def executePostRequest[Req: Encoder, Res: Decoder](path: String, requestBody: Req): Either[IdentityClientError, Res] = {
     logger.info(s"executing POST $path")
 
@@ -25,11 +32,8 @@ class IdentityClient(config: Config) extends StrictLogging {
     Either.catchNonFatal(request.asString)
       .leftMap(err => IdentityClientError.fromThrowable(err))
       .flatMap {
-        case res if res.is2xx => decode[Res](res.body).leftMap(err => IdentityClientError.fromCirceError(res.body, err))
-        case res => decode[ApiError](res.body) match {
-          case Right(apiError) => Left(IdentityClientError.fromApiError(apiError))
-          case Left(err) => Left(IdentityClientError.fromCirceError(res.body, err))
-        }
+        case res if res.is2xx => decodeJson[Res](res.body)
+        case res => Left(decodeApiError(res.body))
       }
   }
 
@@ -50,16 +54,6 @@ object IdentityClient {
 
   @JsonCodec case class AutoSignInLinkResponseBody(token: String)
 
-  @JsonCodec case class ApiError(errors: List[ApiError.Single]) extends IdentityClientError {
-    def invalidUser: Boolean = errors.exists(_.invalidUser)
-  }
-
-  object ApiError {
-    @JsonCodec case class Single(message: String) {
-      def invalidUser: Boolean = message == "Invalid user"
-    }
-  }
-
   // Models an error created by a request to the identity client; either:
   // - the API reported an error in JSON format which was successfully deserialized.
   // - an 'underlying' error occurred e.g. network error
@@ -78,6 +72,15 @@ object IdentityClient {
     def fromApiError(err: ApiError): IdentityClientError = err
   }
 
+  @JsonCodec case class ApiError(errors: List[ApiError.Single]) extends IdentityClientError {
+    def isInvalidUser: Boolean = errors.exists(_.isInvalidUser)
+  }
+
+  object ApiError {
+    @JsonCodec case class Single(message: String) {
+      def isInvalidUser: Boolean = message == "Invalid user"
+    }
+  }
 
   case class UnderlyingError(err: Throwable) extends IdentityClientError
 
