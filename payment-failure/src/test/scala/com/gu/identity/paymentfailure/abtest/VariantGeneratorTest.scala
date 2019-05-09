@@ -11,9 +11,10 @@ class VariantGeneratorTest extends WordSpec with Matchers with EitherValues {
       getSegmentId("string", from = 0, to = 1).isLeft shouldBe true
     }
 
-    "return an error if the identity id falls outside the test range" in {
+    "return a UserIneligibleForAbTest error if the identity id falls outside the test range" in {
       getSegmentId("499", from = 0.5, to = 1).isLeft shouldBe true
       getSegmentId("1022333", from = 0.4, to = 0.5).isLeft shouldBe true
+      getSegmentId("1022333", from = 0.4, to = 0.5) shouldEqual Left(UserIneligibleForAbTest(s"user not in range [0.4, 0.5]"))
     }
 
     "return a segment id if the identity id falls within the test range" in {

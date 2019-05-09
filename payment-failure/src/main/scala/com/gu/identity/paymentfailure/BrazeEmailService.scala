@@ -3,7 +3,7 @@ package com.gu.identity.paymentfailure
 import BrazeClient.TriggerProperties
 import cats.syntax.either._
 import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, IdentityEmailTokenRequest}
-import com.gu.identity.paymentfailure.abtest.{EncryptedEmailTest, Variant, VariantGenerator}
+import com.gu.identity.paymentfailure.abtest._
 import com.typesafe.scalalogging.StrictLogging
 
 // Make this an abstract trait to allow different implementations of sending an email.
@@ -89,14 +89,22 @@ class BrazeEmailServiceWithAbTest(
   }
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
-    logger.info(s"sending email for test ${variantGenerator.abTest}")
-    for {
+    logger.info(s"attempting to send email for test ${variantGenerator.abTest}")
+    (for {
       variant <- variantGenerator.generateVariant(emailData.externalId, emailData.emailAddress)
       customFields = variantToCustomFields(variant)
       response <- sendEmailWithCustomFields(emailData, customFields)
     } yield {
-      logger.info(s"braze email sent with encrypted email test data - variant data: $variant")
+      logger.info(s"braze email sent with variant data for test - variant data: $variant")
       response
+    }).recoverWith {
+      // If this is a UserIneligibleForAbTest error (which, for example, can be caused by a user not meeting the
+      // requirements to be sent an auto sign in token), we still want to send the email but without the variant
+      // meta data
+      case err: UserIneligibleForAbTest => {
+        logger.info("user ineligible for AB test, sending regular email", err)
+        sendEmailWithCustomFields(emailData, customFields = Map.empty)
+      }
     }
   }
 }
