@@ -30,5 +30,5 @@ object VariantGenerator {
   def getSegmentId(identityId: String, from: Double, to: Double): Either[Throwable, Double] =
     Either.catchNonFatal(identityId.takeRight(3).toDouble / 1000d)
       .leftMap(err => UserIneligibleForAbTest(s"unable to derive test segment from identity id $identityId", Some(err)))
-      .ensure(UserIneligibleForAbTest(s"user not in range [$from, $to)"))(id => id >= from && id < to)
+      .ensure(UserIneligibleForAbTest(s"user not in range [$from, $to]"))(id => id >= from && id < to)
 }

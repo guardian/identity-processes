@@ -1,6 +1,6 @@
 package com.gu.identity.paymentfailure
 
-import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, AutoSignInLinkResponseBody, IdentityEmailTokenRequest, IdentityEmailTokenResponse}
+import com.gu.identity.paymentfailure.IdentityClient._
 import com.gu.identity.paymentfailure.abtest.{AutoSignInTest, Variant, VariantGenerator}
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.mockito.MockitoSugar
@@ -67,7 +67,7 @@ class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSu
           .thenReturn(Right(AutoSignInLinkResponseBody("auto-signin-token")))
 
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
-          .thenReturn(Left(new Exception))
+          .thenReturn(Left(IdentityClientError.fromThrowable(new Throwable)))
 
         sendEmailService.sendEmail(
           IdentityBrazeEmailData(
@@ -102,7 +102,7 @@ class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSu
       "still send the email with the email token if the auto sign-in token hasn't been created" in new TestFixture {
 
         when(identityClient.createAutoSignInToken(any[AutoSignInLinkRequestBody]))
-          .thenReturn(Left(new Exception))
+          .thenReturn(Left(IdentityClientError.fromThrowable(new Throwable)))
 
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
           .thenReturn(Right(IdentityEmailTokenResponse("ok", "email-token")))
@@ -140,10 +140,10 @@ class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSu
       "still send the email with no tokens if neither of them were created" in new TestFixture {
 
         when(identityClient.createAutoSignInToken(any[AutoSignInLinkRequestBody]))
-          .thenReturn(Left(new Exception))
+          .thenReturn(Left(IdentityClientError.fromThrowable(new Throwable)))
 
         when(identityClient.encryptEmail(any[IdentityEmailTokenRequest]))
-          .thenReturn(Left(new Exception))
+          .thenReturn(Left(IdentityClientError.fromThrowable(new Throwable)))
 
         sendEmailService.sendEmail(
           IdentityBrazeEmailData(
