@@ -74,7 +74,7 @@ class DefaultBrazeEmailService(
 
 // Used to send an email with additional trigger properties (aka Braze metadata) derived from a variant in an AB test.
 // For example abName, abVariant and an additional token to facilitate sign-in.
-// See e.g. EncryptedEmailTest for a concrete example.
+// See e.g. AutoSignInTest for a concrete example.
 class BrazeEmailServiceWithAbTest(
     brazeClient: BrazeClient,
     variantGenerator: VariantGenerator,
