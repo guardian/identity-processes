@@ -39,7 +39,7 @@ class AutoSignInTest(identityClient: IdentityClient) extends VariantGenerator {
 
 object AutoSignInTest {
 
-  val testName = "auto-sign-in-token-test"
+  val testName = "auto-sign-in-token-test-v2"
 
   val controlVariant = Variant(testName, variantName = "control")
 
