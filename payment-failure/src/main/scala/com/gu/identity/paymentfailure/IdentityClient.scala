@@ -74,11 +74,13 @@ object IdentityClient {
 
   @JsonCodec case class ApiError(errors: List[ApiError.Single]) extends IdentityClientError {
     def isInvalidUser: Boolean = errors.exists(_.isInvalidUser)
+    def isUserNotFound: Boolean = errors.exists(_.isUserNotFound)
   }
 
   object ApiError {
     @JsonCodec case class Single(message: String) {
       def isInvalidUser: Boolean = message == "Invalid user"
+      def isUserNotFound: Boolean = message == "User not found"
     }
   }
 
