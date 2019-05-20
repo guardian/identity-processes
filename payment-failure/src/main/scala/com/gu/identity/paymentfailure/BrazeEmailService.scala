@@ -101,10 +101,9 @@ class BrazeEmailServiceWithAbTest(
       // If this is a UserIneligibleForAbTest error (which, for example, can be caused by a user not meeting the
       // requirements to be sent an auto sign in token), we still want to send the email but without the variant
       // meta data
-      case err: UserIneligibleForAbTest => {
+      case err: UserIneligibleForAbTest =>
         logger.info("user ineligible for AB test, sending regular email", err)
         sendEmailWithCustomFields(emailData, customFields = Map.empty)
-      }
     }
   }
 }

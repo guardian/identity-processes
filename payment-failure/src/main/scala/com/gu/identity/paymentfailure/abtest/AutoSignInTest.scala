@@ -14,7 +14,10 @@ class AutoSignInTest(identityClient: IdentityClient) extends VariantGenerator {
       // If the user is invalid for an auto sign-in token,
       // return an UserIneligibleForAbTest,
       // so that the BrazeEmailServiceWithAbTest will send them a regular email
-      case apiError: ApiError if apiError.isInvalidUser => UserIneligibleForAbTest("user not eligible for auto sign-in token", Some(apiError))
+      // If user not found, still attempt to send a regular email,
+      // since it might be that the braze external id is a salesforce id instead of an identity id.
+      case apiError: ApiError if apiError.isInvalidUser || apiError.isUserNotFound =>
+        UserIneligibleForAbTest("user not eligible for auto sign-in token", Some(apiError))
       // Otherwise return a RuntimeException
       // The BrazeEmailServiceWithAbTest will propagate this error,
       // meaning the lambda will be invoked again
