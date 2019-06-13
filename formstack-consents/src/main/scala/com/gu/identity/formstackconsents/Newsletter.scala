@@ -5,8 +5,6 @@ sealed trait Newsletter {
   val listType: String
   val consent: String
 
-  // TODO: are these private?
-
   case object Holidays extends Newsletter {
     val formId = "1945214"
     val listType = "set-consents"
