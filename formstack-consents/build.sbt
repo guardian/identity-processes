@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.3.3",
   "joda-time" % "joda-time" % "2.3",
   "org.joda" % "joda-convert" % "1.6",
+  "org.typelevel" %% "cats-core" % "2.0.0-M1",
   "org.jlib" % "jlib-awslambda-logback" % "1.0.0"
 )
 

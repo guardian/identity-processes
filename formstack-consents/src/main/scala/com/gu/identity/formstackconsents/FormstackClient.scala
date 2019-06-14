@@ -56,9 +56,7 @@ class FormstackClient(config: DevConfig) extends StrictLogging {
 }
 
 object FormstackClient {
-  implicit val config: Configuration = Configuration.default
-  // Scala won't allow 'type' as an argument so specifying it used @JsonKey
-  @ConfiguredJsonCodec case class FormstackConsent(field: String, label: String, @JsonKey("type") consentType: String, value: String)
+  @JsonCodec case class FormstackConsent(field: String, label: String, `type`: String, value: String)
   @JsonCodec case class FormstackSubmission(data: Map[String, FormstackConsent])
   @JsonCodec case class FormstackResponse(submissions: List[FormstackSubmission], pages: Int)
 }
