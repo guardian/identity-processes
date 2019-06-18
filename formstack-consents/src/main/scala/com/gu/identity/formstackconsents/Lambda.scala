@@ -14,7 +14,7 @@ object Lambda extends App {
 //    val lambdaService = new LambdaService(config, formstackClient, identityClient)
 //
 //    newsletters.map(lambdaService.getConsentsAndSendToIdentity)
-    println("Hello")
+    println("Hello ")
   }
 }
 
