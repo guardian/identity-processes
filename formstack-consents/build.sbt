@@ -1,4 +1,5 @@
-name := "formstack-consents"
+
+name := "formstack-consents-lambda"
 
 version := "0.1"
 
@@ -25,3 +26,18 @@ scalacOptions += "-Ypartial-unification"
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
 )
+
+assemblyJarName := "main.jar"
+
+assemblyMergeStrategy in assembly := {
+  case PathList("module-info.class") => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+
+enablePlugins(RiffRaffArtifact)
+riffRaffPackageType := assembly.value
+riffRaffUploadArtifactBucket := Option("riffraff-artifact")
+riffRaffUploadManifestBucket := Option("riffraff-builds")
+riffRaffArtifactResources += (file("cloud-formation.yaml") -> "formstack-consents-cfn/cloud-formation.yaml")

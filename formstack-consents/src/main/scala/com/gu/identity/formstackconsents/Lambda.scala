@@ -8,12 +8,13 @@ object Lambda extends App {
 
   def handler(): Unit = {
     // TODO: look into integrating parameter store through cloudformation
-    val config = new DevConfig
-    val formstackClient = new FormstackClient(config)
-    val identityClient = new IdentityClient(config)
-    val lambdaService = new LambdaService(config, formstackClient, identityClient)
-
-    newsletters.map(lambdaService.getConsentsAndSendToIdentity)
+//    val config = new DevConfig
+//    val formstackClient = new FormstackClient(config)
+//    val identityClient = new IdentityClient(config)
+//    val lambdaService = new LambdaService(config, formstackClient, identityClient)
+//
+//    newsletters.map(lambdaService.getConsentsAndSendToIdentity)
+    println("Hello")
   }
 }
 

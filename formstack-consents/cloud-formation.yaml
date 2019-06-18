@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  Stage:
+    Description: environment name
+    Type: String
+    AllowedValues:
+    - CODE
+    - PROD
+
+Resources:
+  FormstackConsentsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Lambda to send email to user who has signed up to a newsletter via Formstack
+      Handler: com.gu.identity.formstackconsents.Lambda::handler
+      Runtime: java8
+      CodeUri: !Sub s3://identity-lambda/identity/${Stage}/formstack-consents-lambda/main.jar
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:FormstackConsentsLambda-${Stage}
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/FormstackConsentsLambda-${Stage}:log-stream:*
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - ssm:GetParameter
+          Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/FormstackConsentsLambda-${Stage}
+
+  FormstackConsentsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${FormstackConsentsLambda}
+      RetentionInDays: 14
+
+  FormstackConsentsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Stage}-formstack-consents-dead-letter
