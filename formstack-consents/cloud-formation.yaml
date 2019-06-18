@@ -13,6 +13,8 @@ Resources:
   FormstackConsentsLambda:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub FormstackConsentsLambda-${Stage}
+      Timeout: 120
       Description: Lambda to send email to user who has signed up to a newsletter via Formstack
       Handler: com.gu.identity.formstackconsents.Lambda::handler
       Runtime: java8
