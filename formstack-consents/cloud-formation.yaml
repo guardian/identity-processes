@@ -16,7 +16,9 @@ Resources:
       Description: Lambda to send email to user who has signed up to a newsletter via Formstack
       Handler: com.gu.identity.formstackconsents.Lambda::handler
       Runtime: java8
-      CodeUri: !Sub s3://identity-lambda/identity/${Stage}/formstack-consents-lambda/main.jar
+      CodeUri:
+        Bucket: identity-lambda
+        Key: !Sub identity/${Stage}/formstack-consents-lambda/main.jar
       Policies:
       - Version: '2012-10-17'
         Statement:
