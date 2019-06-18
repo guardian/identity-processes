@@ -84,5 +84,5 @@ Resources:
       QueueName: !Sub ${Stage}-formstack-consents-dead-letter
 
 
-#      take as input API gateway event in Lambda UI
+#      take as input em in Lambda UI
 #      environment params
