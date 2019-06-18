@@ -9,7 +9,7 @@ import io.circe.generic.extras._
 import scalaj.http.{Http, HttpResponse}
 
 class IdentityClient(config: DevConfig) extends StrictLogging {
-  def sendConsentToIdentity(formstackConsent: FormstackConsent, newsletter: Newsletter): Either[Throwable, HttpResponse[String]] = {
+  def sendConsentToIdentity(formstackConsent: FormstackConsent, newsletter: Newsletter): Either[Throwable, Unit] = {
 
     // The key in the JSON sent to Identity depends on the listType. Sometimes the listType is 'set-lists' with a value of the consent name,
     // and sometimes the listType is 'set-consents'. See example below.
@@ -37,8 +37,7 @@ class IdentityClient(config: DevConfig) extends StrictLogging {
       .leftMap(err => new Throwable(s"Connection to identity failed: $err"))
       .flatMap {
         case res if res.is2xx =>
-          logger.info(s"successfully posted newsletter consent to identity: email: ${formstackConsent.value}, newsletter: ${newsletter.consent}")
-          Right(res)
+          Right(logger.info(s"successfully posted newsletter consent to identity: email: ${formstackConsent.value}, newsletter: ${newsletter.consent}"))
         case res =>
           val errorMessage = s"unable to post newsletter consent to identity: email: ${formstackConsent.value}, newsletter: ${newsletter.consent}"
           logger.error(errorMessage)

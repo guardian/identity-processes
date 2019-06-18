@@ -26,19 +26,15 @@ class LambdaService(config: DevConfig, formstackClient: FormstackClient, identit
   def getConsentsAndSendToIdentity(newsletter: Newsletter): Either[Throwable, Unit] = {
     formstackClient.getConsentsForNewsletter(newsletter) match {
       case Left(err) => Left(err)
-      case Right(multiplePageResponses) => processPageResponses(multiplePageResponses, newsletter)
+      case Right(multiplePageResponses) =>
+        formstackClient.getConsentsForNewsletter(newsletter) match {
+        case Left(err) => Left(err)
+        case Right(multiplePageResponses) => Right(multiplePageResponses
+          .map(pageResponse => pageResponse.submissions
+            .map(submission => getEmailConsentFromSubmission(submission)
+              .map(email => sendConsentToIdentity(email, newsletter)))))
+      }
     }
   }
-
-  def processPageResponses(pageResponses: List[FormstackClient.FormstackResponse], newsletter: Newsletter): Either[Throwable, List[HttpResponse[String]]] = {
-    val submissions: List[FormstackClient.FormstackSubmission] = pageResponses.flatMap(_.submissions)
-    val emails: List[Either[Throwable, FormstackConsent]] = submissions.map(getEmailConsentFromSubmission)
-    emails.map{ consentsOrErrors =>
-      consentsOrErrors.flatMap(consent => identityClient.sendConsentToIdentity(consent, newsletter))
-    }.sequence
-  }
-
-
-
 
 }
