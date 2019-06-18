@@ -42,6 +42,35 @@ Resources:
           Action:
           - ssm:GetParameter
           Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/FormstackConsentsLambda-${Stage}
+    Events:
+      GetApi:
+        Type: Api
+        Properties:
+          RestApiId:
+            Ref: ServlessRestApi
+          Path: /consent
+          Method: POST
+
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub ${Stage}
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          version: '1.0'
+          title:
+            Ref: AWS::StackName
+        paths:
+          /consent:
+            post:
+              x-amazon-apigateway-integration:
+                # The HTTP method used in the integration request. For Lambda function invocations, the value must be POST.
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FormstackConsentsLambda.Arn}/invocations
+              responses: {}
 
   FormstackConsentsLambdaLogGroup:
     Type: AWS::Logs::LogGroup
@@ -53,3 +82,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${Stage}-formstack-consents-dead-letter
+
+
+#      take as input API gateway event in Lambda UI
+#      environment params
