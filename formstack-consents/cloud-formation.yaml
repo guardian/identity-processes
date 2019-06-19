@@ -66,13 +66,14 @@ Resources:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FormstackConsentsLambda.Arn}/invocations
               responses: {}
 
-  ServerlessRestApiLambdaPermission:
-    DependsOn: FormstackConsentsLambda
-    Type: "AWS::Lambda::Permission"
+  FormstackConsentsLambdaPerms:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - FormstackConsentsLambda
+      - ServerlessRestApi
     Properties:
       Action: lambda:InvokeFunction
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessRestApi}/*"
-      FunctionName: !GetAtt FormstackConsentsLambda.Arn
+      FunctionName: !Ref FormstackConsentsLambda
       Principal: apigateway.amazonaws.com
 
   FormstackConsentsLambdaLogGroup:
