@@ -20,16 +20,17 @@ object Lambda extends App {
     //    newsletters.map(lambdaService.getConsentsAndSendToIdentity)
     println("Hello ")
     println(event.getBody)
-    HttpResponse.apply(body = event.getBody, code = 200, headers = Map())
     val response = """
       |{
-      |      "isBase64Encoded": true,
+      |      "isBase64Encoded": false,
       |      "statusCode": 200,
       |      "headers": { "headerName": "headerValue" },
       |      "body": "body"
       |}
     """
-    parse(response)
+    val jsonRes = parse(response)
+    println(jsonRes)
+    jsonRes
   }
 }
 
