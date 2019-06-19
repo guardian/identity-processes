@@ -2,39 +2,29 @@ package com.gu.identity.formstackconsents
 
 import com.gu.identity.globalConfig.DevConfig
 import com.amazonaws.services.lambda.runtime.events.{APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent}
-import io.circe.{Json, ParsingFailure}
-import scalaj.http.HttpResponse
-import io.circe.parser._
+import io.circe.generic.extras.{ConfiguredJsonCodec, JsonKey}
+import io.circe.parser.decode
+
+// this will change depending on form
+@ConfiguredJsonCodec case class FormstackSubmission(@JsonKey("FormID") formId: String, @JsonKey("email_address") emailAddress: String)
 
 object Lambda extends App {
 
-  val newsletters: List[Newsletter] = List(Holidays, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection)
+  def decodeFormstackSubmission(eventBody: String): Option[FormstackSubmission] = {
+    decode[FormstackSubmission](eventBody).toOption
+  }
 
   def handler(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent = {
-    // TODO: look into integrating parameter store through cloudformation
-    //    val config = new DevConfig
-    //    val formstackClient = new FormstackClient(config)
-    //    val identityClient = new IdentityClient(config)
-    //    val lambdaService = new LambdaService(config, formstackClient, identityClient)
-    //
-    //    newsletters.map(lambdaService.getConsentsAndSendToIdentity)
-    println("Hello ")
-    println(event.getBody)
-    val response =  new APIGatewayProxyResponseEvent
-    response.withStatusCode(200)
-
-//      """
-//      {
-//        "isBase64Encoded": false,
-//        "statusCode": 200,
-//        "headers": { "headerName": "headerValue" },
-//        "body": "body"
-//      }
-//    """
-//    val jsonRes = parse(response)
-//    println(jsonRes)
-//    jsonRes
-//    new APIGatewayProxyResponseEvent
+        val config = new DevConfig
+        val identityClient = new IdentityClient(config)
+//    Uncomment when ready to test
+//    (for {
+//     formstackSubmission <- decodeFormstackSubmission(event.getBody)
+//     response <- identityClient.sendConsentToIdentity(formstackSubmission)
+//   } yield response).getOrElse{
+//      val invalidResponse = new APIGatewayProxyResponseEvent
+//      invalidResponse.withStatusCode(404)
+//    }
   }
 }
 
