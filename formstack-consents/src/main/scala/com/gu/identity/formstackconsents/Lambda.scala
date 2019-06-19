@@ -21,12 +21,12 @@ object Lambda extends App {
     println("Hello ")
     println(event.getBody)
     val response = """
-      |{
-      |      "isBase64Encoded": false,
-      |      "statusCode": 200,
-      |      "headers": { "headerName": "headerValue" },
-      |      "body": "body"
-      |}
+      {
+        "isBase64Encoded": false,
+        "statusCode": 200,
+        "headers": { "headerName": "headerValue" },
+        "body": "body"
+      }
     """
     val jsonRes = parse(response)
     println(jsonRes)
