@@ -12,12 +12,14 @@ object Lambda extends App {
   @ConfiguredJsonCodec case class FormstackSubmission(@JsonKey("FormID") formId: String, @JsonKey("email_address") emailAddress: String)
 
   def decodeFormstackSubmission(eventBody: String): Option[FormstackSubmission] = {
+    println(eventBody)
     decode[FormstackSubmission](eventBody).toOption
   }
 
   def handler(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent = {
     val config = new DevConfig
     val identityClient = new IdentityClient(config)
+    println(event)
 //    Uncomment when ready to test
     (for {
      formstackSubmission <- decodeFormstackSubmission(event.getBody)
