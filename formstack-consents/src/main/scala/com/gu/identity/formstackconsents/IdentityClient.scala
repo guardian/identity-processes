@@ -1,15 +1,14 @@
 package com.gu.identity.formstackconsents
 
-import com.gu.identity.globalConfig.DevConfig
 import io.circe.syntax._
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
-import com.gu.identity.formstackconsents.Lambda.FormstackSubmission
+import com.gu.identity.formstackconsents.Lambda.{FormstackSubmission, Config}
 import com.typesafe.scalalogging.StrictLogging
 import io.circe.generic.extras._
 import scalaj.http.{Http, HttpResponse}
 import scala.util.Try
 
-class IdentityClient(config: DevConfig) extends StrictLogging {
+class IdentityClient(config: Config) extends StrictLogging {
 
   val newsletters: List[Newsletter] = List(Holidays, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection)
 
@@ -33,8 +32,8 @@ class IdentityClient(config: DevConfig) extends StrictLogging {
     val requestBody = IdentityRequest(formstackSubmission.emailAddress, List(newsletter.consent))
 
     Try {
-      Http(s"${config.Identity.host}/consent-email")
-        .headers(("Authorization", config.Identity.accessToken), ("Content-type", "application/json"), ("Accept", "text/plain"))
+      Http(s"${config.idapiHost}/consent-email")
+        .headers(("Authorization", config.idapiAccessToken), ("Content-type", "application/json"), ("Accept", "text/plain"))
         .postData(requestBody.asJson.noSpaces)
         .asString
     }.toOption

@@ -8,6 +8,15 @@ Parameters:
     AllowedValues:
     - CODE
     - PROD
+  IdentityApiEndpoint:
+    Description: endpoint for the identity API
+    Type: String
+    AllowedValues:
+    - https://idapi.theguardian.com
+    - https://idapi.code.dev-theguardian.com
+  IdentityAPIKey:
+    Description: key used to authenticate against the identity API
+    Type: String
 
 Resources:
   FormstackConsentsLambda:
@@ -17,6 +26,10 @@ Resources:
       FunctionName: !Sub FormstackConsentsLambda-${Stage}
       Timeout: 120
       Description: Lambda to send email to user who has signed up to a newsletter via Formstack
+      Environment:
+        Variables:
+          idapiHost: !Sub ${IdentityApiEndpoint}
+          idapiAccessToken: !Sub ${IdentityAPIKey}
       Handler: com.gu.identity.formstackconsents.Lambda::handler
       Runtime: java8
       CodeUri:
