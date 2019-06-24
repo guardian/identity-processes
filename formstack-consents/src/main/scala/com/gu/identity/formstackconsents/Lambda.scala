@@ -1,10 +1,12 @@
 package com.gu.identity.formstackconsents
 
 import com.amazonaws.services.lambda.runtime.events.{APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent}
+import com.typesafe.scalalogging.StrictLogging
+import io.circe.generic.JsonCodec
 import io.circe.generic.extras.{Configuration, ConfiguredJsonCodec, JsonKey}
 import io.circe.parser.decode
 
-object Lambda extends App {
+object Lambda extends App with StrictLogging {
 
   case class Config(idapiHost: String, idapiAccessToken: String)
 
@@ -20,13 +22,21 @@ object Lambda extends App {
 
   implicit val circeConfig: Configuration = Configuration.default
   // this will change depending on form
-  @ConfiguredJsonCodec case class FormstackSubmission(@JsonKey("FormID") formId: String, @JsonKey("email_address") emailAddress: String)
+  @JsonCodec case class FormstackSubmission(@JsonKey("FormID") formId: String, @JsonKey("email_address") emailAddress: String)
 
   def decodeFormstackSubmission(eventBody: String): Option[FormstackSubmission] = {
-    decode[FormstackSubmission](eventBody).toOption
+    decode[FormstackSubmission](eventBody).toOption match {
+      case Some(submission) => Some(submission)
+      case None => {
+        logger.error("Unable to decode formstack submission")
+        None
+      }
+    }
   }
 
   def handler(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent = {
+    logger.info("event" + event.toString)
+    logger.info("body" + event.getBody)
 //    Uncomment when ready to test
     (for {
       config <- getConfig
