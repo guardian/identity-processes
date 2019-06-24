@@ -15,16 +15,16 @@ object Lambda extends App {
   }
 
   def handler(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent = {
-        val config = new DevConfig
-        val identityClient = new IdentityClient(config)
+    val config = new DevConfig
+    val identityClient = new IdentityClient(config)
 //    Uncomment when ready to test
-//    (for {
-//     formstackSubmission <- decodeFormstackSubmission(event.getBody)
-//     response <- identityClient.sendConsentToIdentity(formstackSubmission)
-//   } yield response).getOrElse{
-//      val invalidResponse = new APIGatewayProxyResponseEvent
-//      invalidResponse.withStatusCode(404)
-//    }
+    (for {
+     formstackSubmission <- decodeFormstackSubmission(event.getBody)
+     response <- identityClient.sendConsentToIdentity(formstackSubmission)
+   } yield response).getOrElse{
+      val invalidResponse = new APIGatewayProxyResponseEvent
+      invalidResponse.withStatusCode(404)
+    }
   }
 }
 
