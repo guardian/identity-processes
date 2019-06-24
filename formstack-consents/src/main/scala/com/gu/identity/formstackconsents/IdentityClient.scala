@@ -3,6 +3,7 @@ package com.gu.identity.formstackconsents
 import com.gu.identity.globalConfig.DevConfig
 import io.circe.syntax._
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
+import com.gu.identity.formstackconsents.Lambda.FormstackSubmission
 import com.typesafe.scalalogging.StrictLogging
 import io.circe.generic.extras._
 import scalaj.http.{Http, HttpResponse}
@@ -32,12 +33,11 @@ class IdentityClient(config: DevConfig) extends StrictLogging {
     val requestBody = IdentityRequest(formstackSubmission.emailAddress, List(newsletter.consent))
 
     Try {
-      val response = Http(s"${config.Identity.host}/consent-email")
+      Http(s"${config.Identity.host}/consent-email")
         .headers(("Authorization", config.Identity.accessToken), ("Content-type", "application/json"), ("Accept", "text/plain"))
         .postData(requestBody.asJson.noSpaces)
         .asString
-      Some(response)
-    }.recoverWith(None)
+    }.toOption
   }
 
   def handleResponseFromIdentity(response: Option[HttpResponse[String]], formstackSubmission: FormstackSubmission, newsletter: Newsletter): Option[APIGatewayProxyResponseEvent] = {
