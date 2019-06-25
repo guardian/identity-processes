@@ -7,4 +7,5 @@ When the user clicks the link in the email, an identity account will be created 
 # Running Serless Application Model locally
 
 1. Ensure that is SAM installed. Instructions [here](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html)
+2. Change the CodeUri in cloud-formation.yaml to target/scala-2.12/main.jar
 2. Since `sam build` does not support Java 8 using SBT, use `sbt assembly` to run sam locally. Run `sbt assembly && sam local start-api -t cloud-formation.yaml -n /etc/gu/formstack-consents.json`. The -t refers to the template where the cloudformation can be found and the -n refers to a local JSON file that stores the environment variables passed to the lambda.
