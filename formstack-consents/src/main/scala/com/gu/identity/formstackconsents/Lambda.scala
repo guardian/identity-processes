@@ -7,7 +7,7 @@ import io.circe.parser.decode
 
 object Lambda extends StrictLogging {
 
-  case class Config(idapiHost: String, idapiAccessToken: String)
+  case class Config(idapiHost: String, idapiAccessToken: String, formstackSharedSecret: String)
 
   def getEnvironmentVariable(env: String): Option[String] =
     Option(System.getenv(env))
@@ -16,12 +16,18 @@ object Lambda extends StrictLogging {
     for {
       idapiHost <- getEnvironmentVariable("idapiHost")
       idapiAccessToken <- getEnvironmentVariable("idapiAccessToken")
-    } yield Config(idapiHost, idapiAccessToken)
+      formstackSharedSecret <- getEnvironmentVariable("formstackSharedSecret")
+    } yield Config(idapiHost, idapiAccessToken, formstackSharedSecret)
+  }
+
+  def verifySecretKey(formstackSharedSecret: String, secretKeyFromRequest: String): Option[Boolean] = {
+    val isValid = formstackSharedSecret == secretKeyFromRequest
+    if (isValid) { Some(true) } else { None }
   }
 
   implicit val circeConfig: Configuration = Configuration.default
   // this will change depending on form
-  @ConfiguredJsonCodec case class FormstackSubmission(@JsonKey("FormID") formId: String, @JsonKey("email_address") emailAddress: String)
+  @ConfiguredJsonCodec case class FormstackSubmission(@JsonKey("FormID") formId: String, @JsonKey("email_address") emailAddress: String, @JsonKey("HandshakeKey") handshakeKey: String)
 
   def decodeFormstackSubmission(eventBody: String): Option[FormstackSubmission] = {
     decode[FormstackSubmission](eventBody).toOption match {
@@ -35,13 +41,11 @@ object Lambda extends StrictLogging {
   }
 
   def handler(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent = {
-    logger.info("event" + event.toString)
-    logger.info("body" + event.getBody)
-//    Uncomment when ready to test
     (for {
-      config <- getConfig
-      identityClient = new IdentityClient(config)
       formstackSubmission <- decodeFormstackSubmission(event.getBody)
+      config <- getConfig
+      _ <- verifySecretKey(config.formstackSharedSecret, formstackSubmission.handshakeKey)
+      identityClient = new IdentityClient(config)
       response <- identityClient.sendConsentToIdentity(formstackSubmission)
     } yield response).getOrElse{
       val invalidResponse = new APIGatewayProxyResponseEvent
