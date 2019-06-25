@@ -17,6 +17,9 @@ Parameters:
   IdentityAPIKey:
     Description: key used to authenticate against the identity API
     Type: String
+  FormstackSharedSecret:
+    Description: The shared secret is included in the form submission data
+    Type: String
 
 Resources:
   FormstackConsentsLambda:
@@ -30,28 +33,14 @@ Resources:
         Variables:
           idapiHost: !Sub ${IdentityApiEndpoint}
           idapiAccessToken: !Sub ${IdentityAPIKey}
+          formstackSharedSecret: !Sub ${FormstackSharedSecret}
       Handler: com.gu.identity.formstackconsents.Lambda::handler
       Runtime: java8
       CodeUri:
         Bucket: identity-lambda
         Key: !Sub identity/${Stage}/formstack-consents-lambda/main.jar
-      Policies:
-      - Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Action:
-          - logs:CreateLogGroup
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-          Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/FormstackConsentsLambda-${Stage}:log-stream:*
-      - Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Action:
-          - ssm:GetParameter
-          Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/FormstackConsentsLambda-${Stage}
     Events:
-      GetApi:
+      FormstackConsentApi:
         Type: Api
         Properties:
           RestApiId:
@@ -79,28 +68,3 @@ Resources:
                 uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FormstackConsentsLambda.Arn}/invocations
               responses: {}
-
-  FormstackConsentsLambdaPerms:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - FormstackConsentsLambda
-      - ServerlessRestApi
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref FormstackConsentsLambda
-      Principal: apigateway.amazonaws.com
-
-  FormstackConsentsLambdaLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /aws/lambda/${FormstackConsentsLambda}
-      RetentionInDays: 14
-
-  FormstackConsentsDeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub ${Stage}-formstack-consents-dead-letter
-
-
-#      take as input em in Lambda UI
-#      environment params

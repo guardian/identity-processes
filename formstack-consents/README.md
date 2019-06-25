@@ -1,5 +1,5 @@
 # Formstack Consents Lambda
 
-This lambda is responsible for making calls to Formstack, getting the email address of each user who has signed up to newsletters via Formstack and making a subsequent POST request to Identity API /consent-email with the user's email address and the newsletter they signed up to. This will then trigger a confirmation email for that user. 
+Upon a submission to one of the Formstack forms specified in com.gu.identity.formstackconsents.Newsletter, webhooks set up on Formstack forms send a POST request to /consent, triggering this via an API Gateway. A once the email address and form ID has been retrieved from the Formstack submission, a POST request is then made to Identity, triggering a confirmation email to be sent to that user.
 
 When the user clicks the link in the email, an identity account will be created for them and they will be signed up to the newsletter. 

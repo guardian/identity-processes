@@ -1,10 +1,10 @@
 <configuration>
     <contextName>formstack-consents</contextName>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>%date [%thread] %-5level %logger{36}:%line - %msg%n%xException{full}</Pattern>
-        </layout>
+    <appender name="awslambda" class="org.jlib.cloud.aws.lambda.logback.AwsLambdaAppender">
+        <encoder type="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] &lt;%-36X{AWSRequestId:-request-id-not-set-by-lambda-runtime}&gt; %-5level %logger{10} - %msg%n</pattern>
+        </encoder>
     </appender>
 
     <root level="INFO">
