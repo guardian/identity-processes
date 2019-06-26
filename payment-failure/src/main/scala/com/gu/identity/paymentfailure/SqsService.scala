@@ -8,6 +8,7 @@ import com.amazonaws.services.sqs.model.{DeleteMessageRequest, DeleteMessageResu
 import com.typesafe.scalalogging.StrictLogging
 import io.circe.parser.decode
 import cats.syntax.either._
+import io.circe.Decoder
 import io.circe.parser._
 
 class SqsService(config: Config) extends StrictLogging {
@@ -16,15 +17,16 @@ class SqsService(config: Config) extends StrictLogging {
     new DefaultAWSCredentialsProviderChain,
     new InstanceProfileCredentialsProvider(false)
   )
+
   val sqsClient = AmazonSQSClientBuilder.standard().withCredentials(credentialsProvider).withRegion("eu-west-1").build()
 
-  def parseSingleMessage(sqsMessage: SQSMessage): Either[Throwable, IdentityBrazeEmailData] = {
+  def parseMessage[A : Decoder](sqsMessage: SQSMessage): Either[Throwable, A] = {
     logger.info(s"attempting to parse message body ${sqsMessage.getBody}")
     for {
       jsonMessage <- parse(sqsMessage.getBody)
       body <- jsonMessage.hcursor.downField("Message").as[String]
-      identityEmailData <- decode[IdentityBrazeEmailData](body)
-    } yield identityEmailData
+      data <- decode[A](body)
+    } yield data
   }
 
   def deleteMessage(message: SQSEvent.SQSMessage): Either[Throwable, DeleteMessageResult] = {
