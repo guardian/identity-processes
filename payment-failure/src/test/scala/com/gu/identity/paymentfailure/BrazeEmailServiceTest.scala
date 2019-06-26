@@ -32,7 +32,7 @@ class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSu
 
         sendEmailService.sendEmail(
           IdentityBrazeEmailData(
-            externalId = "identity-id",
+            externalId = BrazeExternalId.fromIdentityId(identityId = "identity-id"),
             emailAddress = "email",
             templateId = "template-id",
             customFields = Map("name" -> "test-user")
@@ -71,7 +71,7 @@ class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSu
 
         sendEmailService.sendEmail(
           IdentityBrazeEmailData(
-            externalId = "identity-id",
+            externalId = BrazeExternalId.fromIdentityId(identityId = "identity-id"),
             emailAddress = "email",
             templateId = "template-id",
             customFields = Map("name" -> "test-user")
@@ -109,7 +109,7 @@ class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSu
 
         sendEmailService.sendEmail(
           IdentityBrazeEmailData(
-            externalId = "identity-id",
+            externalId = BrazeExternalId.fromIdentityId(identityId = "identity-id"),
             emailAddress = "email",
             templateId = "template-id",
             customFields = Map("name" -> "test-user")
@@ -147,7 +147,7 @@ class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSu
 
         sendEmailService.sendEmail(
           IdentityBrazeEmailData(
-            externalId = "identity-id",
+            externalId = BrazeExternalId.fromIdentityId(identityId = "identity-id"),
             emailAddress = "email",
             templateId = "template-id",
             customFields = Map("name" -> "test-user")
@@ -212,7 +212,7 @@ class BrazeEmailServiceWithAbTestTest extends WordSpec with Matchers with Mockit
 
         sendEmailService.sendEmail(
           IdentityBrazeEmailData(
-            externalId = "identity-id",
+            externalId = BrazeExternalId.fromIdentityId(identityId = "identity-id"),
             emailAddress = "email",
             templateId = "template-id",
             customFields = Map.empty

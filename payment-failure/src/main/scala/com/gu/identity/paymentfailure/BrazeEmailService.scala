@@ -21,7 +21,7 @@ object BrazeEmailService {
     emailData: IdentityBrazeEmailData,
     customFields: Map[String, String]
   ): BrazeSendRequest = {
-    val recipient = BrazeRecipient(emailData.externalId, emailData.customFields ++ customFields)
+    val recipient = BrazeRecipient(emailData.externalId.value, emailData.customFields ++ customFields)
     BrazeSendRequest(brazeApiKey, emailData.templateId, List(recipient))
   }
 }
@@ -62,7 +62,7 @@ class DefaultBrazeEmailService(
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
     val encryptedEmailToken = encryptEmail(emailData.emailAddress)
-    val autoSignInToken = createAutoSignInToken(emailData.externalId, emailData.emailAddress)
+    val autoSignInToken = createAutoSignInToken(emailData.externalId.value, emailData.emailAddress)
     val tokenFields = List(
       encryptedEmailToken.map(TriggerProperties.emailToken -> _),
       autoSignInToken.map(TriggerProperties.autoSignInToken -> _)
@@ -91,7 +91,7 @@ class BrazeEmailServiceWithAbTest(
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
     logger.info(s"attempting to send email for test ${variantGenerator.abTest}")
     (for {
-      variant <- variantGenerator.generateVariant(emailData.externalId, emailData.emailAddress)
+      variant <- variantGenerator.generateVariant(emailData.externalId.value, emailData.emailAddress)
       customFields = variantToCustomFields(variant)
       response <- sendEmailWithCustomFields(emailData, customFields)
     } yield {
