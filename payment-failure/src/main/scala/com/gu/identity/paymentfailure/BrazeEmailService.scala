@@ -2,7 +2,6 @@ package com.gu.identity.paymentfailure
 
 import BrazeClient.TriggerProperties
 import cats.syntax.either._
-import com.gu.identity.paymentfailure.IdentityClient.{AutoSignInLinkRequestBody, IdentityEmailTokenRequest}
 import com.gu.identity.paymentfailure.abtest._
 import com.typesafe.scalalogging.StrictLogging
 
@@ -27,47 +26,10 @@ object BrazeEmailService {
 }
 
 // Sends an email with encrypted email and auto sign-in tokens included as trigger properties.
-class DefaultBrazeEmailService(
-    identityClient: IdentityClient,
-    brazeClient: BrazeClient,
-    config: Config
-) extends BrazeEmailService with StrictLogging {
-
-  // Recover from error by allowing for the encrypted email token to be optional.
-  // Would rather send an email without a token than not at all.
-  private def encryptEmail(email: String): Option[String] =
-    identityClient.encryptEmail(IdentityEmailTokenRequest(email))
-    .fold(
-      err => {
-        // TODO: monitor these errors
-        // Log this error as otherwise on folding to an option, this information would be lost.
-        logger.error(s"unable to encrypt email $email", err)
-        Option.empty[String]
-      },
-      response => Some(response.encryptedEmail)
-    )
-
-  // Recover from error by allowing for the auto sign in token to be optional.
-  // Would rather send an email without a token than not at all.
-  private def createAutoSignInToken(identityId: String, email: String): Option[String] =
-    identityClient.createAutoSignInToken(AutoSignInLinkRequestBody(identityId, email))
-      .fold(
-        err => {
-          // TODO: monitor these errors
-          logger.error(s"unable to create auto sign in token for identity id $identityId and email $email", err)
-          Option.empty[String]
-        },
-        response => Some(response.token)
-      )
+class DefaultBrazeEmailService(brazeClient: BrazeClient, config: Config) extends BrazeEmailService with StrictLogging {
 
   def sendEmail(emailData: IdentityBrazeEmailData): Either[Throwable, BrazeResponse] = {
-    val encryptedEmailToken = encryptEmail(emailData.emailAddress)
-    val autoSignInToken = createAutoSignInToken(emailData.externalId, emailData.emailAddress)
-    val tokenFields = List(
-      encryptedEmailToken.map(TriggerProperties.emailToken -> _),
-      autoSignInToken.map(TriggerProperties.autoSignInToken -> _)
-    ).flatten.toMap
-    val request = BrazeEmailService.brazeSendRequest(config.brazeApiKey, emailData, tokenFields)
+    val request = BrazeEmailService.brazeSendRequest(config.brazeApiKey, emailData, customFields = Map.empty)
     brazeClient.sendEmail(request)
   }
 }
