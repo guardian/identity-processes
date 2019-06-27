@@ -35,10 +35,9 @@ class LambdaService(sqsService: SqsService, brazeEmailService: BrazeEmailService
 object LambdaService {
 
   def default(config: Config): LambdaService = {
-    val identityClient = new IdentityClient(config)
     val sqsService = new SqsService(config)
     val brazeClient = new BrazeClient(config)
-    val sendEmailService = new DefaultBrazeEmailService(identityClient, brazeClient, config)
+    val sendEmailService = new DefaultBrazeEmailService(brazeClient, config)
     new LambdaService(sqsService, sendEmailService)
   }
 

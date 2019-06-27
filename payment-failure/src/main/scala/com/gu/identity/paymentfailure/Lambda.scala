@@ -59,11 +59,7 @@ object Lambda extends StrictLogging {
       throw err
     }
 
-    // Currently running the auto sign in test
-    // TODO: switch back to using DefaultBrazeEmailService when auto sign in token test is finished
-    val identityClient = new IdentityClient(config)
-    val autoSignInTokenTest = new AutoSignInTest(identityClient)
-    val lambdaService = LambdaService.withAbTest(config, autoSignInTokenTest)
+    val lambdaService = LambdaService.default(config)
 
     logger.info("config and services successfully initialised - processing events")
     lambdaService.processEvent(event)
