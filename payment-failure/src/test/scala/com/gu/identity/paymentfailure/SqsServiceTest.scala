@@ -21,10 +21,18 @@ class SqsServiceTest extends WordSpec with Matchers with MockitoSugar {
         """
           |{
           |   "Type": "Notification",
-          |   "Message" : "{\"externalId\":\"100001111\",\"emailAddress\":\"test@theguardian.com\",\"templateId\":\"6ec82e61-b8b0-4d11-8e5f-9914c0700f38\",\"customFields\":{\"first_name\":\"test-user-first-name\"}}"
+          |   "Message" : "{\"externalId\":{\"value\":\"100001111\",\"externalIdType\":\"IdentityId\"},\"emailAddress\":\"test@theguardian.com\",\"templateId\":\"6ec82e61-b8b0-4d11-8e5f-9914c0700f38\",\"customFields\":{\"first_name\":\"test-user-first-name\"}}"
           |}
         """.stripMargin)
-      sqsService.parseSingleMessage(sqsMessage) shouldBe Right(IdentityBrazeEmailData("100001111", "test@theguardian.com", "6ec82e61-b8b0-4d11-8e5f-9914c0700f38", Map("first_name" -> "test-user-first-name")))
+      sqsService.parseMessage[IdentityBrazeEmailData](sqsMessage) shouldBe
+        Right(
+          IdentityBrazeEmailData(
+            externalId = BrazeExternalId.fromIdentityId(identityId = "100001111"),
+            emailAddress = "test@theguardian.com",
+            templateId = "6ec82e61-b8b0-4d11-8e5f-9914c0700f38",
+            Map("first_name" -> "test-user-first-name")
+          )
+        )
     }
 
     "throw a decoder error when invalid json is passed in message body" in new TestFixture {
@@ -36,7 +44,7 @@ class SqsServiceTest extends WordSpec with Matchers with MockitoSugar {
           |}
         """.stripMargin
       )
-      sqsService.parseSingleMessage(sqsMessage) shouldBe Left(DecodingFailure("Attempt to decode value on failed cursor", List(DownField("Message"))))
+      sqsService.parseMessage[IdentityBrazeEmailData](sqsMessage) shouldBe Left(DecodingFailure("Attempt to decode value on failed cursor", List(DownField("Message"))))
     }
   }
 }
