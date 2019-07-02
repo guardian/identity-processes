@@ -15,9 +15,9 @@ class IdentityClient(config: Config) extends StrictLogging {
 
   def updateConsent(formstackSubmission: FormstackSubmission, newsletter: Newsletter): Option[HttpResponse[String]] = {
     // The key in the JSON sent to Identity depends on the listType. Sometimes the listType is 'set-lists' with a value of the consent name,
-    // and sometimes the listType is 'set-consents'. See example below.
+    // and sometimes the listType is 'set-consents'. See example body of POST request to IDAPI below.
     //  {
-    //    "email" : "lauren.emms@guardian.co.uk",
+    //    "email" : "example.test@exampledomain.co.uk",
     //    "set-consents" : "holidays"
     //  }
     val requestBody = IdentityClient.createIdentityRequest(formstackSubmission.emailAddress, newsletter)

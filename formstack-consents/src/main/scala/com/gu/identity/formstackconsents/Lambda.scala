@@ -32,7 +32,7 @@ object Lambda extends StrictLogging {
   def decodeFormstackSubmission(eventBody: String): Option[FormstackSubmission] = {
     decode[FormstackSubmission](eventBody).toOption match {
       case Some(submission) =>
-        logger.info(s"Successfully decoded formstack submission: $submission")
+        logger.info(s"Successfully decoded formstack submission. FormId: ${submission.formId}, Email: ${submission.emailAddress}")
         Some(submission)
       case None =>
         logger.error("Unable to decode formstack submission")
