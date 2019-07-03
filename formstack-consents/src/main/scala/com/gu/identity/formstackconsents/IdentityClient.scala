@@ -56,7 +56,7 @@ object IdentityClient {
 
   case class IdentityRequest(email: String, listType: List[String])
 
-  def identityRequestEncoder(newsletter: Newsletter): Encoder[IdentityRequest] = {
+  private def identityRequestEncoder(newsletter: Newsletter): Encoder[IdentityRequest] = {
 
     implicit val circeConfig: Configuration = Configuration.default.copy(
       transformMemberNames = {

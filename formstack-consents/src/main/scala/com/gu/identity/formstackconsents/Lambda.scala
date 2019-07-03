@@ -3,7 +3,6 @@ package com.gu.identity.formstackconsents
 import com.amazonaws.services.lambda.runtime.events.{APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent}
 import com.typesafe.scalalogging.StrictLogging
 import io.circe.{HCursor, Json}
-import io.circe.generic.extras.{Configuration, ConfiguredJsonCodec, JsonKey}
 import io.circe.parser._
 import com.gu.identity.formstackconsents.FormstackSubmissionDecoder.FormstackSubmission
 
