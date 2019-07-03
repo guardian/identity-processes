@@ -4,6 +4,7 @@ import io.circe.syntax._
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.gu.identity.formstackconsents.Lambda.{Config, FormstackSubmission}
 import com.typesafe.scalalogging.StrictLogging
+import io.circe.Encoder
 import io.circe.generic.extras._
 import scalaj.http.{Http, HttpResponse}
 
@@ -14,18 +15,11 @@ class IdentityClient(config: Config) extends StrictLogging {
   val newsletters: List[Newsletter] = List(Holidays, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection)
 
   def updateConsent(formstackSubmission: FormstackSubmission, newsletter: Newsletter): Option[HttpResponse[String]] = {
-    // The key in the JSON sent to Identity depends on the listType. Sometimes the listType is 'set-lists' with a value of the consent name,
-    // and sometimes the listType is 'set-consents'. See example body of POST request to IDAPI below.
-    //  {
-    //    "email" : "example.test@exampledomain.co.uk",
-    //    "set-consents" : "holidays"
-    //  }
-    val requestBody = IdentityClient.createIdentityRequest(formstackSubmission.emailAddress, newsletter)
 
     Try {
       Http(s"${config.idapiHost}/consent-email")
         .headers(("Authorization", config.idapiAccessToken), ("Content-type", "application/json"), ("Accept", "text/plain"))
-        .postData(requestBody.asJson.noSpaces)
+        .postData(IdentityClient.createRequestBody(formstackSubmission.emailAddress, newsletter))
         .asString
     }.toOption
   }
@@ -57,10 +51,10 @@ class IdentityClient(config: Config) extends StrictLogging {
 }
 
 object IdentityClient {
-  implicit val circeConfig: Configuration = Configuration.default
-  @ConfiguredJsonCodec case class IdentityRequest(email: String, listType: List[String])
 
-  def createIdentityRequest(email: String, newsletter: Newsletter): IdentityRequest = {
+  case class IdentityRequest(email: String, listType: List[String])
+
+  def identityRequestEncoder(newsletter: Newsletter): Encoder[IdentityRequest] = {
 
     implicit val circeConfig: Configuration = Configuration.default.copy(
       transformMemberNames = {
@@ -69,7 +63,20 @@ object IdentityClient {
       }
     )
 
-    IdentityRequest(email, List(newsletter.consent))
+    io.circe.generic.extras.semiauto.deriveEncoder[IdentityRequest]
   }
+
+  def createRequestBody(email: String, newsletter: Newsletter): String = {
+    // The key in the JSON sent to Identity depends on the listType. Sometimes the listType is 'set-lists' with a value of the consent name,
+    // and sometimes the listType is 'set-consents'. See example body of POST request to IDAPI below.
+    //  {
+    //    "email" : "example.test@exampledomain.co.uk",
+    //    "set-consents" : "holidays"
+    //  }
+
+    implicit val identityRequestEncoder = IdentityClient.identityRequestEncoder(newsletter)
+    IdentityRequest(email, List(newsletter.consent)).asJson.noSpaces
+  }
+
 }
 
