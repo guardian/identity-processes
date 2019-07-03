@@ -38,7 +38,6 @@ object Lambda extends StrictLogging {
   }
 
   def handler(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent = {
-    logger.info(event.getBody)
     (for {
       formstackSubmission <- decodeFormstackSubmission(event.getBody)
       config <- getConfig
