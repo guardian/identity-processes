@@ -2,10 +2,12 @@ package com.gu.identity.formstackconsents
 
 import io.circe.syntax._
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
-import com.gu.identity.formstackconsents.Lambda.{Config, FormstackSubmission}
+import com.gu.identity.formstackconsents.Lambda.Config
+import com.gu.identity.formstackconsents.FormstackSubmissionDecoder.FormstackSubmission
 import com.typesafe.scalalogging.StrictLogging
 import io.circe.Encoder
 import io.circe.generic.extras._
+import io.circe.generic.extras.semiauto.deriveEncoder
 import scalaj.http.{Http, HttpResponse}
 
 import scala.util.Try
@@ -63,7 +65,7 @@ object IdentityClient {
       }
     )
 
-    io.circe.generic.extras.semiauto.deriveEncoder[IdentityRequest]
+    deriveEncoder[IdentityRequest]
   }
 
   def createRequestBody(email: String, newsletter: Newsletter): String = {
