@@ -26,3 +26,10 @@ With SAM running locally, make a POST request to http://127.0.0.1:3000/consent w
 }`
 
 The JSON config for your local development can be downloaded with the following command and will be saved in /etc/gu/formstack-consents.json:
+
+# Formstack Form Settings
+The webhooks set up for each consent form in Formstack require the following options to be set in order for this lambda to work
+- Post with sub-field names should be ticked
+- Post Data Field Key should be set to "Post with API-friendly field keys"
+- Content Type should be set to JSON
+- Shared secret should be set to the secret defined in config
