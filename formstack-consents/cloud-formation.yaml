@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  Stage:
+    Description: environment name
+    Type: String
+    AllowedValues:
+    - CODE
+    - PROD
+  IdentityApiEndpoint:
+    Description: endpoint for the identity API
+    Type: String
+    AllowedValues:
+    - https://idapi.theguardian.com
+    - https://idapi.code.dev-theguardian.com
+  IdentityAPIKey:
+    Description: key used to authenticate against the identity API
+    Type: String
+  FormstackSharedSecret:
+    Description: The shared secret is included in the form submission data
+    Type: String
+
+Resources:
+  FormstackConsentsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 512
+      FunctionName: !Sub FormstackConsentsLambda-${Stage}
+      Timeout: 120
+      Description: Lambda to send email to user who has signed up to a newsletter via Formstack
+      Environment:
+        Variables:
+          idapiHost: !Sub ${IdentityApiEndpoint}
+          idapiAccessToken: !Sub ${IdentityAPIKey}
+          formstackSharedSecret: !Sub ${FormstackSharedSecret}
+      Handler: com.gu.identity.formstackconsents.Lambda::handler
+      Runtime: java8
+      CodeUri:
+        Bucket: identity-lambda
+        Key: !Sub identity/${Stage}/formstack-consents-lambda/main.jar
+    Events:
+      FormstackConsentApi:
+        Type: Api
+        Properties:
+          RestApiId:
+            Ref: ServlessRestApi
+          Path: /consent
+          Method: POST
+
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub ${Stage}
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          version: '1.0'
+          title:
+            Ref: AWS::StackName
+        paths:
+          /consent:
+            post:
+              x-amazon-apigateway-integration:
+                # The HTTP method used in the integration request. For Lambda function invocations, the value must be POST.
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FormstackConsentsLambda.Arn}/invocations
+              responses: {}
+
+  FormstackConsentsLambdaPerms:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+    - FormstackConsentsLambda
+    - ServerlessRestApi
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FormstackConsentsLambda
+      Principal: apigateway.amazonaws.com
