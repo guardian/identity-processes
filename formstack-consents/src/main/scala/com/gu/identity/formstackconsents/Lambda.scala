@@ -2,9 +2,9 @@ package com.gu.identity.formstackconsents
 
 import com.amazonaws.services.lambda.runtime.events.{APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent}
 import com.typesafe.scalalogging.StrictLogging
-import io.circe.{HCursor, Json}
+import cats.implicits._
+import io.circe.{Decoder, HCursor}
 import io.circe.parser._
-import com.gu.identity.formstackconsents.FormstackSubmissionDecoder.FormstackSubmission
 
 object Lambda extends StrictLogging {
 
@@ -27,13 +27,13 @@ object Lambda extends StrictLogging {
   }
 
   def decodeFormstackSubmission(eventBody: String): Option[FormstackSubmission] = {
-    FormstackSubmissionDecoder.decodeFormstackSubmission(eventBody) match {
-      case Some(submission) =>
+    decode[FormstackSubmission](eventBody) match {
+      case Left(error) =>
+        logger.error(s"Unable to decode formstack submission: $error")
+        None
+      case Right(submission) =>
         logger.info(s"Successfully decoded formstack submission. FormId: ${submission.formId}, Email: ${submission.emailAddress}")
         Some(submission)
-      case None =>
-        logger.error("Unable to decode formstack submission")
-        None
     }
   }
 
@@ -51,24 +51,23 @@ object Lambda extends StrictLogging {
   }
 }
 
-object FormstackSubmissionDecoder {
+case class FormstackSubmission(formId: String, emailAddress: String, handshakeKey: String)
 
- case class FormstackSubmission(formId: String, emailAddress: String, handshakeKey: String)
+object FormstackSubmission {
 
-  private def getEmailField(body: HCursor): Option[String] = {
-    body.get[String]("email_address").toOption match {
-      case Some(email) => Some(email)
-      case None => body.get[String]("your_email_address").toOption
-    }
+  private def getEmailField(cursor: HCursor): Decoder.Result[String] = {
+    cursor.downField("email_address").as[String]
+      .orElse(cursor.downField("your_email_address").as[String])
   }
 
-  def decodeFormstackSubmission(body: String): Option[FormstackSubmission] = {
-    val jObj: Json = parse(body).getOrElse(Json.Null)
-    val cursor: HCursor =  jObj.hcursor
-    for {
-      formId <- cursor.get[String]("FormID").toOption
-      email <- getEmailField(cursor)
-      handshakeKey <- cursor.get[String]("HandshakeKey").toOption
-    } yield FormstackSubmission(formId, email, handshakeKey)
+  implicit val formstackDecoder: Decoder[FormstackSubmission] = new Decoder[FormstackSubmission] {
+    final def apply(cursor: HCursor): Decoder.Result[FormstackSubmission] =
+      for {
+        formId <- cursor.downField("FormID").as[String]
+        email <- getEmailField(cursor)
+        handshakeKey <-  cursor.downField("HandshakeKey").as[String]
+      } yield FormstackSubmission(formId, email, handshakeKey)
   }
 }
+
+
