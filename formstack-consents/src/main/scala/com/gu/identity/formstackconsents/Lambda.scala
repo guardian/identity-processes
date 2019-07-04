@@ -46,7 +46,8 @@ object Lambda extends StrictLogging {
       response <- identityClient.sendConsentToIdentity(formstackSubmission)
     } yield response).getOrElse{
       val invalidResponse = new APIGatewayProxyResponseEvent
-      invalidResponse.withStatusCode(404)
+      logger.error("lambda unsuccessful")
+      invalidResponse.withStatusCode(500)
     }
   }
 }
