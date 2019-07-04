@@ -1,6 +1,6 @@
 # Formstack Consents Lambda
 
-Upon a submission to one of the Formstack forms specified in com.gu.identity.formstackconsents.Newsletter, webhooks set up on Formstack forms send a POST request to /consent, triggering this via an API Gateway. A once the email address and form ID has been retrieved from the Formstack submission, a POST request is then made to Identity, triggering a confirmation email to be sent to that user.
+Upon a submission to one of the Formstack forms specified in com.gu.identity.formstackconsents.Newsletter, webhooks set up via Formstack's UI send a POST request to /consent, triggering this lambda via an API Gateway. Once the email address and form ID have been retrieved from the Formstack submission, a POST request is then made to Identity, triggering a confirmation email to be sent to that user.
 
 When the user clicks the link in the email, an identity account will be created for them and they will be signed up to the newsletter. 
 
@@ -16,16 +16,20 @@ With SAM running locally, make a POST request to http://127.0.0.1:3000/consent w
 `{
     "FormID": <insert-newsletter-form-id>,
     "UniqueID": "12345678",
-    "email_address": <insert-your-guardian-email>,
+    "email_address": <insert-your-own-guardian-email>,
     "region": "Other",
     "i_am_": "Other",
     "course": "Other",
     "universitycollegeinstitute": "Other",
     "year_of_graduation": "Sep 2012",
-    "HandshakeKey": <insert-local-dev-password>
+    "HandshakeKey": <insert-code-password>
 }`
 
-The JSON config for your local development can be downloaded with the following command and will be saved in /etc/gu/formstack-consents.json:
+The JSON config for your local development can be downloaded from S3 with the following command:
+
+`sudo aws s3 cp --profile identity s3://identity-private-config/CODE/identity-formstack-consents/formstack-consents.json /etc/gu/`
+
+*Note: when testing locally, make sure to use your own email address as this will trigger an email to be sent to the specified account*
 
 # Formstack Form Settings
 The webhooks set up for each consent form in Formstack require the following options to be set in order for this lambda to work
