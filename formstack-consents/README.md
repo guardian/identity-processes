@@ -13,17 +13,17 @@ When the user clicks the link in the email, an identity account will be created 
 # Testing the endpoint
 With SAM running locally, make a POST request to http://127.0.0.1:3000/consent with the following example body:
 
-`{
-    "FormID": <INSERT-NEWSLETTER-FORM-ID>,
-    "UniqueID": "12345678",
-    "email_address": <INSERT-YOUR-OWN-EMAIL-ADDRESS>,
-    "region": "Other",
-    "i_am_": "Other",
-    "course": "Other",
-    "universitycollegeinstitute": "Other",
-    "year_of_graduation": "Sep 2012",
-    "HandshakeKey": <INSERT-CODE-FORMSTACK-SHARED-PASSWORD>
-}`
+    {
+        "FormID": <INSERT-NEWSLETTER-FORM-ID>,
+        "UniqueID": "12345678",
+        "email_address": <INSERT-YOUR-OWN-EMAIL-ADDRESS>,
+        "region": "Other",
+        "i_am_": "Other",
+        "course": "Other",
+        "universitycollegeinstitute": "Other",
+        "year_of_graduation": "Sep 2012",
+        "HandshakeKey": <INSERT-CODE-FORMSTACK-SHARED-PASSWORD>
+    }
 
 The JSON config for your local development can be downloaded from S3 with the following command:
 
