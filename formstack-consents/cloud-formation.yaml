@@ -21,7 +21,20 @@ Parameters:
     Description: The shared secret is included in the form submission data
     Type: String
 
+Conditions:
+  IsProd: !Equals
+  - !Ref 'Stage'
+  - PROD
+
 Resources:
+  TopicPagerDutyAlerts:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: PagerDutyTopic
+      Subscription:
+      - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
+        Protocol: https
+
   FormstackConsentsLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -78,3 +91,20 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref FormstackConsentsLambda
       Principal: apigateway.amazonaws.com
+
+  FormstackConsentsLambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alert when formstack consents lambda errors
+      Namespace: AWS/Lambda
+      Dimensions:
+      - Name: FunctionName
+        Value: !Ref 'FormstackConsentsLambda'
+      MetricName: Errors
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: '1'
+      Period: '60'
+      EvaluationPeriods: '1'
+      AlarmActions:
+      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
