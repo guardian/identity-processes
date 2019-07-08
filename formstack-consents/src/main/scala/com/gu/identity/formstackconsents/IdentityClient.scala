@@ -3,7 +3,6 @@ package com.gu.identity.formstackconsents
 import io.circe.syntax._
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.gu.identity.formstackconsents.Lambda.Config
-import com.gu.identity.formstackconsents.FormstackSubmissionDecoder.FormstackSubmission
 import com.typesafe.scalalogging.StrictLogging
 import io.circe.Encoder
 import io.circe.generic.extras._

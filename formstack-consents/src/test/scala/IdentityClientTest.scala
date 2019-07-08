@@ -1,5 +1,4 @@
-import com.gu.identity.formstackconsents.FormstackSubmissionDecoder.FormstackSubmission
-import com.gu.identity.formstackconsents.{Holidays, IdentityClient, Students}
+import com.gu.identity.formstackconsents.{FormstackSubmission, Holidays, IdentityClient, Students}
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.mockito.MockitoSugar
 
