@@ -11,8 +11,8 @@ The JSON config for your local development can be downloaded from S3 with the fo
 `sudo aws s3 cp --profile identity s3://identity-private-config/CODE/identity-formstack-consents/formstack-consents.json /etc/gu/`
 
 1. Ensure that is SAM installed. Instructions [here](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-mac.html)
-2. Change the CodeUri in cloud-formation.yaml to target/scala-2.12/main.jar
-2. Since `sam build` does not support Java 8 using SBT, use `sbt assembly` to run sam locally. Run `sbt assembly && sam local start-api -t cloud-formation.yaml -n /etc/gu/formstack-consents.json`. The -t refers to the template where the cloudformation can be found and the -n refers to a local JSON file that stores the environment variables passed to the lambda.
+2. Change the CodeUri in cloud-formation.yaml to: `CodeUri: target/scala-2.12/main.jar`
+3. Since `sam build` does not support Java 8 using SBT, use `sbt assembly` to run sam locally. Run `sbt assembly && sam local start-api -t cloud-formation.yaml -n /etc/gu/formstack-consents.json`. The -t refers to the template where the cloudformation can be found and the -n refers to a local JSON file that stores the environment variables passed to the lambda.
 
 # Testing the endpoint
 With SAM running locally, make a POST request to http://127.0.0.1:3000/consent with the following example body:
