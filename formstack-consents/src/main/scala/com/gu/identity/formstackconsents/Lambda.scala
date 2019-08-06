@@ -59,6 +59,7 @@ object FormstackSubmission {
   private def getEmailField(cursor: HCursor): Decoder.Result[String] = {
     cursor.downField("email_address").as[String]
       .orElse(cursor.downField("your_email_address").as[String])
+        .orElse(cursor.downField("email").as[String])
   }
 
   implicit val formstackDecoder: Decoder[FormstackSubmission] = new Decoder[FormstackSubmission] {
