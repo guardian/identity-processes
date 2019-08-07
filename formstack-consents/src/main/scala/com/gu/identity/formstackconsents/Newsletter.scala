@@ -42,8 +42,26 @@ case object SocietyWeekly extends Newsletter {
   val consent = "society-weekly"
 }
 
+// TODO is this form obsolete?
 case object EdinburghFestivalDataCollection extends Newsletter {
   val formId = "3163410"
   val listType = "set-consents"
   val consent = "supporter"
+}
+
+// Marketing Forms requiring opt in check for consent collection.
+// Formstack form can be setup with conditional logic to trigger the lambda webhook,
+// but we checked again when the submission is decoded as a precaution.
+// key-value pair must match Formstack submission data.
+abstract class MarketingConsent extends Newsletter {
+  val optInKey: String
+  val optInValue: String
+}
+
+case object EventMarketingConsentCollection extends MarketingConsent {
+  val formId = "3534972"
+  val listType = "set-consents"
+  val consent = "supporter"
+  override val optInKey: String = "supporter_consent_opt_in"
+  override val optInValue: String = "Opt in"
 }

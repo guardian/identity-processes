@@ -13,7 +13,7 @@ import scala.util.Try
 
 class IdentityClient(config: Config) extends StrictLogging {
 
-  val newsletters: List[Newsletter] = List(Holidays, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection)
+  val newsletters: List[Newsletter] = List(Holidays, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection, EventMarketingConsentCollection)
 
   def updateConsent(formstackSubmission: FormstackSubmission, newsletter: Newsletter): Option[HttpResponse[String]] = {
 
@@ -45,7 +45,7 @@ class IdentityClient(config: Config) extends StrictLogging {
     val newsletterOpt = newsletters.find(n => n.formId == formstackSubmission.formId)
 
     newsletterOpt.flatMap { newsletter => {
-      val response = updateConsent(formstackSubmission, newsletter)
+      val response = updateConsent(formstackSubmission, newsletter) 
       handleResponseFromIdentity(response, formstackSubmission, newsletter)
     }}
   }
