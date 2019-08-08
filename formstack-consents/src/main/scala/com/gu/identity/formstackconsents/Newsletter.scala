@@ -49,13 +49,12 @@ case object EdinburghFestivalDataCollection extends Newsletter {
   val consent = "supporter"
 }
 
-// Marketing Forms requiring opt in check for consent collection.
+// Some marketing Forms have an opt in checkbox for consent collection.
 // Formstack form can be setup with conditional logic to trigger the lambda webhook,
-// but we checked again when the submission is decoded as a precaution.
-// key-value pair must match Formstack submission data.
+// but we want tp check again when the submission is decoded as a precaution.
+// Add new MarketingConsent to newsletters and optInForms values in IdentityClient
 abstract class MarketingConsent extends Newsletter {
-  val optInKey: String
-  val optInValue: String
+  val optInKey: String = "opt_in" //  Request the formstack checkbox hidden label be "opt_in" if possible
 }
 
 case object EventMarketingConsentCollection extends MarketingConsent {
@@ -63,5 +62,4 @@ case object EventMarketingConsentCollection extends MarketingConsent {
   val listType = "set-consents"
   val consent = "supporter"
   override val optInKey: String = "supporter_consent_opt_in"
-  override val optInValue: String = "Opt in"
 }
