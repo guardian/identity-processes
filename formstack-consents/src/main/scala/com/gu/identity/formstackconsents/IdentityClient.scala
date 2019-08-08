@@ -15,6 +15,8 @@ class IdentityClient(config: Config) extends StrictLogging {
 
   val newsletters: List[Newsletter] = List(Holidays, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection, EventMarketingConsentCollection)
 
+  val optInForms: List[MarketingConsent] = List(EventMarketingConsentCollection)
+
   def updateConsent(formstackSubmission: FormstackSubmission, newsletter: Newsletter): Option[HttpResponse[String]] = {
 
     Try {
@@ -41,13 +43,40 @@ class IdentityClient(config: Config) extends StrictLogging {
     }
   }
 
+  def checkHasOptedIn(formstackSubmission: FormstackSubmission): Boolean = {
+    val formId = formstackSubmission.formId
+
+    optInForms.find(f => f.formId == formstackSubmission.formId) match {
+          // Extra opt in is required
+          case Some(_) =>
+            formstackSubmission.opt_in match {
+              case Some(optInValue) => optInValue // opt in required. Field present as expected.
+              case None =>
+                logger.error(s"Opt in error: Missing required opt in data for FormID: $formId")
+                false // opt in required BUT missing expected opt in field.
+            }
+         // Extra opt in NOT required
+          case None =>
+            formstackSubmission.opt_in match {
+              case None => true // opt in not required. No unexpected opt_in field present
+              case Some(_) =>
+                logger.error(s"Opt in error: Unexpected data received for FormID: $formId")
+                false // opt in not required BUT unexpected opt_in field present
+            }
+        }
+    }
+
   def sendConsentToIdentity(formstackSubmission: FormstackSubmission): Option[APIGatewayProxyResponseEvent] = {
     val newsletterOpt = newsletters.find(n => n.formId == formstackSubmission.formId)
 
-    newsletterOpt.flatMap { newsletter => {
-      val response = updateConsent(formstackSubmission, newsletter) 
-      handleResponseFromIdentity(response, formstackSubmission, newsletter)
-    }}
+    if (checkHasOptedIn(formstackSubmission)) {
+      newsletterOpt.flatMap { newsletter => {
+        val response = updateConsent(formstackSubmission, newsletter)
+        handleResponseFromIdentity(response, formstackSubmission, newsletter)
+      }}
+    } else {
+      None // form is not submitted due to missing consent opt in requirements
+    }
   }
 }
 
