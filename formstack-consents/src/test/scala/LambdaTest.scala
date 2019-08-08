@@ -48,9 +48,34 @@ class LambdaTest extends WordSpec with Matchers with MockitoSugar {
       |}
     """.stripMargin
 
-  val formstackSubmission = FormstackSubmission("3082194", "test@exampledomain.com", "secretkey")
+  val optedInEventBody =
+    """
+      |{
+      |    "FormID": "3534972",
+      |    "UniqueID": "1234567",
+      |    "HandshakeKey": "secretkey",
+      |    "your_email_address": "test@exampledomain.com",
+      |    "supporter_consent_opt_in": "Opt in"
+      |}
+    """.stripMargin
 
-  "The Lambda and FormstackSubmissionDecoder" should {
+  val notOptedInEventBody =
+    """
+      |{
+      |    "FormID": "3534972",
+      |    "UniqueID": "1234567",
+      |    "HandshakeKey": "secretkey",
+      |    "your_email_address": "test@exampledomain.com",
+      |    "supporter_consent_opt_in": null
+      |}
+    """.stripMargin
+
+
+  val formstackSubmission = FormstackSubmission("3082194", "test@exampledomain.com", "secretkey", None)
+  val optedInFormstackSubmission = FormstackSubmission("3534972", "test@exampledomain.com", "secretkey", Some(true))
+  val notOptedInFormstackSubmission = FormstackSubmission("3534972", "test@exampledomain.com", "secretkey", Some(false))
+
+  "The Lambda" should {
     "Successfully decode a valid event body with email field key as 'email_address'" in {
       Lambda.decodeFormstackSubmission(validEventBody1).shouldEqual(Some(formstackSubmission))
     }
@@ -61,6 +86,12 @@ class LambdaTest extends WordSpec with Matchers with MockitoSugar {
 
     "Unsuccessfully decode an invalid event body without an email field" in {
       Lambda.decodeFormstackSubmission(invalidEventBody).shouldEqual(None)
+    }
+    "Successfully decode event body if it has additional opt in field" in {
+       Lambda.decodeFormstackSubmission(optedInEventBody).shouldEqual(Some(optedInFormstackSubmission))
+    }
+    "Successfully decode an event body if additional opt in field is null" in {
+       Lambda.decodeFormstackSubmission(notOptedInEventBody).shouldEqual(Some(notOptedInFormstackSubmission))
     }
   }
 }
