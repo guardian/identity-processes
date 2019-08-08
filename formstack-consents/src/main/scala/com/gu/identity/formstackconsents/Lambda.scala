@@ -52,7 +52,12 @@ object Lambda extends StrictLogging {
   }
 }
 
-case class FormstackSubmission(formId: String, emailAddress: String, handshakeKey: String)
+case class FormstackSubmission(
+  formId: String,
+  emailAddress: String,
+  handshakeKey: String,
+  opt_in: Option[Boolean] = None // if required, request the formstack checkbox hidden label be "opt_in"
+)
 
 object FormstackSubmission {
 
@@ -62,14 +67,28 @@ object FormstackSubmission {
         .orElse(cursor.downField("email").as[String])
   }
 
+  // Form submissions of type MarketingConsent require the user to 'opt in' to consents, not just submit.
+  // While we can conditionally trigger lambda webhook within Formstack, these settings are not exclusively
+  // under our control so we perform an additional checks in code to ensure we are never collecting consent and user data inappropriately.
+  // Any forms with required opt ins should be added in Newsletter.scala. Request the formstack checkbox hidden label be "opt_in"
+  private def getConsentOptInField(cursor: HCursor): Option[Boolean] = {
+    val field = cursor.downField("opt_in").as[String]
+      .orElse(cursor.downField("supporter_consent_opt_in").as[String])
+
+    field match {
+      case Right(_) => Some(true) // assumes single opt in checkbox so value is irrelevant
+      case Left(error) if error.message == "Attempt to decode value on failed cursor" => None // field does not exist b/c no opt in required eg. newsletters
+      case Left(_) => Some(false) // field is null
+      }
+  }
+
   implicit val formstackDecoder: Decoder[FormstackSubmission] = new Decoder[FormstackSubmission] {
     final def apply(cursor: HCursor): Decoder.Result[FormstackSubmission] =
       for {
         formId <- cursor.downField("FormID").as[String]
         email <- getEmailField(cursor)
-        handshakeKey <-  cursor.downField("HandshakeKey").as[String]
-      } yield FormstackSubmission(formId, email, handshakeKey)
+        handshakeKey <- cursor.downField("HandshakeKey").as[String]
+        opt_in = getConsentOptInField(cursor)
+      } yield FormstackSubmission(formId, email, handshakeKey, opt_in)
   }
 }
-
-
