@@ -1,25 +1,18 @@
 # Formstack Consents Lambda
 
-Used to trigger a consent email from IDAPI upon submssion of a [Formstack](https://guardiannewsandmedia.formstack.com) newsletter signup form or marketing consent form via a webhook.
+Upon a submission to one of the [Formstack](https://guardiannewsandmedia.formstack.com) forms specified in `com.gu.identity.formstackconsents.Newsletter`, webhooks set up via Formstack's UI send a POST request to `/consent`, triggering this lambda via an API Gateway. Once the email address and form ID have been retrieved from the Formstack submission, a POST request is then made to Identity, triggering a confirmation email to be sent to that user.
+
+When the user clicks the link in the email, an identity account will be created for them and they will be signed up to the newsletter.
 
 Example Formstack newsletter signup forms used for [Professional Networks]:(https://www.theguardian.com/guardian-professional)
 - [Teacher Newsletter](https://www.theguardian.com/teacher-network/2018/mar/21/guardian-teacher-network-newsletter-sign-up)
 - [Society Newsletter](https://www.theguardian.com/society/2018/jun/20/society-weekly-email-newsletter-sign-up)
 
+**Notes:**
 
-## How the lambda works
+New newsletter or marketing consent forms must be specified in `com.gu.identity.formstackconsents.Newsletter.scala` with corresponding `FormID` from Formstack
 
-Any new newsletter or marketing consent form required must be specified in `com.gu.identity.formstackconsents.Newsletter.scala` wirh corresponding `FormID` from Formstack
-
-1. Upon a submission of one of the Formstack forms, a webhook set up via Formstack's UI sends a POST request to the lambda's `/consent` endpoint triggering this lambda via an API Gateway address.
-
-2. The lambda decodes the email address, form ID, and any additional opt in if required.
-
-3. If successfully decoded, the `IdentityClient` makes a POST request to Identity, triggering a confirmation email to be sent to that user. (Email and newsletter/consent data is carried by the token.)
-
-4. When the user clicks the link in the email, an identity account will be created for them and they will be signed up to the newsletter or have appropriated consents set. 
-
-**Note:** Formstack webhook can be set with coniditional logic in Formstack settings directly, but we perform an addditional check in the lambda as a precaution. 
+For required opt ins, Formstack webhooks be set with coniditional logic in Formstack settings directly, but we perform an addditional check in the lambda as a precaution. 
 
 ## Running Serverless Application Model locally
 
