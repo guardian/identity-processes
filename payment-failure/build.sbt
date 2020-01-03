@@ -23,7 +23,12 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalaj" %% "scalaj-http" % "2.3.0",
   "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+  
+  // Force a version of jackson-databind that addresses this vulnerability:
+  // https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-469674
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.1",
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.1",
 )
 
 // Enables the @JsonCodec - https://circe.github.io/circe/
