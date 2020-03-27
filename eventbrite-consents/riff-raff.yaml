@@ -1,0 +1,18 @@
+stacks: [identity]
+
+regions: [eu-west-1]
+
+deployments:
+  eventbrite-consents-cfn:
+    type: cloud-formation
+    parameters:
+      templatePath: cloud-formation.yaml
+
+  eventbrite-consents-lambda:
+    type: aws-lambda
+    parameters:
+      bucket: identity-lambda
+      functionNames: [EventbriteConsentsLambda-]
+      fileName: main.jar
+      prefixStack: false
+    dependencies: [eventbrite-consents-cfn]
