@@ -9,16 +9,24 @@ Parameters:
     Type: String
   EventsToken:
     Type: String
-  IsDebug:
+  Stage:
+    Description: environment name
     Type: String
     AllowedValues:
-      - true
-      - false
+      - DEV
+      - PROD
 
 Conditions:
-  IsDebug: !Equals
-    - !Ref 'IsDebug'
-    - true
+  IsProd: !Equals
+    - !Ref Stage
+    - PROD
+
+Mappings:
+  IsDebugMap:
+    DEV:
+      value: true
+    PROD:
+      value: false
 
 Resources:
   TopicPagerDutyAlerts:
@@ -44,7 +52,7 @@ Resources:
           eventsToken: !Ref EventsToken
           # update the cron expression when updating this
           syncFrequencyHours: 4
-          isDebug: !Ref IsDebug
+          isDebug: !FindInMap [IsDebugMap, !Ref Stage, value]
       Handler: com.gu.identity.eventbriteconsents.Lambda::handler
       Runtime: java8
       CodeUri:
@@ -85,4 +93,4 @@ Resources:
       Period: '60'
       EvaluationPeriods: '1'
       AlarmActions:
-      - !If [IsDebug, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
