@@ -30,6 +30,11 @@ Mappings:
       value: true
     PROD:
       value: false
+  SyncFrequencyMap:
+    values:
+      # syncFrequency needs to match cron
+      cronExpression: "cron(0 0,4,8,12,16,20 * * ? *)"
+      syncFrequencyHours: 4
 
 Resources:
   TopicPagerDutyAlerts:
@@ -53,8 +58,7 @@ Resources:
           idapiAccessToken: !Ref IdapiAccessToken
           masterclassesToken: !Ref MasterclassesToken
           eventsToken: !Ref EventsToken
-          # update the cron expression when updating this
-          syncFrequencyHours: 4
+          syncFrequencyHours: !FindInMap [SyncFrequencyMap, values, syncFrequencyHours]
           isDebug: !FindInMap [IsDebugMap, !Ref Stage, value]
       Handler: com.gu.identity.eventbriteconsents.Lambda::handler
       Runtime: java8
@@ -66,8 +70,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: "ScheduledRule"
-      # update syncFrequencyHours parameter when updating this
-      ScheduleExpression: "cron(0 0,4,8,12,16,20 * * ? *)"
+      ScheduleExpression: !FindInMap [SyncFrequencyMap, values, cronExpression]
       State: "ENABLED"
       Targets:
         - Arn: !GetAtt EventbriteConsentsLambda.Arn
