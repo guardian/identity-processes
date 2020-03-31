@@ -6,7 +6,7 @@ import scalaj.http.Http
 
 case class IdapiConsentUpdate(email: String, `set-consents`: Vector[String])
 
-class IdapiClient(idapiUrl: String, idapiAccessToken: String) {
+class IdentityClient(idapiUrl: String, idapiAccessToken: String) {
   def updateEventConsent(emailAddress: String): Unit = {
     val result = Http(s"$idapiUrl/consent-email")
       .headers(

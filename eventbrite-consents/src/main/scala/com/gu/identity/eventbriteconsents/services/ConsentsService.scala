@@ -3,11 +3,11 @@ package com.gu.identity.eventbriteconsents.services
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import com.gu.identity.eventbriteconsents.clients.{EventbriteClient, IdapiClient}
+import com.gu.identity.eventbriteconsents.clients.{EventbriteClient, IdentityClient}
 import com.gu.identity.eventbriteconsents.config.LambdaConfig
 import com.typesafe.scalalogging.LazyLogging
 
-class ConsentsService(config: LambdaConfig, eventbriteClient: EventbriteClient, identitiyClient: IdapiClient) extends LazyLogging {
+class ConsentsService(config: LambdaConfig, eventbriteClient: EventbriteClient, identitiyClient: IdentityClient) extends LazyLogging {
 
   def syncConsents(): Unit = {
     val lastRun = Instant.now().minus(config.syncFrequencyHours, ChronoUnit.HOURS)
@@ -40,7 +40,7 @@ class ConsentsService(config: LambdaConfig, eventbriteClient: EventbriteClient, 
         Thread.sleep(250)
         findConsentEmails(lastRun, token, continue, accumulated)
       case _ =>
-        accumulated
+        accumulated.map(_.toLowerCase)
     }
   }
 }
