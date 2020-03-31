@@ -5,10 +5,13 @@ Parameters:
   IdapiAccessToken:
     Description: key used to authenticate against the identity API
     Type: String
+    NoEcho: true
   MasterclassesToken:
     Type: String
+    NoEcho: true
   EventsToken:
     Type: String
+    NoEcho: true
   Stage:
     Description: environment name
     Type: String
