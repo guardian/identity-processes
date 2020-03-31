@@ -2,29 +2,23 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 
 Parameters:
-  Stage:
-    Description: environment name
-    Type: String
-    AllowedValues:
-    - CODE
-    - PROD
-  IdentityApiEndpoint:
-    Description: endpoint for the identity API
-    Type: String
-    AllowedValues:
-    - https://idapi.theguardian.com
-    - https://idapi.code.dev-theguardian.com
-  IdentityAPIKey:
+  IdapiAccessToken:
     Description: key used to authenticate against the identity API
     Type: String
-  EventbriteSharedSecret:
-    Description: The shared secret is included in the form submission data
+  MasterclassesToken:
     Type: String
+  EventsToken:
+    Type: String
+  IsDebug:
+    Type: String
+    AllowedValues:
+      - true
+      - false
 
 Conditions:
-  IsProd: !Equals
-  - !Ref 'Stage'
-  - PROD
+  IsDebug: !Equals
+    - !Ref 'IsDebug'
+    - true
 
 Resources:
   TopicPagerDutyAlerts:
@@ -44,53 +38,37 @@ Resources:
       Description: Lambda to send email to user who has signed up to a newsletter via Eventbrite
       Environment:
         Variables:
-          idapiHost: !Sub ${IdentityApiEndpoint}
-          idapiAccessToken: !Sub ${IdentityAPIKey}
-          eventbriteSharedSecret: !Sub ${EventbriteSharedSecret}
+          idapiHost: "https://idapi.theguardian.com"
+          idapiAccessToken: !Ref IdapiAccessToken
+          masterclassesToken: !Ref MasterclassesToken
+          eventsToken: !Ref EventsToken
+          # update the cron expression when updating this
+          syncFrequencyHours: 4
+          isDebug: !Ref IsDebug
       Handler: com.gu.identity.eventbriteconsents.Lambda::handler
       Runtime: java8
       CodeUri:
         Bucket: identity-lambda
         Key: !Sub identity/${Stage}/eventbrite-consents-lambda/main.jar
-    Events:
-      EventbriteConsentApi:
-        Type: Api
-        Properties:
-          RestApiId:
-            Ref: ServlessRestApi
-          Path: /consent
-          Method: POST
 
-  ServerlessRestApi:
-    Type: AWS::Serverless::Api
+  ScheduledRule:
+    Type: AWS::Events::Rule
     Properties:
-      StageName: !Sub ${Stage}
-      DefinitionBody:
-        swagger: 2.0
-        info:
-          version: '1.0'
-          title:
-            Ref: AWS::StackName
-        paths:
-          /consent:
-            post:
-              x-amazon-apigateway-integration:
-                # The HTTP method used in the integration request. For Lambda function invocations, the value must be POST.
-                httpMethod: POST
-                type: aws_proxy
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${EventbriteConsentsLambda.Arn}/invocations
-              responses: {}
+      Description: "ScheduledRule"
+      # update syncFrequencyHours parameter when updating this
+      ScheduleExpression: "cron(0 0,4,8,12,16,20 * * ? *)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt EventbriteConsentsLambda.Arn
+          Id: "eventbriteconsentslambda"
 
-  EventbriteConsentsLambdaPerms:
+  PermissionForEventsToInvokeLambda:
     Type: AWS::Lambda::Permission
-    DependsOn:
-    - EventbriteConsentsLambda
-    - ServerlessRestApi
     Properties:
-      Action: lambda:InvokeFunction
       FunctionName: !Ref EventbriteConsentsLambda
-      Principal: apigateway.amazonaws.com
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduledRule.Arn
 
   EventbriteConsentsLambdaErrorAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -107,4 +85,4 @@ Resources:
       Period: '60'
       EvaluationPeriods: '1'
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsDebug, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
