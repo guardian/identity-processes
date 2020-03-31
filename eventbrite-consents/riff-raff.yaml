@@ -7,6 +7,8 @@ deployments:
     type: cloud-formation
     parameters:
       templatePath: cloud-formation.yaml
+      cloudFormationStackName: eventbrite-consents-lambda
+      cloudFormationStackByTags: false
 
   eventbrite-consents-lambda:
     type: aws-lambda
