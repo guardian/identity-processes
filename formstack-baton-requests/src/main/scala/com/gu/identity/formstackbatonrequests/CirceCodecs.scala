@@ -44,4 +44,12 @@ object circeCodecs {
     Encoder.instance { psr =>
       addAdditionalFields(psr.asJsonObject, "SAR", "perform")
     }
+
+  /** encoder used for test run. */
+  implicit val sarRequestEncoder: Encoder[SarRequest] = Encoder.instance {
+    case ir: SarInitiateRequest =>
+      addAdditionalFields(ir.asJsonObject, "SAR", "initiate")
+    case sr: SarStatusRequest =>
+      addAdditionalFields(sr.asJsonObject, "SAR", "status")
+  }
 }
