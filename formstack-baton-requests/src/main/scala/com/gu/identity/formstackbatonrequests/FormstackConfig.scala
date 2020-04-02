@@ -13,9 +13,9 @@ object FormstackConfig {
 
   def getSarHandlerConfig: SarLambdaConfig = {
     (for {
-      resultsBucket <- getEnvironmentVariable("resultsBucket")
-      resultsPath <- getEnvironmentVariable("resultsPath")
-      performSarFunctionName <- getEnvironmentVariable("performSarFunctionName")
+      resultsBucket <- getEnvironmentVariable("RESULTS_BUCKET")
+      resultsPath <- getEnvironmentVariable("RESULTS_PATH")
+      performSarFunctionName <- getEnvironmentVariable("PERFORM_SAR_FUNCTION_NAME")
     } yield SarLambdaConfig(resultsBucket, resultsPath, performSarFunctionName))
       .getOrElse {
         throw new RuntimeException(

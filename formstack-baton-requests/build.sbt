@@ -8,6 +8,9 @@ val circeVersion = "0.13.0"
 val amazonSdkVersion = "1.11.755"
 
 libraryDependencies ++= Seq(
+  "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
+  "com.amazonaws" % "aws-java-sdk-s3" % amazonSdkVersion,
+  "com.amazonaws" % "aws-java-sdk-lambda" % amazonSdkVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
   "io.circe" %% "circe-core" % circeVersion,
@@ -17,10 +20,6 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions += "-Ypartial-unification"
-
-addCompilerPlugin(
-  "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
-)
 
 assemblyJarName := "main.jar"
 
