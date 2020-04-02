@@ -8,6 +8,12 @@ val circeVersion = "0.13.0"
 val amazonSdkVersion = "1.11.755"
 
 libraryDependencies ++= Seq(
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
+  "io.circe" %% "circe-core" % circeVersion,
+  "io.circe" %% "circe-parser" % circeVersion,
+  "io.circe" %% "circe-generic" % circeVersion,
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
 
 scalacOptions += "-Ypartial-unification"
