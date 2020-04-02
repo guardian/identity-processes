@@ -1,0 +1,18 @@
+stacks: [identity]
+
+regions: [eu-west-1]
+
+deployments:
+  formstack-baton-requests-cfn:
+    type: cloud-formation
+    parameters:
+      templatePath: cloud-formation.yaml
+
+  formstack-baton-requests:
+    type: aws-lambda
+    parameters:
+      bucket: identity-lambda
+      functionNames: [FormstackSarLambda-]
+      fileName: main.jar
+      prefixStack: false
+    dependencies: [formstack-baton-requests-cfn]
