@@ -16,6 +16,6 @@ class IdentityClient(idapiUrl: String, idapiAccessToken: String) {
       .postData(IdapiConsentUpdate(emailAddress, Vector("events")).asJson.noSpaces)
       .asString
 
-    if (result.code != 200) throw new RuntimeException(s"Unexpected response from idapi ${result.code} ${result.body}")
+    if (result.code != 200) throw new RuntimeException(s"Unexpected response from idapi when syncing email $emailAddress ${result.code} ${result.body}")
   }
 }

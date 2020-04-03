@@ -13,11 +13,13 @@ object Lambda extends LazyLogging {
   val idapiClient: IdentityClient = new IdentityClient(config.idapiHost, config.idapiAccessToken)
   val consentsService: ConsentsService = new ConsentsService(config, eventbriteClient, idapiClient)
 
+  // Entry point for AWS lambda
   def handler(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent = {
     consentsService.syncConsents()
     new APIGatewayProxyResponseEvent().withStatusCode(204)
   }
 
+  // main is used for testing the service locally
   def main(args: Array[String]): Unit = {
     consentsService.syncConsents()
   }

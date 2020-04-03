@@ -12,7 +12,7 @@ class ConsentsService(config: LambdaConfig, eventbriteClient: EventbriteClient, 
   def syncConsents(): Unit = {
     val lastRun = Instant.now().minus(config.syncFrequencyHours, ChronoUnit.HOURS)
     val emailAddresses = findConsentEmails(lastRun, config.masterclassesToken) ++ findConsentEmails(lastRun, config.eventsToken)
-    logger.info(s"Number of email address to sync ${emailAddresses.size}")
+    logger.info(s"Email addresses to sync $emailAddresses, total ${emailAddresses.size}, last run $lastRun")
     for {
       email <- emailAddresses
     } yield if (config.isDebug) {
