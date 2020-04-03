@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  IdapiAccessToken:
+    Description: key used to authenticate against the identity API
+    Type: String
+    NoEcho: true
+  MasterclassesToken:
+    Type: String
+    NoEcho: true
+  EventsToken:
+    Type: String
+    NoEcho: true
+  Stage:
+    Description: environment name
+    Type: String
+    AllowedValues:
+      - DEV
+      - PROD
+
+Conditions:
+  IsProd: !Equals
+    - !Ref Stage
+    - PROD
+
+Mappings:
+  IsDebugMap:
+    DEV:
+      value: true
+    PROD:
+      value: false
+  SyncFrequencyMap:
+    values:
+      # syncFrequency needs to match cron
+      cronExpression: "cron(0 0,4,8,12,16,20 * * ? *)"
+      syncFrequencyHours: 4
+
+Resources:
+  TopicPagerDutyAlerts:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: PagerDutyTopic
+      Subscription:
+      - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
+        Protocol: https
+
+  EventbriteConsentsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 512
+      FunctionName: !Sub EventbriteConsentsLambda-${Stage}
+      Timeout: 120
+      Description: Lambda to send email to user who has signed up to a newsletter via Eventbrite
+      Environment:
+        Variables:
+          idapiHost: "https://idapi.theguardian.com"
+          idapiAccessToken: !Ref IdapiAccessToken
+          masterclassesToken: !Ref MasterclassesToken
+          eventsToken: !Ref EventsToken
+          syncFrequencyHours: !FindInMap [SyncFrequencyMap, values, syncFrequencyHours]
+          isDebug: !FindInMap [IsDebugMap, !Ref Stage, value]
+      Handler: com.gu.identity.eventbriteconsents.Lambda::handler
+      Runtime: java8
+      CodeUri:
+        Bucket: identity-lambda
+        Key: !Sub identity/${Stage}/eventbrite-consents-lambda/main.jar
+
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "ScheduledRule"
+      ScheduleExpression: !FindInMap [SyncFrequencyMap, values, cronExpression]
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt EventbriteConsentsLambda.Arn
+          Id: "eventbriteconsentslambda"
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EventbriteConsentsLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduledRule.Arn
+
+  EventbriteConsentsLambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alert when eventbrite consents lambda errors
+      Namespace: AWS/Lambda
+      Dimensions:
+      - Name: FunctionName
+        Value: !Ref 'EventbriteConsentsLambda'
+      MetricName: Errors
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: '1'
+      Period: '60'
+      EvaluationPeriods: '1'
+      AlarmActions:
+      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
