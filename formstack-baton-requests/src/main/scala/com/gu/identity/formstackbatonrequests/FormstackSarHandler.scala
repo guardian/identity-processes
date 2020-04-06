@@ -3,8 +3,7 @@ package com.gu.identity.formstackbatonrequests
 import java.util.UUID.randomUUID
 
 import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pending, SarInitiateRequest, SarInitiateResponse, SarPerformRequest, SarRequest, SarResponse, SarStatusRequest, SarStatusResponse}
-import com.gu.identity.formstackbatonrequests.lambda.LambdaClient
-import com.gu.identity.formstackbatonrequests.s3.S3Client
+import com.gu.identity.formstackbatonrequests.aws.{LambdaClient, S3Client, S3CompletedPathFound, S3FailedPathFound, S3NoResultsFound}
 import com.typesafe.scalalogging.LazyLogging
 
 case class FormstackSarHandler(s3Client: S3Client, lambdaClient: LambdaClient, sarHandlerConfig: SarLambdaConfig)

@@ -6,9 +6,8 @@ import io.circe.{Decoder, DecodingFailure, Encoder, Printer}
 import io.circe.parser._
 import io.circe.syntax._
 import circeCodecs._
-import com.gu.identity.formstackbatonrequests.BatonModels.{SarInitiateRequest, SarRequest, SarStatusRequest}
-import com.gu.identity.formstackbatonrequests.lambda.Lambda
-import com.gu.identity.formstackbatonrequests.s3.S3
+import com.gu.identity.formstackbatonrequests.BatonModels.{SarInitiateRequest, SarStatusRequest}
+import com.gu.identity.formstackbatonrequests.aws.{S3, Lambda}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source
@@ -16,7 +15,7 @@ import scala.io.Source
 trait FormstackHandler[Req, Res] extends LazyLogging {
   def handle(request: Req): Either[Throwable, Res]
 
-  val jsonPrinter = Printer.spaces2.copy(dropNullValues = true)
+  val jsonPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
 
   private def checkFormstackDataProviderIfInitRequest(request: Req): Either[Throwable, Unit] = {
     request match {

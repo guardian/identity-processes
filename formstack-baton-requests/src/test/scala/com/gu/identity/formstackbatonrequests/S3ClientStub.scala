@@ -1,6 +1,6 @@
 package com.gu.identity.formstackbatonrequests
 
-import com.gu.identity.formstackbatonrequests.s3.S3Client
+import com.gu.identity.formstackbatonrequests.aws.{S3Client, S3CompletedPathFound, S3FailedPathFound, S3NoResultsFound, S3StatusResponse}
 
 class S3ClientStub (
   checkForResultsResponse: Either[Throwable, S3StatusResponse]

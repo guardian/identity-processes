@@ -2,7 +2,7 @@ package com.gu.identity.formstackbatonrequests
 
 import com.amazonaws.services.lambda.model.InvokeResult
 import com.gu.identity.formstackbatonrequests.BatonModels.SarPerformRequest
-import com.gu.identity.formstackbatonrequests.lambda.LambdaClient
+import com.gu.identity.formstackbatonrequests.aws.LambdaClient
 
 class LambdaClientStub(
   invokeLambda: Either[Throwable, InvokeResult]
