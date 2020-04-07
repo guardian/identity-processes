@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  Stage:
+    Description: Stage name
+    Type: String
+    AllowedValues:
+      - PROD
+      - CODE
+    Default: CODE
+  SarResultsBucket:
+    Description: Bucket where sar results are uploaded to
+    Type: String
+    Default: baton-results
+  VpcId:
+    Description: Vpc where the lambda is being created
+    Type: String
+  VpcSubnets:
+    Description: Subnets to use in VPC
+    Type: CommaDelimitedList
+
+Resources:
+  FormstackBatonSarLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EC2Policy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                Resource: "*"
+        - PolicyName: LogPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/formstack-baton-sar-lambda-${Stage}:log-stream:*"
+        - PolicyName: S3ListPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub arn:aws:s3:::${SarResultsBucket}
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub Security group for the formstack-baton-requests-${Stage} lambdas
+      VpcId: !Ref VpcId
+
+  FormstackBatonSarLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Initiates the PerformFormstackSarLambda and checks the status of Formstack SARs via S3
+      FunctionName:
+        !Sub formstack-baton-sar-lambda-${Stage}
+      Code:
+        S3Bucket: identity-lambda
+        S3Key: !Sub identity/${Stage}/formstack-baton-requests/main.jar
+      Handler: com.gu.identity.formstackbatonrequests.Handler::handleSar
+      Environment:
+        Variables:
+          RESULTS_BUCKET: baton-results
+          RESULTS_PATH: !Sub formstack-results/${Stage}
+          PERFORM_SAR_FUNCTION_NAME: performSarFunctionName
+      MemorySize: 384
+      Runtime: java8
+      Timeout: 120
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds: !Ref VpcSubnets
+      Role:
+        !GetAtt FormstackBatonSarLambdaRole.Arn
