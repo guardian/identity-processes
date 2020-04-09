@@ -19,6 +19,9 @@ Parameters:
     Description: Subnets to use in VPC
     Type: CommaDelimitedList
 
+Conditions:
+  IsProd: !Equals [ !Ref Stage, PROD ]
+
 Resources:
   FormstackBatonSarLambdaRole:
     Type: AWS::IAM::Role
@@ -89,3 +92,39 @@ Resources:
         SubnetIds: !Ref VpcSubnets
       Role:
         !GetAtt FormstackBatonSarLambdaRole.Arn
+
+#  There tables are only created in PROD since Formstack doesn't have a CODE environment and we don't want to test in
+#  CODE with real data
+  FormstackSubmissionIds:
+    Condition: IsProd
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: formstack-submission-ids
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: submissionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: submissionId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  FormstackSubmissionsLastUpdated:
+    Condition: IsProd
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: formstack-submissions-last-updated
+      AttributeDefinitions:
+        - AttributeName: formstackSubmissionTableMetadata
+          AttributeType: S
+      KeySchema:
+        - AttributeName: formstackSubmissionTableMetadata
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
