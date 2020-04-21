@@ -15,7 +15,8 @@ case class FormstackSarHandler(s3Client: S3Client, lambdaClient: LambdaClient, s
 
     val performSarRequest = SarPerformRequest(
       initiationReference,
-      request.subjectEmail
+      request.subjectEmail,
+      "formstack"
     )
 
     logger.info(s"invoking FormstackPerformSarLambda with initiation reference: $initiationReference")
