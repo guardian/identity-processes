@@ -7,8 +7,8 @@ import com.typesafe.scalalogging.LazyLogging
  * updated with ALL submissions from Formstack */
 object PopulateFormstackTable extends App with LazyLogging {
 
-  val config = FormstackConfig.getPerformSarHandlerConfig
-  val formstackPerformSarHandler = FormstackPerformSarHandler(Dynamo, FormstackSarService, config)
+  val defaultConfig = FormstackConfig.getPerformSarHandlerConfig
+  val formstackPerformSarHandler = FormstackPerformSarHandler(Dynamo, FormstackSarService, defaultConfig)
 
   val updateDynamoResult = formstackPerformSarHandler.updateDynamo(SubmissionTableUpdateDate("", ""))
   updateDynamoResult match {

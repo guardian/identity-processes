@@ -18,7 +18,8 @@ object FormstackClientStub {
     Right(FormstackFormSubmissionsResponse(
         List(
           FormstackSubmission("987", Map("fieldWithoutEmail"-> FormstackResponseValue("noEmail".asJson), "fieldWithEmail"-> FormstackResponseValue("email@test.com".asJson))),
-          FormstackSubmission("876", Map("fieldWithoutEmail"-> FormstackResponseValue("noEmail".asJson), "fieldWithEmail"-> FormstackResponseValue("email@test2.com".asJson)))
+          FormstackSubmission("876", Map("fieldWithInvalidEmail"-> FormstackResponseValue("email@test2com".asJson))),
+          FormstackSubmission("765", Map("fieldWithoutEmail"-> FormstackResponseValue("noEmail".asJson))),
         ),
       pages = 1))
   val formSubmissionsForGivenPageFailure = Left(new Exception("Formstack API error"))

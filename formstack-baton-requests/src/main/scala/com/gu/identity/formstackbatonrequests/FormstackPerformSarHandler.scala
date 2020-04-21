@@ -43,7 +43,7 @@ case class FormstackPerformSarHandler(
         logger.info(s"Received page $submissionPage of submissions out of ${response.pages} pages for form ${form.id}.")
         val submissionsIdsWithEmails = submissionsWithEmailAndAccount(response.submissions, token.account)
         logger.info(s"Writing ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo")
-        val writeResults = dynamoClient.writeSubmissions(submissionsIdsWithEmails, config.bcryptSalt)
+        val writeResults = dynamoClient.writeSubmissions(submissionsIdsWithEmails, config.bcryptSalt, config.submissionTableName)
         val errors = writeResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString()))
@@ -78,7 +78,7 @@ case class FormstackPerformSarHandler(
       for {
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackSarService.resultsPerPage, config.accountOneToken)
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackSarService.resultsPerPage, config.accountTwoToken)
-        _ <- dynamoClient.updateMostRecentTimestamp()
+        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName)
       } yield ()
     } else Right(())
   }

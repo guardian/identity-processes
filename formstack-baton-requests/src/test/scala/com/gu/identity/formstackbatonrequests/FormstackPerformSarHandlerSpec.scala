@@ -37,7 +37,7 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
 
       FormstackClientStub.formSubmissionsForGivenPageSuccess.map { submissionsOrError =>
         val submissionsWithEmail = lambda.submissionsWithEmailAndAccount(submissionsOrError.submissions, accountNumber = 1)
-        submissionsWithEmail.length shouldBe 2
+        submissionsWithEmail.length shouldBe 1
       }
     }
   }
