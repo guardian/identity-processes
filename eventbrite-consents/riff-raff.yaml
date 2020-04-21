@@ -3,16 +3,18 @@ stacks: [identity]
 regions: [eu-west-1]
 
 deployments:
-  formstack-baton-requests-cfn:
+  eventbrite-consents-cfn:
     type: cloud-formation
     parameters:
       templatePath: cloud-formation.yaml
+      cloudFormationStackName: eventbrite-consents-lambda
+      cloudFormationStackByTags: false
 
-  formstack-baton-requests:
+  eventbrite-consents-lambda:
     type: aws-lambda
     parameters:
       bucket: identity-lambda
-      functionNames: [formstack-baton-sar-lambda-]
+      functionNames: [EventbriteConsentsLambda-]
       fileName: main.jar
       prefixStack: false
-    dependencies: [formstack-baton-requests-cfn]
+    dependencies: [eventbrite-consents-cfn]

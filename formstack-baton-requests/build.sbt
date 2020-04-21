@@ -25,10 +25,6 @@ libraryDependencies ++= Seq(
 
 scalacOptions += "-Ypartial-unification"
 
-addCompilerPlugin(
-  "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
-)
-
 assemblyJarName := "main.jar"
 
 assemblyMergeStrategy in assembly := {

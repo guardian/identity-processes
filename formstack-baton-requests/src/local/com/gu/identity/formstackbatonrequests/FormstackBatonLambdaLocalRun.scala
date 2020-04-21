@@ -10,6 +10,7 @@ import com.gu.identity.formstackbatonrequests.aws.{Lambda, S3}
 /** This object can be used for local runs of the lambda, for end-to-end testing. */
 
 object FormstackBatonLambdaLocalRun extends App {
+
   def runWith(request: SarRequest): Unit = {
     val sarLambdaConfig = FormstackConfig.getSarHandlerConfig
     val sarLambda = FormstackSarHandler(S3, Lambda, sarLambdaConfig)
