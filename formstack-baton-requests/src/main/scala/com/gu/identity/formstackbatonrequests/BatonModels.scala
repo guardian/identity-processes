@@ -11,7 +11,7 @@ object BatonModels {
 
   case class SarInitiateRequest(subjectEmail: String, dataProvider: String) extends SarRequest
   case class SarStatusRequest(initiationReference: String) extends SarRequest
-  case class SarPerformRequest(initiationReference: String, subjectEmail: String) extends SarRequest
+  case class SarPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends SarRequest
 
   sealed trait SarResponse
 
@@ -20,5 +20,11 @@ object BatonModels {
     status: BatonTaskStatus,
     resultLocations: Option[List[String]] = None,
     message: Option[String] = None
+  ) extends SarResponse
+  case class SarPerformResponse(
+    status: BatonTaskStatus,
+    initiationReference: String,
+    subjectEmail: String,
+    message: Option[String]
   ) extends SarResponse
 }

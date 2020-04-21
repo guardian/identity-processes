@@ -1,6 +1,6 @@
 package com.gu.identity.formstackbatonrequests
 
-import com.gu.identity.formstackbatonrequests.BatonModels.{BatonTaskStatus, Completed, Failed, Pending, SarInitiateRequest, SarInitiateResponse, SarPerformRequest, SarRequest, SarResponse, SarStatusRequest, SarStatusResponse}
+import com.gu.identity.formstackbatonrequests.BatonModels.{BatonTaskStatus, Completed, Failed, Pending, SarInitiateRequest, SarInitiateResponse, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse, SarStatusRequest, SarStatusResponse}
 import io.circe.{Decoder, Encoder, Json, JsonObject}
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -12,6 +12,7 @@ object circeCodecs {
       cursor.downField("action").as[String].flatMap {
         case "status" => cursor.as[SarStatusRequest]
         case "initiate" => cursor.as[SarInitiateRequest]
+        case "perform" => cursor.as[SarPerformRequest]
       }
     }
 
@@ -38,6 +39,8 @@ object circeCodecs {
       addAdditionalFields(ir.asJsonObject, "SAR", "initiate")
     case sr: SarStatusResponse =>
       addAdditionalFields(sr.asJsonObject, "SAR", "status")
+    case pr: SarPerformResponse =>
+      addAdditionalFields(pr.asJsonObject, "SAR", "perform")
   }
 
   implicit val sarPerformRequestEncoder: Encoder[SarPerformRequest] =
@@ -45,11 +48,13 @@ object circeCodecs {
       addAdditionalFields(psr.asJsonObject, "SAR", "perform")
     }
 
-  /** encoder used for test run. */
+  /* encoder used for test run. */
   implicit val sarRequestEncoder: Encoder[SarRequest] = Encoder.instance {
     case ir: SarInitiateRequest =>
       addAdditionalFields(ir.asJsonObject, "SAR", "initiate")
     case sr: SarStatusRequest =>
       addAdditionalFields(sr.asJsonObject, "SAR", "status")
+    case pr: SarPerformRequest =>
+      addAdditionalFields(pr.asJsonObject, "SAR", "perform")
   }
 }

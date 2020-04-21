@@ -1,6 +1,6 @@
 package com.gu.identity.formstackbatonrequests
 
-import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pending, SarInitiateRequest, SarInitiateResponse, SarRequest, SarResponse, SarStatusRequest, SarStatusResponse}
+import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pending, SarInitiateRequest, SarInitiateResponse, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse, SarStatusRequest, SarStatusResponse}
 import org.scalatest.{FreeSpec, Matchers}
 import io.circe.parser._
 import io.circe.syntax._
@@ -66,6 +66,44 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
         status = Pending
       )
       response.asJson.printWith(jsonPrinter) shouldBe """{"status":"pending","action":"status","requestType":"SAR","dataProvider":"formstack"}"""
+    }
+
+    "should decode a valid perform request" in {
+      val expectedRequest = SarPerformRequest("someRequestId", "testSubjectEmail", "formstack")
+
+      val jsonRequest =
+        """{
+          |"initiationReference": "someRequestId",
+          |"subjectEmail": "testSubjectEmail",
+          |"dataProvider" : "formstack",
+          |"requestType" : "SAR",
+          |"action" : "perform"
+          |}
+          |""".stripMargin
+
+      decode[SarRequest](jsonRequest) shouldBe Right(expectedRequest)
+    }
+
+    "should encode completed SarPerformResponse correctly" in {
+      val response: SarResponse = SarPerformResponse(
+        status = Completed,
+        initiationReference = "someRequestId",
+        subjectEmail = "testSubjectEmail",
+        message = None
+      )
+
+      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"completed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","action":"perform","requestType":"SAR","dataProvider":"formstack"}"""
+    }
+
+    "should encode failed SarPerformResponse correctly" in {
+      val response: SarResponse = SarPerformResponse(
+        status = Failed,
+        initiationReference = "someRequestId",
+        subjectEmail = "testSubjectEmail",
+        message = Some("Error writing to S3")
+      )
+
+      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"failed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","message":"Error writing to S3","action":"perform","requestType":"SAR","dataProvider":"formstack"}"""
     }
 
   }
