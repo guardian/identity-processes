@@ -43,13 +43,13 @@ case class FormstackPerformSarHandler(
         logger.info(s"Received page $submissionPage of submissions out of ${response.pages} pages for form ${form.id}.")
         val submissionsIdsWithEmails = submissionsWithEmailAndAccount(response.submissions, token.account)
         logger.info(s"Writing ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo")
-        val writeResults = dynamoClient.writeSubmissions(submissionsIdsWithEmails, config.bcryptSalt, config.submissionTableName)
-        val errors = writeResults.collect { case Left(err) => err }
-        if (errors.nonEmpty) {
-          Left(new Exception(errors.toString()))
-        } else if (submissionPage < response.pages) {
-          handleSubs(form, lastUpdate, submissionPage + 1, token)
-        } else Right(())
+        dynamoClient.writeSubmissions(submissionsIdsWithEmails, config.bcryptSalt, config.submissionTableName) match {
+          case Right(unprocessedItems) if unprocessedItems.nonEmpty =>
+            Left(new Exception(s"Some items could not be written to DynamoDB: $unprocessedItems"))
+          case Right(_) if submissionPage < response.pages => handleSubs(form, lastUpdate, submissionPage + 1, token)
+          case Right(_) => Right(())
+          case Left(err) => Left(err)
+        }
     }
   }
 

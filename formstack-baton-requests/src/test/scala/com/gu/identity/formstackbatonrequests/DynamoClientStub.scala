@@ -1,15 +1,16 @@
 package com.gu.identity.formstackbatonrequests
 
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
 
 class DynamoClientStub(
   mostRecentTimestampResponse: Either[Throwable, SubmissionTableUpdateDate],
   updateMostRecentTimestampResponse: Either[Throwable, Unit],
-  writeSubmissionsResponse: List[Either[Throwable, Unit]]
+  writeSubmissionsResponse: Either[Throwable, List[BatchWriteItemResult]]
 ) extends DynamoClient {
-  override def mostRecentTimestamp(): Either[Throwable, SubmissionTableUpdateDate] = mostRecentTimestampResponse
-  override def updateMostRecentTimestamp(): Either[Throwable, Unit] = updateMostRecentTimestampResponse
-  override def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String): List[Either[Throwable, Unit]] = writeSubmissionsResponse
+  override def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate] = mostRecentTimestampResponse
+  override def updateMostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, Unit] = updateMostRecentTimestampResponse
+  override def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]] = writeSubmissionsResponse
 }
 
 object DynamoClientStub {
@@ -17,8 +18,8 @@ object DynamoClientStub {
   val mostRecentTimestampFailure = Left(new Exception("formstackSubmissionTableMetadata not found."))
   val updateMostRecentTimestampSuccess = Right(())
   val updateMostRecentTimestampFailure = Left(new Exception("unable to update most recent timestamp."))
-  val writeSubmissionsSuccess = List(Right(()), Right(()))
-  val writeSubmissionsFailure = List(Left(new Exception("unable to write submission to Dynamo.")), Left(new Exception("unable to write submission to Dynamo.")))
+  val writeSubmissionsSuccess = Right(List.empty[BatchWriteItemResult])
+  val writeSubmissionsFailure = Left(new Exception("Invalid table name"))
 
   def withFailedResponse = new DynamoClientStub(mostRecentTimestampFailure, updateMostRecentTimestampFailure, writeSubmissionsFailure)
   def withSuccessResponse = new DynamoClientStub(mostRecentTimestampSuccess, updateMostRecentTimestampSuccess, writeSubmissionsSuccess)

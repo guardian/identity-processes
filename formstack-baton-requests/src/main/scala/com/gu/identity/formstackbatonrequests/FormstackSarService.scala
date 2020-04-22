@@ -48,7 +48,6 @@ object FormstackSarService extends FormstackSar with LazyLogging {
     minTime: SubmissionTableUpdateDate,
     encryptionPassword: String,
     accountToken: FormstackAccountToken): Either[Throwable, FormstackFormSubmissionsResponse] = {
-    println("getting submissions since" + minTime.date)
     val response = Http(s"https://www.formstack.com/api/v2/form/$formId/submission.json")
       .headers(
         Seq(
@@ -76,7 +75,6 @@ object FormstackSarService extends FormstackSar with LazyLogging {
     if(response.body.contains("An error occurred while decrypting the submissions"))
       Left(FormstackDecryptionError(response.body))
     else
-      logger.info(response.body)
       decode[FormstackFormSubmissionsResponse](response.body)
   }
 }

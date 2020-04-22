@@ -9,9 +9,13 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.gu.scanamo.Scanamo
 import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
+import cats.implicits._
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult
+
+import scala.util.Try
 
 trait DynamoClient {
-  def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): List[Either[Throwable, Unit]]
+  def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]]
   def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate]
   def updateMostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, Unit]
 }
@@ -30,15 +34,17 @@ object Dynamo extends DynamoClient with LazyLogging {
     .withCredentials(AwsCredentials.credentials)
     .build()
 
-  override def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): List[Either[Throwable, Unit]] = {
-    submissionIdsAndEmails.map { submissionIdAndEmail =>
+  override def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]] = {
+    val hashedEmailsOrError = submissionIdsAndEmails.traverse { submissionIdAndEmail =>
       for {
         hashedEmail <- submissionIdAndEmail.email.bcryptSafe(salt).toEither
         submissionWithHashedEmail = submissionIdAndEmail.copy(email = hashedEmail)
-        _ <- Scanamo.put[SubmissionIdEmail](dynamoClient)(submissionsTableName)(submissionWithHashedEmail)
-          .getOrElse(Right())
-          .fold(dynamoReadError => Left(new Exception(dynamoReadError.toString)),  _ => Right(()))
-      } yield ()
+      } yield submissionWithHashedEmail
+    }
+
+    hashedEmailsOrError.flatMap { submissionsWithHashedEmails =>
+      Try(Scanamo.putAll[SubmissionIdEmail](dynamoClient)(submissionsTableName)(submissionsWithHashedEmails.toSet))
+        .toEither
     }
   }
 
