@@ -129,4 +129,77 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  PerformFormstackSarLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EC2Policy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                Resource: "*"
+        - PolicyName: LogPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/formstack-baton-perform-sar-lambda-${Stage}:log-stream:*"
+        - PolicyName: S3ListPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub arn:aws:s3:::${SarResultsBucket}
+        - PolicyName: S3WritePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                  - s3:GetObject
+                Resource: !Sub arn:aws:s3:::${SarResultsBucket}/formstack-results/${Stage}/*
+
+  PerformFormstackSarLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Performs SAR to Formstack, writing results to S3
+      FunctionName:
+        !Sub formstack-baton-perform-sar-lambda-${Stage}
+      Code:
+        S3Bucket: identity-lambda
+        S3Key: !Sub identity/${Stage}/formstack-baton-requests/main.jar
+      Handler: com.gu.identity.formstackbatonrequests.Handler::handlePerformSar
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+      MemorySize: 1024
+      Runtime: java8
+      Timeout: 900
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds: !Ref VpcSubnets
+      Role:
+        !GetAtt PerformFormstackSarLambdaRole.Arn
+    DependsOn:
+      - PerformFormstackSarLambdaRole
+
 

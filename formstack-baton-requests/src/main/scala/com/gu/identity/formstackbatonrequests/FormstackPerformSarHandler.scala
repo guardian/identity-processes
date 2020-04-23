@@ -2,17 +2,20 @@ package com.gu.identity.formstackbatonrequests
 
 import java.time.{Instant, LocalDate, LocalDateTime}
 
-import com.gu.identity.formstackbatonrequests.BatonModels.{SarRequest, SarResponse}
-import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse}
+import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, S3Client, S3WriteSuccess, SubmissionTableUpdateDate}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.ExecutionContext
 
 case class SubmissionIdEmail(email: String, submissionId: String, receivedByLambdaTimestamp: Long, accountNumber: Int)
+case class FormstackQuestionAnswer(id: String, timestamp: String, label: String, value: String)
+case class FormstackSubmissionQuestionAnswer(id: String, timestamp: String, fields: List[FormstackQuestionAnswer])
 
 case class FormstackPerformSarHandler(
   dynamoClient: DynamoClient,
   formstackClient: FormstackSar,
+  s3Client: S3Client,
   config: PerformSarLambdaConfig)
   extends LazyLogging with FormstackHandler[SarRequest, SarResponse] {
 
@@ -82,6 +85,25 @@ case class FormstackPerformSarHandler(
       } yield ()
     } else Right(())
   }
-//  This will be implemented in next PR
-  override def handle(request: SarRequest): Either[Throwable, SarResponse] = ???
+
+  def initiateSar(request: SarPerformRequest): Either[Throwable, S3WriteSuccess] =
+    (for {
+      submissionTableUpdateDate <- dynamoClient.mostRecentTimestamp(config.lastUpdatedTableName)
+      _ <- updateDynamo(submissionTableUpdateDate)
+      submissionIds <- dynamoClient.userSubmissions(request.subjectEmail, config.bcryptSalt, config.submissionTableName)
+      submissionData <- formstackClient.submissionData(submissionIds, config)
+      _ <- s3Client.writeSuccessResult(request.initiationReference, submissionData, config)
+    } yield ()).flatMap(_ => s3Client.copyResultsToCompleted(request.initiationReference, config))
+
+  override def handle(request: SarRequest): Either[Throwable, SarResponse] =
+    request match {
+      case r: SarPerformRequest =>
+        initiateSar(r) match {
+          case Right(_) => Right(SarPerformResponse(Completed, r.initiationReference, r.subjectEmail, None))
+          case Left(err) =>
+            s3Client.writeFailedResults(r.initiationReference, err.getMessage, config)
+            Right(SarPerformResponse(Failed, r.initiationReference, r.subjectEmail, Some(err.getMessage)))
+        }
+      case _ => Left(new Exception("Unable to retrieve email and initiation reference from request"))
+    }
 }
