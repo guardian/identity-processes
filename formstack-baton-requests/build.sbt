@@ -12,6 +12,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk-dynamodb" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-s3" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-lambda" % amazonSdkVersion,
+  "com.amazonaws" % "aws-java-sdk-ssm" % amazonSdkVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
   "org.scalaj" %% "scalaj-http" % "2.4.2",

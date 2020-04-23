@@ -122,8 +122,7 @@ object FormstackSarService extends FormstackSar with LazyLogging {
         }
 
         decode[FormstackFieldLabel](response.body)
-          .map(label =>
-            FormstackQuestionAnswer(submission.id, submission.timestamp, label.label, responseValues.value.toString))
+          .map(label => FormstackLabelValue(label.label, responseValues.value.toString))
       }.sequence
 
       labelsAndValuesOrError.map(labelsAndValues => FormstackSubmissionQuestionAnswer(submission.id, submission.timestamp, labelsAndValues))

@@ -7,7 +7,7 @@ import io.circe.parser._
 import io.circe.syntax._
 import circeCodecs._
 import com.gu.identity.formstackbatonrequests.BatonModels.{SarInitiateRequest, SarPerformRequest, SarStatusRequest}
-import com.gu.identity.formstackbatonrequests.aws.{AwsCredentials, Dynamo, Lambda, S3}
+import com.gu.identity.formstackbatonrequests.aws.{Dynamo, Lambda, S3}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source
@@ -50,6 +50,11 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
 
 object Handler {
 
+  val stage = sys.env.getOrElse("STAGE", "CODE") match {
+    case "PROD" => "PROD"
+    case _      => "CODE"
+  }
+
   def handleSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
     val sarHandlerConfig = FormstackConfig.getSarHandlerConfig
     val sarHandler = FormstackSarHandler(S3, Lambda, sarHandlerConfig)
@@ -58,7 +63,10 @@ object Handler {
 
   def handlePerformSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
     val performSarHandlerConfig = FormstackConfig.getPerformSarHandlerConfig
-    val performSarHandler = FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, performSarHandlerConfig)
+    val performSarHandler =
+      if (stage == "PROD")
+        FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, performSarHandlerConfig)
+      else FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
     performSarHandler.handleRequest(inputStream, outputStream)
   }
 

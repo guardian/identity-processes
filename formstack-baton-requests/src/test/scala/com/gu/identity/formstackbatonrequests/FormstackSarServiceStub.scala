@@ -30,7 +30,7 @@ object FormstackSarServiceStub {
     Right(List(FormstackSubmissionQuestionAnswer(
       "123",
       "2019-01-01 00:00:00",
-      List(FormstackQuestionAnswer("123", "2019-01-01 00:00:00", "What is your name?", "Test Testington")))))
+      List(FormstackLabelValue("What is your name?", "Test Testington")))))
 
   val genericFormstackError = Left(new Exception("Formstack API error"))
 

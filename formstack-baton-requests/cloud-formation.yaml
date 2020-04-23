@@ -18,6 +18,24 @@ Parameters:
   VpcSubnets:
     Description: Subnets to use in VPC
     Type: CommaDelimitedList
+  EncryptionPasswordPath:
+    Type: String
+    Default: /identity/formstack-baton-requests/encryption-password
+  FormstackAccountOneTokenPath:
+    Type: String
+    Default: /identity/formstack-baton-requests/formstack-account-one-token
+  FormstackAccountTwoTokenPath:
+    Type: String
+    Default: /identity/formstack-baton-requests/formstack-account-two-token
+  BcryptSaltPath:
+    Type: String
+    Default: /identity/formstack-baton-requests/bcrypt-salt
+  SubmissionsTableName:
+    Type: String
+    Default: formstack-submissions-last-updated
+  LastUpdatedTableName:
+    Type: String
+    Default: formstack-submission-ids
 
 Conditions:
   IsProd: !Equals [ !Ref Stage, PROD ]
@@ -80,7 +98,7 @@ Resources:
       Handler: com.gu.identity.formstackbatonrequests.Handler::handleSar
       Environment:
         Variables:
-          RESULTS_BUCKET: baton-results
+          RESULTS_BUCKET: !Ref SarResultsBucket
           RESULTS_PATH: !Sub formstack-results/${Stage}
           PERFORM_SAR_FUNCTION_NAME: performSarFunctionName
       MemorySize: 384
@@ -99,7 +117,7 @@ Resources:
     Condition: IsProd
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: formstack-submission-ids
+      TableName: !Ref SubmissionsTableName
       AttributeDefinitions:
         - AttributeName: email
           AttributeType: S
@@ -118,7 +136,7 @@ Resources:
     Condition: IsProd
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: formstack-submissions-last-updated
+      TableName: !Ref LastUpdatedTableName
       AttributeDefinitions:
         - AttributeName: formstackSubmissionTableMetadata
           AttributeType: S
@@ -189,7 +207,15 @@ Resources:
       Handler: com.gu.identity.formstackbatonrequests.Handler::handlePerformSar
       Environment:
         Variables:
-          Stage: !Ref Stage
+          STAGE: !Ref Stage
+          RESULTS_BUCKET: !Ref SarResultsBucket
+          RESULTS_PATH: !Sub formstack-results/${Stage}
+          ENCRYPTION_PASSWORD_PATH: !Ref EncryptionPasswordPath
+          FORMSTACK_ACCOUNT_ONE_TOKEN_PATH: !Ref FormstackAccountOneTokenPath
+          FORMSTACK_ACCOUNT_TWO_TOKEN_PATH: !Ref FormstackAccountTwoTokenPath
+          BCRYPT_SALT_PATH: !Ref BcryptSaltPath
+          SUBMISSION_TABLE_NAME: !Ref SubmissionsTableName
+          LAST_UPDATED_TABLE_NAME: !Ref LastUpdatedTableName
       MemorySize: 1024
       Runtime: java8
       Timeout: 900
@@ -201,5 +227,4 @@ Resources:
         !GetAtt PerformFormstackSarLambdaRole.Arn
     DependsOn:
       - PerformFormstackSarLambdaRole
-
 

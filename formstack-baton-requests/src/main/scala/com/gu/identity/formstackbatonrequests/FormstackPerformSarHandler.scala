@@ -9,8 +9,8 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.concurrent.ExecutionContext
 
 case class SubmissionIdEmail(email: String, submissionId: String, receivedByLambdaTimestamp: Long, accountNumber: Int)
-case class FormstackQuestionAnswer(id: String, timestamp: String, label: String, value: String)
-case class FormstackSubmissionQuestionAnswer(id: String, timestamp: String, fields: List[FormstackQuestionAnswer])
+case class FormstackLabelValue(label: String, value: String)
+case class FormstackSubmissionQuestionAnswer(id: String, timestamp: String, fields: List[FormstackLabelValue])
 
 case class FormstackPerformSarHandler(
   dynamoClient: DynamoClient,

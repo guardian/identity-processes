@@ -2,7 +2,7 @@ package com.gu.identity.formstackbatonrequests.aws
 
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.{CannedAccessControlList, S3ObjectSummary}
-import com.gu.identity.formstackbatonrequests.{FormstackQuestionAnswer, FormstackSubmission, FormstackSubmissionQuestionAnswer, PerformSarLambdaConfig, SarLambdaConfig}
+import com.gu.identity.formstackbatonrequests.{FormstackSubmissionQuestionAnswer, PerformSarLambdaConfig, SarLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 import cats.implicits._
 
