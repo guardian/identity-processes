@@ -18,6 +18,7 @@ trait DynamoClient {
   def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]]
   def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate]
   def updateMostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, Unit]
+  def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]]
 }
 
 case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String)
@@ -66,4 +67,13 @@ object Dynamo extends DynamoClient with LazyLogging {
       .getOrElse(Right())
       .fold(dynamoReadError => Left(new Exception(dynamoReadError.toString)),  _ => Right(()))
   }
+
+    override def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]] = {
+      logger.info(s"retrieving submissions from $submissionsTableName")
+      for {
+        hashedEmail <- email.bcryptSafe(salt).toEither
+        queryResult <- Scanamo.query[SubmissionIdEmail](dynamoClient)(submissionsTableName)('email -> hashedEmail)
+          .sequence.left.map(err => new Exception(err.toString))
+      } yield queryResult
+    }
 }
