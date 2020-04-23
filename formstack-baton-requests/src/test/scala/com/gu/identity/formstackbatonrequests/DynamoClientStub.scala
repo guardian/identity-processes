@@ -1,5 +1,7 @@
 package com.gu.identity.formstackbatonrequests
 
+import java.time.LocalDateTime
+
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
 
@@ -10,7 +12,7 @@ class DynamoClientStub(
   userSubmissionsResponse: Either[Throwable, List[SubmissionIdEmail]]
 ) extends DynamoClient {
   override def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate] = mostRecentTimestampResponse
-  override def updateMostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, Unit] = updateMostRecentTimestampResponse
+  override def updateMostRecentTimestamp(lastUpdatedTableName: String, currentDateTime: LocalDateTime): Either[Throwable, Unit] = updateMostRecentTimestampResponse
   override def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]] = writeSubmissionsResponse
   override def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]] = userSubmissionsResponse
 }

@@ -6,7 +6,6 @@ import io.circe.{Decoder, DecodingFailure, Encoder, Printer}
 import io.circe.parser._
 import io.circe.syntax._
 import circeCodecs._
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.gu.identity.formstackbatonrequests.BatonModels.{SarInitiateRequest, SarPerformRequest, SarStatusRequest}
 import com.gu.identity.formstackbatonrequests.aws.{AwsCredentials, Dynamo, Lambda, S3}
 import com.typesafe.scalalogging.LazyLogging
@@ -59,7 +58,7 @@ object Handler {
 
   def handlePerformSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
     val performSarHandlerConfig = FormstackConfig.getPerformSarHandlerConfig
-    val performSarHandler = FormstackPerformSarHandler(Dynamo, FormstackSarService, S3, performSarHandlerConfig)
+    val performSarHandler = FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, performSarHandlerConfig)
     performSarHandler.handleRequest(inputStream, outputStream)
   }
 

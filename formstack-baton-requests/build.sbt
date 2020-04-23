@@ -1,4 +1,3 @@
-
 name := "formstack-baton-requests"
 
 version := "0.1"
@@ -33,6 +32,11 @@ assemblyMergeStrategy in assembly := {
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
 }
+
+startDynamoDBLocal := startDynamoDBLocal.dependsOn(compile in Test).value
+test in Test := (test in Test).dependsOn(startDynamoDBLocal).value
+testOnly in Test := (testOnly in Test).dependsOn(startDynamoDBLocal).evaluated
+testOptions in Test += dynamoDBLocalTestCleanup.value
 
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full

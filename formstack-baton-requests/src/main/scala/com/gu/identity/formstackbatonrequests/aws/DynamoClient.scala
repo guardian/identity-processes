@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 import com.gu.identity.formstackbatonrequests.SubmissionIdEmail
 import com.typesafe.scalalogging.LazyLogging
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClient}
 import com.gu.scanamo.Scanamo
 import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
@@ -17,7 +17,7 @@ import scala.util.Try
 trait DynamoClient {
   def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]]
   def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate]
-  def updateMostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, Unit]
+  def updateMostRecentTimestamp(lastUpdatedTableName: String, currentDateTime: LocalDateTime): Either[Throwable, Unit]
   def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]]
 }
 
@@ -27,13 +27,7 @@ object SubmissionTableUpdateDate {
   val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 }
 
-object Dynamo extends DynamoClient with LazyLogging {
-
-  private val dynamoClient = AmazonDynamoDBClient
-    .builder()
-    .withRegion(AwsCredentials.region)
-    .withCredentials(AwsCredentials.credentials)
-    .build()
+case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) extends DynamoClient with LazyLogging {
 
   override def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]] = {
     val hashedEmailsOrError = submissionIdsAndEmails.traverse { submissionIdAndEmail =>
@@ -59,10 +53,10 @@ object Dynamo extends DynamoClient with LazyLogging {
       .getOrElse(Left(new Exception("formstackSubmissionTableMetadata not found.")))
   }
 
-  override def updateMostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, Unit] = {
-    val currentDateTime = LocalDateTime.now.format(SubmissionTableUpdateDate.formatter)
-    logger.info(s"updating most recent timestamp in $lastUpdatedTableName to $currentDateTime")
-    val recentUpdate = SubmissionTableUpdateDate("lastUpdated", currentDateTime)
+  override def updateMostRecentTimestamp(lastUpdatedTableName: String, currentDateTime: LocalDateTime): Either[Throwable, Unit] = {
+    val formattedDateTime = currentDateTime.format(SubmissionTableUpdateDate.formatter)
+    logger.info(s"updating most recent timestamp in $lastUpdatedTableName to $formattedDateTime")
+    val recentUpdate = SubmissionTableUpdateDate("lastUpdated", formattedDateTime)
     Scanamo.put[SubmissionTableUpdateDate](dynamoClient)(lastUpdatedTableName)(recentUpdate)
       .getOrElse(Right())
       .fold(dynamoReadError => Left(new Exception(dynamoReadError.toString)),  _ => Right(()))
@@ -76,4 +70,12 @@ object Dynamo extends DynamoClient with LazyLogging {
           .sequence.left.map(err => new Exception(err.toString))
       } yield queryResult
     }
+}
+
+object Dynamo {
+  val defaultDynamoClient: AmazonDynamoDB = AmazonDynamoDBClient
+    .builder()
+    .withRegion(AwsCredentials.region)
+    .withCredentials(AwsCredentials.credentials)
+    .build()
 }

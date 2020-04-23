@@ -1,6 +1,6 @@
 package com.gu.identity.formstackbatonrequests
 
-import com.gu.identity.formstackbatonrequests.aws.{Dynamo, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.aws.{Dynamo, S3, SubmissionTableUpdateDate}
 import com.typesafe.scalalogging.LazyLogging
 
 /* Script used to populate Formstack table from empty. When .updateDynamo is not provided a date, Dynamo will be
@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 object PopulateFormstackTable extends App with LazyLogging {
 
   val defaultConfig = FormstackConfig.getPerformSarHandlerConfig
-  val formstackPerformSarHandler = FormstackPerformSarHandler(Dynamo, FormstackSarService, defaultConfig)
+  val formstackPerformSarHandler = FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, defaultConfig)
 
   val updateDynamoResult = formstackPerformSarHandler.updateDynamo(SubmissionTableUpdateDate("lastUpdated", "1970-01-01 00:00:00"))
   updateDynamoResult match {

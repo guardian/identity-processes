@@ -5,7 +5,8 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import BatonModels.{SarPerformRequest, SarRequest, SarStatusRequest}
 import io.circe.syntax._
 import circeCodecs._
-import com.gu.identity.formstackbatonrequests.aws.{Dynamo, Lambda, S3}
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.gu.identity.formstackbatonrequests.aws.{AwsCredentials, Dynamo, Lambda, S3}
 
 /* This object can be used for local runs of the lambda, for end-to-end testing. */
 
@@ -32,7 +33,7 @@ object FormstackBatonLambdaLocalRun extends App {
 
   def formstackPerformSarTestRun(request: SarRequest): Unit = {
     val performSarLambdaConfig = FormstackConfig.getPerformSarHandlerConfig
-    val performSarLambda = FormstackPerformSarHandler(Dynamo, FormstackSarService, S3, performSarLambdaConfig)
+    val performSarLambda = FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, performSarLambdaConfig)
     val streams = requestStreams(request)
     performSarLambda.handleRequest(streams.inputStream, streams.outputStream)
     val responseString = new String(streams.outputStream.toByteArray)

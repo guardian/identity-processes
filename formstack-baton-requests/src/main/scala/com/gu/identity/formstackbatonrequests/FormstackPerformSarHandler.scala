@@ -81,7 +81,7 @@ case class FormstackPerformSarHandler(
       for {
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackSarService.resultsPerPage, config.accountOneToken)
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackSarService.resultsPerPage, config.accountTwoToken)
-        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName)
+        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, LocalDateTime.now)
       } yield ()
     } else Right(())
   }
