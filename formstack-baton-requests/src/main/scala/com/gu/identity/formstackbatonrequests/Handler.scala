@@ -6,8 +6,9 @@ import io.circe.{Decoder, DecodingFailure, Encoder, Printer}
 import io.circe.parser._
 import io.circe.syntax._
 import circeCodecs._
-import com.gu.identity.formstackbatonrequests.BatonModels.{SarInitiateRequest, SarStatusRequest}
-import com.gu.identity.formstackbatonrequests.aws.{S3, Lambda}
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.gu.identity.formstackbatonrequests.BatonModels.{SarInitiateRequest, SarPerformRequest, SarStatusRequest}
+import com.gu.identity.formstackbatonrequests.aws.{AwsCredentials, Dynamo, Lambda, S3}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source
@@ -17,10 +18,12 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
 
   val jsonPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
 
-  private def checkFormstackDataProviderIfInitRequest(request: Req): Either[Throwable, Unit] = {
+  private def checkFormstackDataProvider(request: Req): Either[Throwable, Unit] = {
     request match {
       case _: SarStatusRequest => Right(())
       case SarInitiateRequest(_, dataProvider) =>
+        Either.cond(dataProvider == "formstack", (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
+      case SarPerformRequest(_, _, dataProvider) =>
         Either.cond(dataProvider == "formstack", (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
     }
   }
@@ -31,7 +34,7 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
     try {
       val response = for {
         request <- decode[Req](Source.fromInputStream(input).mkString)
-        _ <- checkFormstackDataProviderIfInitRequest(request)
+        _ <- checkFormstackDataProvider(request)
         response <- handle(request)
       } yield response
 
@@ -52,6 +55,12 @@ object Handler {
     val sarHandlerConfig = FormstackConfig.getSarHandlerConfig
     val sarHandler = FormstackSarHandler(S3, Lambda, sarHandlerConfig)
     sarHandler.handleRequest(inputStream, outputStream)
+  }
+
+  def handlePerformSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
+    val performSarHandlerConfig = FormstackConfig.getPerformSarHandlerConfig
+    val performSarHandler = FormstackPerformSarHandler(Dynamo, FormstackSarService, S3, performSarHandlerConfig)
+    performSarHandler.handleRequest(inputStream, outputStream)
   }
 
 }
