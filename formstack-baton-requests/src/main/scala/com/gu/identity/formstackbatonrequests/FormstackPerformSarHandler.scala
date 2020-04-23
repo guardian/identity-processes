@@ -87,13 +87,13 @@ case class FormstackPerformSarHandler(
   }
 
   def initiateSar(request: SarPerformRequest): Either[Throwable, S3WriteSuccess] =
-    (for {
+    for {
       submissionTableUpdateDate <- dynamoClient.mostRecentTimestamp(config.lastUpdatedTableName)
       _ <- updateDynamo(submissionTableUpdateDate)
       submissionIds <- dynamoClient.userSubmissions(request.subjectEmail, config.bcryptSalt, config.submissionTableName)
       submissionData <- formstackClient.submissionData(submissionIds, config)
-      _ <- s3Client.writeSuccessResult(request.initiationReference, submissionData, config)
-    } yield ()).flatMap(_ => s3Client.copyResultsToCompleted(request.initiationReference, config))
+      writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, submissionData, config)
+    } yield writeToS3Response
 
   override def handle(request: SarRequest): Either[Throwable, SarResponse] =
     request match {
