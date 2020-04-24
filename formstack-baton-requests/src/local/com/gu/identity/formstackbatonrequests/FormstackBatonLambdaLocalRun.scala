@@ -43,7 +43,7 @@ object FormstackBatonLambdaLocalRun extends App {
   val sarStatusRequest = SarStatusRequest(initiationReference = "initiationReference")
   val sarPerformRequest = SarPerformRequest(
     initiationReference = "initiationReference",
-    subjectEmail = "alastairsharpe89@gmail.com",
+    subjectEmail = "example@test.com",
     dataProvider = "formstack")
 
   formstackPerformSarTestRun(sarPerformRequest)

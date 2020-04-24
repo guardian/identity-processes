@@ -194,6 +194,16 @@ Resources:
                   - s3:PutObjectAcl
                   - s3:GetObject
                 Resource: !Sub arn:aws:s3:::${SarResultsBucket}/formstack-results/${Stage}/*
+        - PolicyName: GetParamsPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${FormstackAccountOneTokenPath}
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${FormstackAccountTwoTokenPath}
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${EncryptionPasswordPath}
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BcryptSaltPath}
 
   PerformFormstackSarLambda:
     Type: AWS::Lambda::Function

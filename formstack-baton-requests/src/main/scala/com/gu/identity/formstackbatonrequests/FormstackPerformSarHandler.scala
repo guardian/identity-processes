@@ -21,7 +21,7 @@ case class FormstackPerformSarHandler(
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  def submissionsWithEmailAndAccount(submissions: List[FormstackSubmission], accountNumber: Int): List[SubmissionIdEmail] = {
+  def submissionsWithEmailAndAccount(submissions: List[FormSubmission], accountNumber: Int): List[SubmissionIdEmail] = {
     val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b""".r
     submissions.foldLeft(List.empty[SubmissionIdEmail]) { (acc, submission) =>
       val submissionValues = submission.data.map(field => field._2.value).toList
@@ -39,7 +39,7 @@ case class FormstackPerformSarHandler(
     }
   }
 
-  private def handleSubs(form: FormstackForm, lastUpdate: SubmissionTableUpdateDate, submissionPage: Int = 1, token: FormstackAccountToken): Either[Throwable, Unit] = {
+  private def writeSubmissions(form: Form, lastUpdate: SubmissionTableUpdateDate, submissionPage: Int = 1, token: FormstackAccountToken): Either[Throwable, Unit] = {
     formstackClient.formSubmissionsForGivenPage(submissionPage, form.id, lastUpdate, config.encryptionPassword, token) match {
       case Left(err) => skipDecryptionError(err)
       case Right(response) =>
@@ -49,7 +49,7 @@ case class FormstackPerformSarHandler(
         dynamoClient.writeSubmissions(submissionsIdsWithEmails, config.bcryptSalt, config.submissionTableName) match {
           case Right(unprocessedItems) if unprocessedItems.nonEmpty =>
             Left(new Exception(s"Some items could not be written to DynamoDB: $unprocessedItems"))
-          case Right(_) if submissionPage < response.pages => handleSubs(form, lastUpdate, submissionPage + 1, token)
+          case Right(_) if submissionPage < response.pages => writeSubmissions(form, lastUpdate, submissionPage + 1, token)
           case Right(_) => Right(())
           case Left(err) => Left(err)
         }
@@ -64,7 +64,7 @@ case class FormstackPerformSarHandler(
         val forms = response.forms
         val formResults = forms.map { form =>
           logger.info(s"Processing results for form ${form.id}")
-          handleSubs(form, lastUpdate, token = token)
+          writeSubmissions(form, lastUpdate, token = token)
         }
         val errors = formResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
