@@ -41,6 +41,27 @@ Conditions:
   IsProd: !Equals [ !Ref Stage, PROD ]
 
 Resources:
+  BatonInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "formstack-baton-lambda-role-${Stage}"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt FormstackBatonSarLambda.Arn
+
   FormstackBatonSarLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -79,6 +100,13 @@ Resources:
                 Action:
                   - s3:ListBucket
                 Resource: !Sub arn:aws:s3:::${SarResultsBucket}
+        - PolicyName: InvokeLambdaPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                - lambda:InvokeFunction
+                Resource: !GetAtt PerformFormstackSarLambda.Arn
 
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -100,7 +128,7 @@ Resources:
         Variables:
           RESULTS_BUCKET: !Ref SarResultsBucket
           RESULTS_PATH: !Sub formstack-results/${Stage}
-          PERFORM_SAR_FUNCTION_NAME: performSarFunctionName
+          PERFORM_SAR_FUNCTION_NAME: !Ref PerformFormstackSarLambda
       MemorySize: 384
       Runtime: java8
       Timeout: 120
