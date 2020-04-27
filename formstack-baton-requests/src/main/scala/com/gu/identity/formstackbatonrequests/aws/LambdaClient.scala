@@ -2,7 +2,7 @@ package com.gu.identity.formstackbatonrequests.aws
 
 import com.gu.identity.formstackbatonrequests.circeCodecs._
 import com.amazonaws.services.lambda.AWSLambdaClient
-import com.amazonaws.services.lambda.model.{InvokeRequest, InvokeResult}
+import com.amazonaws.services.lambda.model.{InvocationType, InvokeRequest, InvokeResult}
 import com.gu.identity.formstackbatonrequests.BatonModels.SarPerformRequest
 import com.gu.identity.formstackbatonrequests.SarLambdaConfig
 import com.typesafe.scalalogging.LazyLogging
@@ -25,6 +25,7 @@ object Lambda extends LambdaClient with LazyLogging {
     val invokeRequest = new InvokeRequest()
       .withFunctionName(config.performSarFunctionName)
       .withPayload(sarPerformRequest.asJson.toString)
+      .withInvocationType(InvocationType.Event)
 
     Try(lambdaClient.invoke(invokeRequest)).toEither.left.map { err =>
       logger.error("unable to invoke FormstackPerformSarLambda", err)

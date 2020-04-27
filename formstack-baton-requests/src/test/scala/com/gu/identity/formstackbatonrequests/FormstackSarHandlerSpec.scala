@@ -65,7 +65,7 @@ class FormstackSarHandlerSpec extends FreeSpec with Matchers {
     }
 
     "should return pending status when found to be neither success nor failure" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withPendingResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+      val lambda = FormstackSarHandler(S3ClientStub.withPendingStatusResponse, LambdaClientStub.withSuccessResponse, mockConfig)
       val expectedResponse = SarStatusResponse(status = Pending)
       lambda
         .handle(validStatusRequest)

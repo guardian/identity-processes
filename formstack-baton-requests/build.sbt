@@ -1,4 +1,3 @@
-
 name := "formstack-baton-requests"
 
 version := "0.1"
@@ -13,6 +12,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk-dynamodb" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-s3" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-lambda" % amazonSdkVersion,
+  "com.amazonaws" % "aws-java-sdk-ssm" % amazonSdkVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
   "org.scalaj" %% "scalaj-http" % "2.4.2",
@@ -33,6 +33,11 @@ assemblyMergeStrategy in assembly := {
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
 }
+
+startDynamoDBLocal := startDynamoDBLocal.dependsOn(compile in Test).value
+test in Test := (test in Test).dependsOn(startDynamoDBLocal).value
+testOnly in Test := (testOnly in Test).dependsOn(startDynamoDBLocal).evaluated
+testOptions in Test += dynamoDBLocalTestCleanup.value
 
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
