@@ -49,7 +49,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: ec2.amazonaws.com
+              AWS: !Sub "arn:aws:iam::942464564246:root"
             Action:
               - sts:AssumeRole
       Path: /
