@@ -47,8 +47,10 @@ case class FormstackPerformSarHandler(
         val submissionsIdsWithEmails = submissionsWithEmailAndAccount(response.submissions, token.account)
         logger.info(s"Writing ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo")
         dynamoClient.writeSubmissions(submissionsIdsWithEmails, config.bcryptSalt, config.submissionTableName) match {
-          case Right(unprocessedItems) if unprocessedItems.nonEmpty =>
-            Left(new Exception(s"Some items could not be written to DynamoDB: $unprocessedItems"))
+          case Right(batchWriteItemsResults) if batchWriteItemsResults.exists { result =>
+            val unprocessedItems = result.getUnprocessedItems
+            !unprocessedItems.isEmpty
+          } => Left(new Exception(s"Some items could not be written to DynamoDB: $batchWriteItemsResults"))
           case Right(_) if submissionPage < response.pages => writeSubmissions(form, lastUpdate, submissionPage + 1, token)
           case Right(_) => Right(())
           case Left(err) => Left(err)
@@ -90,7 +92,7 @@ case class FormstackPerformSarHandler(
     for {
       submissionTableUpdateDate <- dynamoClient.mostRecentTimestamp(config.lastUpdatedTableName)
       _ <- updateDynamo(submissionTableUpdateDate)
-      submissionIds <- dynamoClient.userSubmissions(request.subjectEmail, config.bcryptSalt, config.submissionTableName)
+      submissionIds <- dynamoClient.userSubmissions(request.subjectEmail.toLowerCase, config.bcryptSalt, config.submissionTableName)
       submissionData <- formstackClient.submissionData(submissionIds, config)
       writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, submissionData, config)
     } yield writeToS3Response
