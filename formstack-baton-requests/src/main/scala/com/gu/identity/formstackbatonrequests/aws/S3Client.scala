@@ -46,14 +46,12 @@ object S3 extends S3Client with LazyLogging {
     resultsBucket: String
   ): StatusResponse = {
     val failedResultsExist = failedResults.nonEmpty
-    val completedResultsExist = completedResults
-      .exists(obj => obj.getKey.contains("ResultsCompleted") | obj.getKey.contains("NoResultsFoundForUser"))
+    val completedResultsExist = completedResults.nonEmpty
 
     (failedResultsExist, completedResultsExist) match {
       case (true, _) => FailedPathFound()
       case (false, true) =>
         val completedResultsPaths = completedResults
-        .filterNot(obj => obj.getKey.contains("ResultsCompleted"))
         .map(obj => s"s3://$resultsBucket/${obj.getKey}")
         CompletedPathFound(completedResultsPaths)
       case _ => NoResultsFound()
