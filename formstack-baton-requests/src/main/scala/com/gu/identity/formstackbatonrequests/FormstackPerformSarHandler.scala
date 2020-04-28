@@ -4,6 +4,7 @@ import java.time.{Instant, LocalDate, LocalDateTime}
 
 import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse}
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, S3Client, S3WriteSuccess, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.ExecutionContext
@@ -22,7 +23,7 @@ case class FormstackPerformSarHandler(
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   def submissionsWithEmailAndAccount(submissions: List[FormSubmission], accountNumber: Int): List[SubmissionIdEmail] = {
-    val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b""".r
+    val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,6}\b""".r
     submissions.foldLeft(List.empty[SubmissionIdEmail]) { (acc, submission) =>
       val submissionValues = submission.data.map(field => field._2.value).toList
       val emailList = submissionValues.collect { case jsonValue => emailReg.findAllIn(jsonValue.toString).toList }.flatten
@@ -71,7 +72,7 @@ case class FormstackPerformSarHandler(
         val errors = formResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString))
-        } else if ((count + FormstackSarService.resultsPerPage) <= response.total) {
+        } else if (count < response.total) {
           updateSubmissionsTable(formsPage + 1, lastUpdate, count + FormstackSarService.resultsPerPage, token)
         } else Right(())
     }

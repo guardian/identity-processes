@@ -1,7 +1,8 @@
 package com.gu.identity.formstackbatonrequests
 
 import com.gu.identity.formstackbatonrequests.BatonModels.{BatonTaskStatus, Completed, Failed, Pending, SarInitiateRequest, SarInitiateResponse, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse, SarStatusRequest, SarStatusResponse}
-import io.circe.{Decoder, Encoder, Json, JsonObject}
+import io.circe.generic.JsonCodec
+import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json, JsonObject}
 import io.circe.generic.auto._
 import io.circe.syntax._
 
@@ -57,4 +58,42 @@ object circeCodecs {
     case pr: SarPerformRequest =>
       addAdditionalFields(pr.asJsonObject, "SAR", "perform")
   }
+
+  /* Codecs for decoding accountFormsForGivenPage response */
+  @JsonCodec case class Form(id: String)
+  @JsonCodec case class FormsResponse(forms: List[Form], total: Int)
+
+  /* Codecs for decoding formSubmissionsForGivenPage response */
+  @JsonCodec case class ResponseValue(value: Json)
+  case class FormSubmission(id: String, data: Map[String, ResponseValue])
+  @JsonCodec case class FormSubmissions(submissions: List[FormSubmission], pages: Int)
+
+  val decodePopulatedSubmission: Decoder[FormSubmission] = new Decoder[FormSubmission] {
+    final def apply(c: HCursor): Decoder.Result[FormSubmission] =
+      for {
+        id <- c.downField("id").as[String]
+        data <- c.downField("data").as[Map[String, ResponseValue]]
+      } yield {
+        FormSubmission(id, data)
+      }
+  }
+  val decodeEmptySubmission: Decoder[FormSubmission] = new Decoder[FormSubmission] {
+    final def apply(c: HCursor): Decoder.Result[FormSubmission] = {
+      for {
+        data <- c.downField("data").as[List[String]]
+        id <-
+          if (data.isEmpty) c.downField("id").as[String]
+          else Left(DecodingFailure("Unable to decode submission data format", List.empty))
+      } yield FormSubmission(id, Map.empty)
+    }
+  }
+
+  implicit val decodeSubmission: Decoder[FormSubmission] = decodePopulatedSubmission or decodeEmptySubmission
+
+  /* Codecs for decoding submissionsById response */
+  @JsonCodec case class SubmissionData(field: String, value: String)
+  @JsonCodec case class Submission(id: String, timestamp: String, data: List[SubmissionData])
+
+  /* Codecs for decoding retrieveSubmissionLabels*/
+  @JsonCodec case class SubmissionLabelField(label: String)
 }
