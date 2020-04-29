@@ -8,16 +8,18 @@ import io.circe.generic.auto._
 import io.circe.parser._
 import scalaj.http.Http
 
+case class EventbriteCredentials(organisationId: String, token: String)
+
 class EventbriteClient {
-  def findConsents(token: String, lastRun: Instant, continuationToken: String = ""): EventbriteResponse = {
+  def findConsents(credentials: EventbriteCredentials, lastRun: Instant, continuationToken: String = ""): EventbriteResponse = {
     val formattedLastRun = DateTimeFormatter
       .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
       .withZone(ZoneId.of("UTC"))
       .format(lastRun)
 
-    val response = Http("https://www.eventbriteapi.com/v3/users/me/owned_event_attendees/")
+    val response = Http(s"https://www.eventbriteapi.com/v3/organizations/${credentials.organisationId}/attendees/")
       .headers(
-        "Authorization" -> s"Bearer $token",
+        "Authorization" -> s"Bearer ${credentials.token}",
         "Accept" -> "application/json"
       )
       .params(
