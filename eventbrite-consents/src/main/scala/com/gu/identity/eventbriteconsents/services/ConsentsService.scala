@@ -3,7 +3,7 @@ package com.gu.identity.eventbriteconsents.services
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-import com.gu.identity.eventbriteconsents.clients.{EventbriteClient, IdentityClient}
+import com.gu.identity.eventbriteconsents.clients.{EventbriteClient, EventbriteCredentials, IdentityClient}
 import com.gu.identity.eventbriteconsents.config.LambdaConfig
 import com.typesafe.scalalogging.LazyLogging
 
@@ -11,7 +11,7 @@ class ConsentsService(config: LambdaConfig, eventbriteClient: EventbriteClient, 
 
   def syncConsents(): Unit = {
     val lastRun = Instant.now().minus(config.syncFrequencyHours, ChronoUnit.HOURS)
-    val emailAddresses = findConsentEmails(lastRun, config.masterclassesToken) ++ findConsentEmails(lastRun, config.eventsToken)
+    val emailAddresses = findConsentEmails(lastRun, config.masterclassesCredentials) ++ findConsentEmails(lastRun, config.eventsCredentials)
     logger.info(s"Email addresses to sync $emailAddresses, total ${emailAddresses.size}, last run $lastRun")
     for {
       email <- emailAddresses
@@ -23,10 +23,15 @@ class ConsentsService(config: LambdaConfig, eventbriteClient: EventbriteClient, 
     }
   }
 
-
   @scala.annotation.tailrec
-  private def findConsentEmails(lastRun: Instant, token: String, continuation: String = "", accumulator: Set[String] = Set.empty): Set[String] = {
-    val eventbriteResponse = eventbriteClient.findConsents(token, lastRun, continuation)
+  private def findConsentEmails(
+    lastRun: Instant,
+    eventbriteCredentials: EventbriteCredentials,
+    continuation: String = "",
+    accumulator: Set[String] = Set.empty
+  ): Set[String] = {
+
+    val eventbriteResponse = eventbriteClient.findConsents(eventbriteCredentials, lastRun, continuation)
 
     val emailAddresses = for {
       attendee <- eventbriteResponse.attendeesList
@@ -41,7 +46,7 @@ class ConsentsService(config: LambdaConfig, eventbriteClient: EventbriteClient, 
       case Some(continue) =>
         // Sleep to avoid rate limiting
         Thread.sleep(250)
-        findConsentEmails(lastRun, token, continue, accumulated)
+        findConsentEmails(lastRun, eventbriteCredentials, continue, accumulated)
       case _ =>
         accumulated.map(_.toLowerCase)
     }
