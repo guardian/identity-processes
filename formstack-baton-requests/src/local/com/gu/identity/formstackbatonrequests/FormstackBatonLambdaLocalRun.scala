@@ -5,8 +5,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import BatonModels.{SarPerformRequest, SarRequest, SarStatusRequest}
 import io.circe.syntax._
 import circeCodecs._
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
-import com.gu.identity.formstackbatonrequests.aws.{AwsCredentials, Dynamo, Lambda, S3}
+import com.gu.identity.formstackbatonrequests.aws.{Dynamo, Lambda, S3}
 
 /* This object can be used for local runs of the lambda, for end-to-end testing. */
 
