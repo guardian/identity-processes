@@ -1,15 +1,16 @@
 package com.gu.identity.formstackbatonrequests
 
-import com.gu.identity.formstackbatonrequests.aws.{S3Client, CompletedPathFound, FailedPathFound, NoResultsFound, StatusResponse, S3WriteSuccess}
+import com.gu.identity.formstackbatonrequests.BatonModels.BatonRequestType
+import com.gu.identity.formstackbatonrequests.aws.{CompletedPathFound, FailedPathFound, NoResultsFound, S3Client, S3WriteSuccess, StatusResponse}
 
 class S3ClientStub (
   checkForResultsResponse: Either[Throwable, StatusResponse],
   writeSuccessResultsResponse: Either[Throwable, S3WriteSuccess],
   writeFailedResultsResponse: Either[Throwable, S3WriteSuccess],
 ) extends S3Client {
-  override def checkForResults(initiationId: String, config: SarLambdaConfig): Either[Throwable, StatusResponse] = checkForResultsResponse
-  override def writeSuccessResult(initiationId: String, results: List[FormstackSubmissionQuestionAnswer], config: PerformSarLambdaConfig): Either[Throwable, S3WriteSuccess] = writeSuccessResultsResponse
-  override def writeFailedResults(initiationId: String, err: String, config: PerformSarLambdaConfig): Either[Throwable, S3WriteSuccess] = writeFailedResultsResponse
+  override def checkForResults(initiationId: String, config: InitLambdaConfig): Either[Throwable, StatusResponse] = checkForResultsResponse
+  override def writeSuccessResult(initiationId: String, results: List[FormstackSubmissionQuestionAnswer], requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = writeSuccessResultsResponse
+  override def writeFailedResults(initiationId: String, err: String, requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = writeFailedResultsResponse
 }
 
 object S3ClientStub {

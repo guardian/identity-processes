@@ -6,7 +6,7 @@ import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pe
 import com.gu.identity.formstackbatonrequests.aws.{LambdaClient, S3Client, CompletedPathFound, FailedPathFound, NoResultsFound}
 import com.typesafe.scalalogging.LazyLogging
 
-case class FormstackSarHandler(s3Client: S3Client, lambdaClient: LambdaClient, sarHandlerConfig: SarLambdaConfig)
+case class FormstackSarHandler(s3Client: S3Client, lambdaClient: LambdaClient, sarHandlerConfig: InitLambdaConfig)
   extends LazyLogging
     with FormstackHandler[SarRequest, SarResponse] {
 
