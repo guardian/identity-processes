@@ -82,7 +82,7 @@ object Handler {
     val performSarHandler =
       if (stage == "PROD")
         FormstackPerformSarHandler(Dynamo(), FormstackService, S3, performSarHandlerConfig)
-      else FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
+      else PerformHandlerStubs.FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
     performSarHandler.handleRequest(inputStream, outputStream)
   }
 
@@ -98,7 +98,7 @@ object Handler {
     val performRerHandler =
       if (stage == "PROD")
         FormstackPerformRerHandler(Dynamo(), FormstackService, S3, performRerHandlerConfig)
-      else FormstackPerformRerHandlerStub(S3, performRerHandlerConfig)
+      else PerformHandlerStubs.FormstackPerformRerHandlerStub(S3, performRerHandlerConfig)
     performRerHandler.handleRequest(inputStream, outputStream)
   }
 
