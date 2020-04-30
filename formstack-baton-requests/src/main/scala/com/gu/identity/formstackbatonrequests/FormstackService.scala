@@ -8,10 +8,11 @@ import io.circe.Json
 import io.circe.generic.JsonCodec
 import cats.implicits._
 
-trait FormstackSar {
+trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
   def formSubmissionsForGivenPage(page: Int, formId: String, minTime: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions]
-  def submissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformSarLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]]
+  def submissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]]
+  def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]]
 }
 /* Codecs for decoding accountFormsForGivenPage response */
 @JsonCodec case class Form(id: String)
@@ -29,9 +30,12 @@ trait FormstackSar {
 /* Codecs for decoding retrieveSubmissionLabels*/
 @JsonCodec case class SubmissionLabelField(label: String)
 
+/* Codecs for submission deletion */
+@JsonCodec case class SubmissionDeletionReponse(success: Int)
+
 case class FormstackDecryptionError(message: String) extends Throwable
 
-object FormstackSarService extends FormstackSar with LazyLogging {
+object FormstackService extends FormstackRequestService with LazyLogging {
 
   val resultsPerPage = 25
 
@@ -129,7 +133,7 @@ object FormstackSarService extends FormstackSar with LazyLogging {
     }
   }
 
-  override def submissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformSarLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = {
+  override def submissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = {
     logger.info(s"retrieving submission data for ${submissionIdEmails.length} submissions")
     val tokens = List(config.accountOneToken, config.accountTwoToken)
     tokens.traverse { token =>
@@ -139,5 +143,24 @@ object FormstackSarService extends FormstackSar with LazyLogging {
         labelsAndValues <- getSubmissionQuestionsAnswers(fieldsAndValues, token)
       } yield labelsAndValues
     }.map(accountSubmissions => accountSubmissions.flatten)
+  }
+
+  override def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
+    logger.info(s"deleting ${submissionIdEmails.length} submissions.")
+    val tokens = List(config.accountOneToken, config.accountTwoToken)
+    submissionIdEmails.traverse { submissionIdEmail =>
+      val token = tokens.find( token => token.account == submissionIdEmail.accountNumber).get
+      val response =
+        Http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
+          .method("DELETE")
+          .header("Authorization", token.secret)
+          .asString
+
+      if(!response.is2xx) {
+        logger.error(response.body)
+      }
+
+      decode[SubmissionDeletionReponse](response.body)
+    }
   }
 }

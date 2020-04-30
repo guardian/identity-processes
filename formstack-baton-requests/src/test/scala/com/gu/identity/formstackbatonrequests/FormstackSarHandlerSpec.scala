@@ -4,11 +4,11 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import org.scalatest.{FreeSpec, Matchers}
 import circeCodecs._
-import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pending, SarInitiateRequest, SarInitiateResponse, SarStatusRequest, SarStatusResponse}
+import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pending, SAR, SarInitiateRequest, SarInitiateResponse, SarStatusRequest, SarStatusResponse}
 
 class FormstackSarHandlerSpec extends FreeSpec with Matchers {
-  val mockConfig: SarLambdaConfig = SarLambdaConfig("resultsBucket", "resultsPath", "performSarFunctionName")
-  val validInitiateRequest: SarInitiateRequest = SarInitiateRequest("subjectEmail", "formstack")
+  val mockConfig: InitLambdaConfig = InitLambdaConfig("resultsBucket", "resultsPath", "performSarFunctionName")
+  val validInitiateRequest: SarInitiateRequest = SarInitiateRequest("subjectEmail", "formstack", SAR)
   val validStatusRequest: SarStatusRequest = SarStatusRequest("initiationReference")
 
   "FormstackSarHandler" - {
@@ -22,7 +22,7 @@ class FormstackSarHandlerSpec extends FreeSpec with Matchers {
       response.contains("io.circe.ParsingFailure") shouldBe true
     }
 
-    "should returning a decoding failure in a dataprovider other than formstack is passed" in {
+    "should returning a decoding failure if a dataprovider other than formstack is passed" in {
       val lambda = FormstackSarHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
       val invalidProviderRequest =
         """{
@@ -39,6 +39,25 @@ class FormstackSarHandlerSpec extends FreeSpec with Matchers {
       lambda.handleRequest(testInputStream, testOutputStream)
       val response = new String(testOutputStream.toByteArray)
       response.contains("DecodingFailure(invalid dataProvider: zuora, List())") shouldBe true
+    }
+
+    "should returning a decoding failure if a requestType other than SAR is passed" in {
+      val lambda = FormstackSarHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+      val invalidProviderRequest =
+        """{
+          |"subjectId": "",
+          |"subjectEmail" : "testSubjectEmail",
+          |"dataProvider" : "formstack",
+          |"requestType": "RER",
+          |"action" : "initiate"
+          |}
+          |""".stripMargin
+
+      val testInputStream = new ByteArrayInputStream(invalidProviderRequest.getBytes)
+      val testOutputStream = new ByteArrayOutputStream()
+      lambda.handleRequest(testInputStream, testOutputStream)
+      val response = new String(testOutputStream.toByteArray)
+      response.contains("DecodingFailure(excepted request type not found: RER, List())") shouldBe true
     }
 
     "should return a SarInitiateResponse after invoking the PerformSarLambda" in {
@@ -72,5 +91,4 @@ class FormstackSarHandlerSpec extends FreeSpec with Matchers {
         .map(response => response shouldBe expectedResponse)
     }
   }
-
 }

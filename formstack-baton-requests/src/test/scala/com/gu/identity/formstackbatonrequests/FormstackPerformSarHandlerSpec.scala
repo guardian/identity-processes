@@ -1,12 +1,11 @@
 package com.gu.identity.formstackbatonrequests
 
-import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, SarInitiateRequest, SarPerformRequest, SarPerformResponse}
-import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate
+import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, SarPerformRequest, SarPerformResponse}
 import org.scalatest.{FreeSpec, Matchers}
 
 class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
-  val mockConfig: PerformSarLambdaConfig =
-    PerformSarLambdaConfig(
+  val mockConfig: PerformLambdaConfig =
+    PerformLambdaConfig(
       "resultsBucket",
       "resultsPath",
       "encryptionPassword",
@@ -28,7 +27,7 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
     val lambda =
       FormstackPerformSarHandler(
         DynamoClientStub.withSuccessResponse,
-        FormstackSarServiceStub.withSuccessResponse,
+        FormstackServiceStub.withSuccessResponse,
         S3ClientStub.withSuccessResponse,
         mockConfig)
 
@@ -48,7 +47,7 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
     val lambda =
       FormstackPerformSarHandler(
         DynamoClientStub.withSuccessResponse,
-        FormstackSarServiceStub.withSuccessResponse,
+        FormstackServiceStub.withSuccessResponse,
         S3ClientStub.withFailedResponse,
         mockConfig)
 
@@ -68,7 +67,7 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
     val lambda =
       FormstackPerformSarHandler(
         DynamoClientStub.withSuccessResponse,
-        FormstackSarServiceStub.withFailedResponse,
+        FormstackServiceStub.withFailedResponse,
         S3ClientStub.withSuccessResponse,
         mockConfig)
 
@@ -88,7 +87,7 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
     val lambda =
       FormstackPerformSarHandler(
         DynamoClientStub.withFailedResponse,
-        FormstackSarServiceStub.withSuccessResponse,
+        FormstackServiceStub.withSuccessResponse,
         S3ClientStub.withSuccessResponse,
         mockConfig)
 
@@ -102,33 +101,4 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
     lambda
       .handle(validSarPerformRequest) shouldBe Right(expectedResponse)
   }
-
-  "should update dynamo with submissions from Formstack" in {
-    val lambda =
-      FormstackPerformSarHandler(
-        DynamoClientStub.withSuccessResponse,
-        FormstackSarServiceStub.withSuccessResponse,
-        S3ClientStub.withSuccessResponse,
-        mockConfig)
-
-    val expectedResponse = Right(())
-
-    lambda
-      .updateDynamo(SubmissionTableUpdateDate("lastUpdated", "2020-01-01 00:00:00")) shouldBe expectedResponse
-  }
-
-  "should detect fields with email addresses and return a list of SubmissionIdEmail" in {
-    val lambda =
-      FormstackPerformSarHandler(
-        DynamoClientStub.withSuccessResponse,
-        FormstackSarServiceStub.withSuccessResponse,
-        S3ClientStub.withSuccessResponse,
-        mockConfig)
-
-    FormstackSarServiceStub.formSubmissionsForGivenPageSuccess.map { submissionsOrError =>
-      val submissionsWithEmail = lambda.submissionsWithEmailAndAccount(submissionsOrError.submissions, accountNumber = 1)
-      submissionsWithEmail.length shouldBe 2
-    }
-  }
-
 }

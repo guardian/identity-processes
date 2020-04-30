@@ -2,6 +2,7 @@ package com.gu.identity.formstackbatonrequests
 
 import java.time.LocalDateTime
 
+import com.amazonaws.services.dynamodbv2.model.DeleteItemResult
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, DynamoClient, SubmissionTableUpdateDate}
 import org.scalatest.FreeSpec
 import com.github.t3hnar.bcrypt._
@@ -20,6 +21,9 @@ class DynamoClientSpec extends FreeSpec with Matchers with BeforeAndAfterAll {
       SubmissionIdEmail("test3@test.com", "submissionId3", 1577836800, 1),
       SubmissionIdEmail("test@test.com", "submissionId4", 1577836800, 2)
     )
+
+  def matchingSubmissions(email: String): Either[Throwable, List[SubmissionIdEmail]] =
+    client.userSubmissions(email, salt, submissionsTable)
 
   "DynamoClient" - {
 
@@ -41,21 +45,37 @@ class DynamoClientSpec extends FreeSpec with Matchers with BeforeAndAfterAll {
 
       val emailAddressForSar = "test@test.com"
 
-      val matchingSubmissions = client.userSubmissions(emailAddressForSar, salt, submissionsTable)
+      val submissions = matchingSubmissions(emailAddressForSar)
 
-      matchingSubmissions.isRight shouldBe true
-      matchingSubmissions.getOrElse(List.empty).length shouldBe 2
-      matchingSubmissions.getOrElse(List.empty).head.submissionId shouldBe "submissionId1"
+      submissions.isRight shouldBe true
+      submissions.getOrElse(List.empty).length shouldBe 2
+      submissions.getOrElse(List.empty).head.submissionId shouldBe "submissionId1"
     }
 
     "should return an empty list if no `SubmissionIddEmail`s match a given email address" in {
 
       val emailAddressForSar = "test4@test.com"
 
-      val matchingSubmissions = client.userSubmissions(emailAddressForSar, salt, submissionsTable)
+      val submissions = matchingSubmissions(emailAddressForSar)
 
-      matchingSubmissions.isRight shouldBe true
-      matchingSubmissions.getOrElse(List.empty).length shouldBe 0
+      submissions.isRight shouldBe true
+      submissions.getOrElse(List.empty).length shouldBe 0
+    }
+
+    "should delete all `SubmissionIdEmail`s that match a given email address" in {
+
+      val emailAddressForRer = "test@test.com"
+      val submissionsBeforeDeletion = matchingSubmissions(emailAddressForRer)
+
+      submissionsBeforeDeletion.isRight shouldBe true
+      submissionsBeforeDeletion.getOrElse(List.empty).length shouldBe 2
+
+      val deleteSubmissions = client.deleteUserSubmissions(submissionsBeforeDeletion.getOrElse(List.empty), salt, submissionsTable)
+      deleteSubmissions.isRight shouldBe true
+
+      val submissionsAfterDeletion = matchingSubmissions(emailAddressForRer)
+      submissionsAfterDeletion.isRight shouldBe true
+      submissionsAfterDeletion.getOrElse(List.empty).length shouldBe 0
     }
 
     "should return an error when invalid salt provided to read `SubmissionIdEmail` from Dynamo" in {
