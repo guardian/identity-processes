@@ -41,6 +41,14 @@ Conditions:
   IsProd: !Equals [ !Ref Stage, PROD ]
 
 Resources:
+  TopicPagerDutyAlerts:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: PagerDutyTopic
+      Subscription:
+        - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
+          Protocol: https
+
   BatonInvokeRole:
     Type: AWS::IAM::Role
     Properties:
@@ -427,3 +435,22 @@ Resources:
         !GetAtt PerformFormstackRerLambdaRole.Arn
     DependsOn:
       - PerformFormstackRerLambdaRole
+
+  FormstackBatonRequestsLambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alert when formstack baton request lambdas error
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: BatonSarLambdaName
+          Value: !Ref FormstackBatonSarLambda
+        - Name: PerformSarLambdaName
+          Value: !Ref PerformFormstackSarLambda
+      MetricName: Errors
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: '1'
+      Period: '60'
+      EvaluationPeriods: '1'
+      AlarmActions:
+        - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']

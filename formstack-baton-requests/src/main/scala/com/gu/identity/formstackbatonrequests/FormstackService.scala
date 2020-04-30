@@ -4,9 +4,8 @@ import com.typesafe.scalalogging.LazyLogging
 import scalaj.http.Http
 import io.circe.parser.decode
 import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate
-import io.circe.Json
-import io.circe.generic.JsonCodec
 import cats.implicits._
+import com.gu.identity.formstackbatonrequests.circeCodecs._
 
 trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
@@ -14,21 +13,6 @@ trait FormstackRequestService {
   def submissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]]
   def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]]
 }
-/* Codecs for decoding accountFormsForGivenPage response */
-@JsonCodec case class Form(id: String)
-@JsonCodec case class FormsResponse(forms: List[Form], total: Int)
-
-/* Codecs for decoding formSubmissionsForGivenPage response */
-@JsonCodec case class ResponseValue(value: Json)
-@JsonCodec case class FormSubmission(id: String, data: Map[String, ResponseValue])
-@JsonCodec case class FormSubmissions(submissions: List[FormSubmission], pages: Int)
-
-/* Codecs for decoding submissionsById response */
-@JsonCodec case class SubmissionData(field: String, value: String)
-@JsonCodec case class Submission(id: String, timestamp: String, data: List[SubmissionData])
-
-/* Codecs for decoding retrieveSubmissionLabels*/
-@JsonCodec case class SubmissionLabelField(label: String)
 
 /* Codecs for submission deletion */
 @JsonCodec case class SubmissionDeletionReponse(success: Int)

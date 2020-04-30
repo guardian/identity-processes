@@ -1,10 +1,12 @@
 package com.gu.identity.eventbriteconsents.config
 
+import com.gu.identity.eventbriteconsents.clients.EventbriteCredentials
+
 case class LambdaConfig(
   idapiHost: String,
   idapiAccessToken: String,
-  masterclassesToken: String,
-  eventsToken: String,
+  masterclassesCredentials: EventbriteCredentials,
+  eventsCredentials: EventbriteCredentials,
   syncFrequencyHours: Int,
   isDebug: Boolean,
 )
@@ -15,8 +17,8 @@ object LambdaConfig {
   def loadFromEnvironment(): LambdaConfig = LambdaConfig(
     idapiHost = loadConfigVar("idapiHost"),
     idapiAccessToken = loadConfigVar("idapiAccessToken"),
-    masterclassesToken = loadConfigVar("masterclassesToken"),
-    eventsToken = loadConfigVar("eventsToken"),
+    masterclassesCredentials = EventbriteCredentials(loadConfigVar("masterclassesOrganisation"), loadConfigVar("masterclassesToken")),
+    eventsCredentials = EventbriteCredentials(loadConfigVar("eventsOrganisation"), loadConfigVar("eventsToken")),
     syncFrequencyHours = loadConfigVar("syncFrequencyHours").toInt,
     isDebug = loadConfigVar("isDebug").toBoolean,
   )

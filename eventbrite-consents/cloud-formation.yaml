@@ -6,7 +6,13 @@ Parameters:
     Description: key used to authenticate against the identity API
     Type: String
     NoEcho: true
+  MasterclassesOrganisation:
+    Type: String
+    NoEcho: true
   MasterclassesToken:
+    Type: String
+    NoEcho: true
+  EventsOrganisation:
     Type: String
     NoEcho: true
   EventsToken:
@@ -58,6 +64,8 @@ Resources:
           idapiAccessToken: !Ref IdapiAccessToken
           masterclassesToken: !Ref MasterclassesToken
           eventsToken: !Ref EventsToken
+          masterclassesOrganisation: !Ref MasterclassesOrganisation
+          eventsOrganisation: !Ref EventsOrganisation
           syncFrequencyHours: !FindInMap [SyncFrequencyMap, values, syncFrequencyHours]
           isDebug: !FindInMap [IsDebugMap, !Ref Stage, value]
       Handler: com.gu.identity.eventbriteconsents.Lambda::handler
