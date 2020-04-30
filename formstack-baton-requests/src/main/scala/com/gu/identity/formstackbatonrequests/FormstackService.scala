@@ -14,9 +14,6 @@ trait FormstackRequestService {
   def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]]
 }
 
-/* Codecs for submission deletion */
-@JsonCodec case class SubmissionDeletionReponse(success: Int)
-
 case class FormstackDecryptionError(message: String) extends Throwable
 
 object FormstackService extends FormstackRequestService with LazyLogging {

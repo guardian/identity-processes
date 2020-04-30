@@ -110,6 +110,9 @@ object circeCodecs {
   /* Codecs for decoding retrieveSubmissionLabels*/
   @JsonCodec case class SubmissionLabelField(label: String)
 
+  /* Codecs for submission deletion */
+  @JsonCodec case class SubmissionDeletionReponse(success: Int)
+
   /* encoder used for test run. */
   implicit val sarRequestEncoder: Encoder[SarRequest] = Encoder.instance {
     case ir: SarInitiateRequest =>
