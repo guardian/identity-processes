@@ -70,11 +70,12 @@ case class DynamoUpdateService(
 
   def updateDynamo(submissionsTableUpdateDate: SubmissionTableUpdateDate): Either[Throwable, Unit] = {
     val timestampAsDate = LocalDateTime.parse(submissionsTableUpdateDate.date, SubmissionTableUpdateDate.formatter)
+    val timeOfStart = LocalDateTime.now
     if (timestampAsDate.toLocalDate != LocalDate.now) {
       for {
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackService.resultsPerPage, config.accountOneToken)
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackService.resultsPerPage, config.accountTwoToken)
-        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, LocalDateTime.now)
+        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, timeOfStart)
       } yield ()
     } else Right(())
   }
