@@ -240,6 +240,22 @@ Resources:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${FormstackAccountTwoTokenPath}
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${EncryptionPasswordPath}
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BcryptSaltPath}
+        - PolicyName: SubmissionIdsTablePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:table/formstack-submission-ids
+        - PolicyName: LastUpdatedTablePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:table/formstack-submissions-last-updated
 
   PerformFormstackSarLambda:
     Type: AWS::Lambda::Function

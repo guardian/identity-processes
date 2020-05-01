@@ -64,7 +64,7 @@ object Handler {
   def handlePerformSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
     val performSarHandlerConfig = FormstackConfig.getPerformSarHandlerConfig
     val performSarHandler =
-      if (stage == "PROD")
+      if (stage == "CODE")
         FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, performSarHandlerConfig)
       else FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
     performSarHandler.handleRequest(inputStream, outputStream)
