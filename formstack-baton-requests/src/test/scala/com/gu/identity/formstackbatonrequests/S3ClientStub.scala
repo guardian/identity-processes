@@ -8,7 +8,7 @@ class S3ClientStub (
   writeSuccessResultsResponse: Either[Throwable, S3WriteSuccess],
   writeFailedResultsResponse: Either[Throwable, S3WriteSuccess],
 ) extends S3Client {
-  override def checkForResults(initiationId: String, config: InitLambdaConfig): Either[Throwable, StatusResponse] = checkForResultsResponse
+  override def checkForResults(initiationId: String, requestType: BatonRequestType, config: InitLambdaConfig): Either[Throwable, StatusResponse] = checkForResultsResponse
   override def writeSuccessResult(initiationId: String, results: List[FormstackSubmissionQuestionAnswer], requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = writeSuccessResultsResponse
   override def writeFailedResults(initiationId: String, err: String, requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = writeFailedResultsResponse
 }

@@ -26,7 +26,7 @@ case class FormstackRerHandler(s3Client: S3Client, lambdaClient: LambdaClient, r
 
   private def status(initiationReference: String): Either[Throwable, RerStatusResponse] = {
     logger.info(s"checking Formstack RER status for initiation reference: $initiationReference")
-    s3Client.checkForResults(initiationReference, rerHandlerConfig).map {
+    s3Client.checkForResults(initiationReference, RER, rerHandlerConfig).map {
       case CompletedPathFound(resultLocations) =>
         logger.info(s"RER completed: completed RER results for initiation reference $initiationReference found in s3: $resultLocations")
         RerStatusResponse(initiationReference, Completed, None)

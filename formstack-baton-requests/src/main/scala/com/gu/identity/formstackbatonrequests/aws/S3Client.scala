@@ -18,7 +18,7 @@ case class S3WriteSuccess()
 
 
 trait S3Client {
-  def checkForResults(initiationId: String, config: InitLambdaConfig): Either[Throwable, StatusResponse]
+  def checkForResults(initiationId: String, requestType: BatonRequestType, config: InitLambdaConfig): Either[Throwable, StatusResponse]
   def writeSuccessResult(initiationId: String, results: List[FormstackSubmissionQuestionAnswer], requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess]
   def writeFailedResults(initiationId: String, err: String, requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess]
 }
@@ -58,9 +58,20 @@ object S3 extends S3Client with LazyLogging {
     }
   }
 
-  override def checkForResults(initiationId: String, config: InitLambdaConfig): Either[Throwable, StatusResponse] = {
-    val completedPath = s"${config.resultsPath}/$initiationId/completed/"
-    val failedPath = s"${config.resultsPath}/$initiationId/failed/"
+  private def generateResultsPath(
+    configResultsPath: String,
+    requestType: BatonRequestType,
+    initiationId: String,
+    status: String,
+    objectName: Option[String] = None): String =
+    objectName match {
+      case Some(obj) => s"$configResultsPath/$requestType/$initiationId/$status/$obj"
+      case None => s"$configResultsPath/$requestType/$initiationId/$status/"
+    }
+
+  override def checkForResults(initiationId: String, requestType: BatonRequestType, config: InitLambdaConfig): Either[Throwable, StatusResponse] = {
+    val completedPath = generateResultsPath(config.resultsPath, requestType, initiationId, "completed")
+    val failedPath = generateResultsPath(config.resultsPath, requestType, initiationId, "failed")
 
     for {
       completedResults <- listFolderContents(config.resultsBucket, completedPath)
@@ -88,18 +99,17 @@ object S3 extends S3Client with LazyLogging {
     results: List[FormstackSubmissionQuestionAnswer],
     requestType: BatonRequestType,
     config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = {
-    val resultsPath = s"${config.resultsPath}/$initiationId/completed"
 
     val filePath = requestType match {
       case SAR if results.nonEmpty =>
         logger.info("Writing SAR result to s3.")
-        s"$resultsPath/formstackSarResponse"
+        generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some("formstackSarResponse"))
       case SAR =>
         logger.info(s"No results found for request $initiationId. Creating NoResultsFoundForUser object.")
-        s"$resultsPath/noResultsFoundForUser"
+        generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some("noResultsFoundForUser"))
       case RER =>
         logger.info(s"Completed erasure request for $initiationId. Creating rerCompleted object.")
-        s"$resultsPath/rerCompleted"
+        generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some("rerCompleted"))
     }
 
     writeToS3(config.resultsBucket, filePath, formatResults(results))
@@ -113,10 +123,10 @@ object S3 extends S3Client with LazyLogging {
     val filePath = requestType match {
       case SAR =>
         logger.info("Writing to failed path in s3.")
-        s"${config.resultsPath}/$initiationId/failed/formstackSarFailed"
+        generateResultsPath(config.resultsPath, requestType, initiationId, "failed", Some("formstackSarFailed"))
       case RER =>
         logger.info("Writing to failed path in s3.")
-        s"${config.resultsPath}/$initiationId/failed/formstackRerFailed"
+        generateResultsPath(config.resultsPath, requestType, initiationId, "failed", Some("formstackRerFailed"))
     }
 
     writeToS3(config.resultsBucket, filePath, err)

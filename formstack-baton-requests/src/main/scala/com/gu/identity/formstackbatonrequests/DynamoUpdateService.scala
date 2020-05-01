@@ -12,7 +12,7 @@ case class DynamoUpdateService(
   config: PerformLambdaConfig) extends LazyLogging {
 
   def submissionsWithEmailAndAccount(submissions: List[FormSubmission], accountNumber: Int): List[SubmissionIdEmail] = {
-    val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b""".r
+    val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,6}\b""".r
     submissions.foldLeft(List.empty[SubmissionIdEmail]) { (acc, submission) =>
       val submissionValues = submission.data.map(field => field._2.value).toList
       val emailList = submissionValues.collect { case jsonValue => emailReg.findAllIn(jsonValue.toString).toList }.flatten
@@ -62,7 +62,7 @@ case class DynamoUpdateService(
         val errors = formResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString))
-        } else if ((count + FormstackService.resultsPerPage) <= response.total) {
+        } else if (count < response.total) {
           updateSubmissionsTable(formsPage + 1, lastUpdate, count + FormstackService.resultsPerPage, token)
         } else Right(())
     }
