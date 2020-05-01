@@ -80,11 +80,12 @@ case class FormstackPerformSarHandler(
 
   def updateDynamo(submissionsTableUpdateDate: SubmissionTableUpdateDate): Either[Throwable, Unit] = {
     val timestampAsDate = LocalDateTime.parse(submissionsTableUpdateDate.date, SubmissionTableUpdateDate.formatter)
+    val timeOfStart = LocalDateTime.now
     if (timestampAsDate.toLocalDate != LocalDate.now) {
       for {
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackSarService.resultsPerPage, config.accountOneToken)
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackSarService.resultsPerPage, config.accountTwoToken)
-        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, LocalDateTime.now)
+        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, timeOfStart)
       } yield ()
     } else Right(())
   }
