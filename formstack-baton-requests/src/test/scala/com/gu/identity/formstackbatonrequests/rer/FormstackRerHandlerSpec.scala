@@ -4,7 +4,8 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import com.gu.identity.formstackbatonrequests.BatonModels._
 import com.gu.identity.formstackbatonrequests.circeCodecs._
-import com.gu.identity.formstackbatonrequests.{InitLambdaConfig, LambdaClientStub, S3ClientStub}
+import com.gu.identity.formstackbatonrequests.InitLambdaConfig
+import com.gu.identity.formstackbatonrequests.aws.{LambdaClientStub, S3ClientStub}
 import org.scalatest.{FreeSpec, Matchers}
 
 class FormstackRerHandlerSpec extends FreeSpec with Matchers {

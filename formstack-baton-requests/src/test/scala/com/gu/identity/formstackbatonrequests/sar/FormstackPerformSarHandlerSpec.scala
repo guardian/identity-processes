@@ -2,6 +2,7 @@ package com.gu.identity.formstackbatonrequests.sar
 
 import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, SarPerformRequest, SarPerformResponse}
 import com.gu.identity.formstackbatonrequests._
+import com.gu.identity.formstackbatonrequests.aws.{DynamoClientStub, S3ClientStub}
 import org.scalatest.{FreeSpec, Matchers}
 
 class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {

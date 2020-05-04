@@ -1,9 +1,9 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.aws
 
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
+import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClient}
-import com.amazonaws.services.dynamodbv2.model.{AttributeDefinition, CreateTableResult, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType}
 
 object LocalDynamoDB {
 

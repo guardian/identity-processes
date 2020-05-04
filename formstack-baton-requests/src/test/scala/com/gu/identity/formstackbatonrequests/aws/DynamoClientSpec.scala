@@ -1,13 +1,10 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.aws
 
 import java.time.LocalDateTime
 
-import com.amazonaws.services.dynamodbv2.model.DeleteItemResult
-import com.gu.identity.formstackbatonrequests.aws.{Dynamo, DynamoClient, SubmissionTableUpdateDate}
-import org.scalatest.FreeSpec
 import com.github.t3hnar.bcrypt._
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
-import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, fixture}
+import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
 
 
 class DynamoClientSpec extends FreeSpec with Matchers with BeforeAndAfterAll {
