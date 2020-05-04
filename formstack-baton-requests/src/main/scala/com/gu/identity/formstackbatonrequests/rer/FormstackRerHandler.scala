@@ -1,9 +1,10 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.rer
 
 import java.util.UUID.randomUUID
 
 import com.gu.identity.formstackbatonrequests.BatonModels._
 import com.gu.identity.formstackbatonrequests.aws._
+import com.gu.identity.formstackbatonrequests.{FormstackHandler, InitLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 
 case class FormstackRerHandler(s3Client: S3Client, lambdaClient: LambdaClient, rerHandlerConfig: InitLambdaConfig)
