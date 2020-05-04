@@ -21,7 +21,7 @@ case class FormstackRerHandler(s3Client: S3Client, lambdaClient: LambdaClient, r
 
     logger.info(s"invoking FormstackPerformRerLambda with initiation reference: $initiationReference")
     lambdaClient.invokeLambda(performRerRequest, rerHandlerConfig)
-      .map(_ => RerInitiateResponse(initiationReference))
+      .map(_ => RerInitiateResponse(initiationReference, "PerformRerLambda invoked", Pending))
   }
 
   private def status(initiationReference: String): Either[Throwable, RerStatusResponse] = {

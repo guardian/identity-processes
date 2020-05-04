@@ -100,18 +100,14 @@ object S3 extends S3Client with LazyLogging {
     requestType: BatonRequestType,
     config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = {
 
-    val filePath = requestType match {
-      case SAR if results.nonEmpty =>
-        logger.info("Writing SAR result to s3.")
-        generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some("formstackSarResponse"))
-      case SAR =>
-        logger.info(s"No results found for request $initiationId. Creating NoResultsFoundForUser object.")
-        generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some("noResultsFoundForUser"))
-      case RER =>
-        logger.info(s"Completed erasure request for $initiationId. Creating rerCompleted object.")
-        generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some("rerCompleted"))
+    logger.info(s"Writing $requestType result to s3. ${results.length} results found.")
+
+    val objectName = requestType match {
+      case SAR => if (results.nonEmpty) "formstackSarResponse" else "noResultsFoundForUser"
+      case RER => "rerCompleted"
     }
 
+    val filePath = generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some(objectName))
     writeToS3(config.resultsBucket, filePath, formatResults(results))
   }
 
@@ -120,15 +116,8 @@ object S3 extends S3Client with LazyLogging {
     err: String,
     requestType: BatonRequestType,
     config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = {
-    val filePath = requestType match {
-      case SAR =>
-        logger.info("Writing to failed path in s3.")
-        generateResultsPath(config.resultsPath, requestType, initiationId, "failed", Some("formstackSarFailed"))
-      case RER =>
-        logger.info("Writing to failed path in s3.")
-        generateResultsPath(config.resultsPath, requestType, initiationId, "failed", Some("formstackRerFailed"))
-    }
-
+    logger.info("Writing to failed path in s3.")
+    val filePath = generateResultsPath(config.resultsPath, requestType, initiationId, "failed", Some(s"formstack${requestType}Failed"))
     writeToS3(config.resultsBucket, filePath, err)
   }
 }

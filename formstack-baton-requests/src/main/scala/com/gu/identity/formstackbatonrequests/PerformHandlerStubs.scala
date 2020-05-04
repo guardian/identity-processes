@@ -1,6 +1,6 @@
 package com.gu.identity.formstackbatonrequests
 
-import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, RerPerformRequest, RerPerformResponse, RerRequest, RerResponse, SAR, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse}
+import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, RER, RerPerformRequest, RerPerformResponse, RerRequest, RerResponse, SAR, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse}
 import com.gu.identity.formstackbatonrequests.aws.S3Client
 
 object PerformHandlerStubs {
@@ -32,7 +32,7 @@ object PerformHandlerStubs {
     override def handle(request: RerRequest): Either[Throwable, RerPerformResponse] = {
       request match {
         case r: RerPerformRequest =>
-          s3Client.writeSuccessResult(r.initiationReference, List.empty, SAR, config)
+          s3Client.writeSuccessResult(r.initiationReference, List.empty, RER, config)
             .map(_ => RerPerformResponse(r.initiationReference, r.subjectEmail, Completed, None))
         case _ =>
           throw new RuntimeException(

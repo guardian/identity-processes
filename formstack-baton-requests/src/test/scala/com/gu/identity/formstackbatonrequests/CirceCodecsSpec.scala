@@ -47,8 +47,8 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
     }
 
     "should encode RerInitiateResponse correctly" in {
-      val response: RerResponse = RerInitiateResponse("someRequestId")
-      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","action":"initiate","requestType":"RER","dataProvider":"formstack"}"""
+      val response: RerResponse = RerInitiateResponse("someRequestId", "PerformRerLambda invoked", Pending)
+      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","message":"PerformRerLambda invoked","status":"pending","action":"initiate","requestType":"RER","dataProvider":"formstack"}"""
     }
 
     "should decode a valid SAR status request" in {
