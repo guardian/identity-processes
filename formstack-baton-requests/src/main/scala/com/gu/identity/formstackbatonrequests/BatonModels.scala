@@ -7,11 +7,29 @@ object BatonModels {
   case object Completed extends BatonTaskStatus
   case object Failed extends BatonTaskStatus
 
+  sealed trait BatonRequestType {
+    def id: String
+  }
+
+  object BatonRequestType {
+    val requests = List(SAR, RER)
+  }
+
+  case object SAR extends BatonRequestType {
+    override def id: String = "SAR"
+  }
+  case object RER extends BatonRequestType {
+    override def id: String = "RER"
+  }
+
+  sealed trait PerformRequest
+  sealed trait PerformResponse
+
   sealed trait SarRequest
 
-  case class SarInitiateRequest(subjectEmail: String, dataProvider: String) extends SarRequest
+  case class SarInitiateRequest(subjectEmail: String, dataProvider: String, requestType: BatonRequestType) extends SarRequest
   case class SarStatusRequest(initiationReference: String) extends SarRequest
-  case class SarPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends SarRequest
+  case class SarPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends SarRequest with PerformRequest
 
   sealed trait SarResponse
 
@@ -26,5 +44,26 @@ object BatonModels {
     initiationReference: String,
     subjectEmail: String,
     message: Option[String]
-  ) extends SarResponse
+  ) extends SarResponse with PerformResponse
+
+  sealed trait RerRequest
+
+  case class RerInitiateRequest(subjectEmail: String, dataProvider: String, requestType: BatonRequestType) extends RerRequest
+  case class RerStatusRequest(initiationReference: String) extends RerRequest
+  case class RerPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends RerRequest with PerformRequest
+
+  sealed trait RerResponse
+
+  case class RerInitiateResponse(initiationReference: String, message: String, status: BatonTaskStatus) extends RerResponse
+  case class RerStatusResponse(
+    initiationReference: String,
+    status: BatonTaskStatus,
+    message: String
+  ) extends RerResponse
+  case class RerPerformResponse(
+    initiationReference: String,
+    subjectEmail: String,
+    status: BatonTaskStatus,
+    message: Option[String]
+  ) extends RerResponse with PerformResponse
 }

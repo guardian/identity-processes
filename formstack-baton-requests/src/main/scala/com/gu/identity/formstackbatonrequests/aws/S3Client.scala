@@ -2,9 +2,9 @@ package com.gu.identity.formstackbatonrequests.aws
 
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.{CannedAccessControlList, S3ObjectSummary}
-import com.gu.identity.formstackbatonrequests.{FormstackSubmissionQuestionAnswer, PerformSarLambdaConfig, SarLambdaConfig}
+import com.gu.identity.formstackbatonrequests.{FormstackSubmissionQuestionAnswer, InitLambdaConfig, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
-import cats.implicits._
+import com.gu.identity.formstackbatonrequests.BatonModels.{BatonRequestType, RER, SAR}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -18,9 +18,9 @@ case class S3WriteSuccess()
 
 
 trait S3Client {
-  def checkForResults(initiationId: String, config: SarLambdaConfig): Either[Throwable, StatusResponse]
-  def writeSuccessResult(initiationId: String, results: List[FormstackSubmissionQuestionAnswer], config: PerformSarLambdaConfig): Either[Throwable, S3WriteSuccess]
-  def writeFailedResults(initiationId: String, err: String, config: PerformSarLambdaConfig): Either[Throwable, S3WriteSuccess]
+  def checkForResults(initiationId: String, requestType: BatonRequestType, config: InitLambdaConfig): Either[Throwable, StatusResponse]
+  def writeSuccessResult(initiationId: String, results: List[FormstackSubmissionQuestionAnswer], requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess]
+  def writeFailedResults(initiationId: String, err: String, requestType: BatonRequestType, config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess]
 }
 
 object S3 extends S3Client with LazyLogging {
@@ -58,9 +58,20 @@ object S3 extends S3Client with LazyLogging {
     }
   }
 
-  override def checkForResults(initiationId: String, config: SarLambdaConfig): Either[Throwable, StatusResponse] = {
-    val completedPath = s"${config.resultsPath}/$initiationId/completed/"
-    val failedPath = s"${config.resultsPath}/$initiationId/failed/"
+  private def generateResultsPath(
+    configResultsPath: String,
+    requestType: BatonRequestType,
+    initiationId: String,
+    status: String,
+    objectName: Option[String] = None): String =
+    objectName match {
+      case Some(obj) => s"$configResultsPath/$requestType/$initiationId/$status/$obj"
+      case None => s"$configResultsPath/$requestType/$initiationId/$status/"
+    }
+
+  override def checkForResults(initiationId: String, requestType: BatonRequestType, config: InitLambdaConfig): Either[Throwable, StatusResponse] = {
+    val completedPath = generateResultsPath(config.resultsPath, requestType, initiationId, "completed")
+    val failedPath = generateResultsPath(config.resultsPath, requestType, initiationId, "failed")
 
     for {
       completedResults <- listFolderContents(config.resultsBucket, completedPath)
@@ -86,25 +97,27 @@ object S3 extends S3Client with LazyLogging {
   override def writeSuccessResult(
     initiationId: String,
     results: List[FormstackSubmissionQuestionAnswer],
-    config: PerformSarLambdaConfig): Either[Throwable, S3WriteSuccess] = {
-    val resultsPath = s"${config.resultsPath}/$initiationId/completed"
-    val filePath = if (results.nonEmpty) {
-      logger.info("Writing SAR result to s3.")
-      s"$resultsPath/formstackSarResponse"
-    } else {
-      logger.info(s"No results found for request $initiationId. Creating NoResultsFoundForUser object.")
-      s"$resultsPath/noResultsFoundForUser"
+    requestType: BatonRequestType,
+    config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = {
+
+    logger.info(s"Writing $requestType result to s3. ${results.length} results found.")
+
+    val objectName = requestType match {
+      case SAR => if (results.nonEmpty) "formstackSarResponse" else "noResultsFoundForUser"
+      case RER => "rerCompleted"
     }
 
+    val filePath = generateResultsPath(config.resultsPath, requestType, initiationId, "completed", Some(objectName))
     writeToS3(config.resultsBucket, filePath, formatResults(results))
   }
 
   override def writeFailedResults(
     initiationId: String,
     err: String,
-    config: PerformSarLambdaConfig): Either[Throwable, S3WriteSuccess] = {
-    val filePath = s"${config.resultsPath}/$initiationId/failed/formstackSarFailed"
+    requestType: BatonRequestType,
+    config: PerformLambdaConfig): Either[Throwable, S3WriteSuccess] = {
     logger.info("Writing to failed path in s3.")
+    val filePath = generateResultsPath(config.resultsPath, requestType, initiationId, "failed", Some(s"formstack${requestType}Failed"))
     writeToS3(config.resultsBucket, filePath, err)
   }
 }

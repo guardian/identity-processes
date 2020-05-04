@@ -7,10 +7,10 @@ import com.typesafe.scalalogging.LazyLogging
  * updated with ALL submissions from Formstack */
 object PopulateFormstackTable extends App with LazyLogging {
 
-  val defaultConfig = FormstackConfig.getPerformSarHandlerConfig
-  val formstackPerformSarHandler = FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, defaultConfig)
+  val defaultConfig = FormstackConfig.getPerformHandlerConfig
+  val dynamoUpdateService = DynamoUpdateService(FormstackService, Dynamo(), defaultConfig)
 
-  val updateDynamoResult = formstackPerformSarHandler.updateDynamo(SubmissionTableUpdateDate("lastUpdated", "1970-01-01 00:00:00"))
+  val updateDynamoResult = dynamoUpdateService.updateDynamo(SubmissionTableUpdateDate("lastUpdated", "1970-01-01 00:00:00"))
   updateDynamoResult match {
     case Left(err) =>
       logger.error("Unable to complete update on formstack-submissions-ids table.", err)

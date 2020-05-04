@@ -22,7 +22,7 @@ object FormstackBatonLambdaLocalRun extends App {
   }
 
   def formstackSarTestRun(request: SarRequest): Unit = {
-    val sarLambdaConfig = FormstackConfig.getSarHandlerConfig
+    val sarLambdaConfig = FormstackConfig.getInitHandlerConfig
     val sarLambda = FormstackSarHandler(S3, Lambda, sarLambdaConfig)
     val streams = requestStreams(request)
     sarLambda.handleRequest(streams.inputStream, streams.outputStream)
@@ -31,8 +31,8 @@ object FormstackBatonLambdaLocalRun extends App {
   }
 
   def formstackPerformSarTestRun(request: SarRequest): Unit = {
-    val performSarLambdaConfig = FormstackConfig.getPerformSarHandlerConfig
-    val performSarLambda = FormstackPerformSarHandler(Dynamo(), FormstackSarService, S3, performSarLambdaConfig)
+    val performSarLambdaConfig = FormstackConfig.getPerformHandlerConfig
+    val performSarLambda = FormstackPerformSarHandler(Dynamo(), FormstackService, S3, performSarLambdaConfig)
     val streams = requestStreams(request)
     performSarLambda.handleRequest(streams.inputStream, streams.outputStream)
     val responseString = new String(streams.outputStream.toByteArray)

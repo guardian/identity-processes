@@ -2,15 +2,15 @@ package com.gu.identity.formstackbatonrequests
 
 import com.gu.identity.formstackbatonrequests.aws.ParameterStoreClient
 
-case class SarLambdaConfig (
+case class InitLambdaConfig (
   resultsBucket: String,
   resultsPath: String,
-  performSarFunctionName: String
+  performFunctionName: String
 )
 
 case class FormstackAccountToken(account: Int, secret: String)
 
-case class PerformSarLambdaConfig (
+case class PerformLambdaConfig (
   resultsBucket: String,
   resultsPath: String,
   encryptionPassword: String,
@@ -30,18 +30,18 @@ object FormstackConfig {
     getEnvironmentVariable(pathEnvVariable).flatMap(ParameterStoreClient.readSecureString)
   }
 
-  def getSarHandlerConfig: SarLambdaConfig =
+  def getInitHandlerConfig: InitLambdaConfig =
     (for {
       resultsBucket <- getEnvironmentVariable("RESULTS_BUCKET")
       resultsPath <- getEnvironmentVariable("RESULTS_PATH")
-      performSarFunctionName <- getEnvironmentVariable("PERFORM_SAR_FUNCTION_NAME")
-    } yield SarLambdaConfig(resultsBucket, resultsPath, performSarFunctionName))
+      performFunctionName <- getEnvironmentVariable("PERFORM_FUNCTION_NAME")
+    } yield InitLambdaConfig(resultsBucket, resultsPath, performFunctionName))
       .getOrElse {
         throw new RuntimeException(
-          s"Unable to retrieve environment variables for Formstack SAR Handler")
+          s"Unable to retrieve environment variables for Formstack Init Handler")
       }
 
-  def getPerformSarHandlerConfig: PerformSarLambdaConfig =
+  def getPerformHandlerConfig: PerformLambdaConfig =
     (for {
       resultsBucket <- getEnvironmentVariable("RESULTS_BUCKET")
       resultsPath <- getEnvironmentVariable("RESULTS_PATH")
@@ -51,7 +51,7 @@ object FormstackConfig {
       bcryptSalt <- secureStringFromStore("BCRYPT_SALT_PATH")
       submissionsTableName <- getEnvironmentVariable("SUBMISSION_TABLE_NAME")
       lastUpdatedTableName <- getEnvironmentVariable("LAST_UPDATED_TABLE_NAME")
-    } yield PerformSarLambdaConfig(resultsBucket, resultsPath, encryptionPassword, FormstackAccountToken(1, accountOneToken), FormstackAccountToken(2, accountTwoToken), bcryptSalt, submissionsTableName, lastUpdatedTableName))
+    } yield PerformLambdaConfig(resultsBucket, resultsPath, encryptionPassword, FormstackAccountToken(1, accountOneToken), FormstackAccountToken(2, accountTwoToken), bcryptSalt, submissionsTableName, lastUpdatedTableName))
       .getOrElse {
         throw new RuntimeException(
           s"Unable to retrieve environment variables for Formstack Perform SAR Handler"

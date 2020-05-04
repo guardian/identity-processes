@@ -1,13 +1,13 @@
 package com.gu.identity.formstackbatonrequests
 
 import com.amazonaws.services.lambda.model.InvokeResult
-import com.gu.identity.formstackbatonrequests.BatonModels.SarPerformRequest
+import com.gu.identity.formstackbatonrequests.BatonModels.{PerformRequest, SarPerformRequest}
 import com.gu.identity.formstackbatonrequests.aws.LambdaClient
 
 class LambdaClientStub(
   invokeLambda: Either[Throwable, InvokeResult]
 ) extends LambdaClient {
-  override def invokeLambda(sarPerformRequest: SarPerformRequest, config: SarLambdaConfig): Either[Throwable, InvokeResult] = invokeLambda
+  def invokeLambda(performRequest: PerformRequest, config: InitLambdaConfig): Either[Throwable, InvokeResult] = invokeLambda
 }
 
 object LambdaClientStub {

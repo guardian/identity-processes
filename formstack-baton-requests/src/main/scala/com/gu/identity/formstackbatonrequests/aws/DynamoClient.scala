@@ -10,7 +10,7 @@ import com.gu.scanamo.Scanamo
 import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
 import cats.implicits._
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult
+import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult}
 
 import scala.util.Try
 
@@ -19,6 +19,7 @@ trait DynamoClient {
   def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate]
   def updateMostRecentTimestamp(lastUpdatedTableName: String, currentDateTime: LocalDateTime): Either[Throwable, Unit]
   def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]]
+  def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]]
 }
 
 case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String)
@@ -59,17 +60,26 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
     val recentUpdate = SubmissionTableUpdateDate("lastUpdated", formattedDateTime)
     Scanamo.put[SubmissionTableUpdateDate](dynamoClient)(lastUpdatedTableName)(recentUpdate)
       .getOrElse(Right())
-      .fold(dynamoReadError => Left(new Exception(dynamoReadError.toString)),  _ => Right(()))
+      .fold(dynamoReadError => Left(new Exception(dynamoReadError.toString)), _ => Right(()))
   }
 
-    override def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]] = {
-      logger.info(s"retrieving submissions from $submissionsTableName")
-      for {
-        hashedEmail <- email.bcryptSafe(salt).toEither
-        queryResult <- Scanamo.query[SubmissionIdEmail](dynamoClient)(submissionsTableName)('email -> hashedEmail)
-          .sequence.left.map(err => new Exception(err.toString))
-      } yield queryResult
+  override def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]] = {
+    logger.info(s"retrieving submissions from $submissionsTableName")
+    for {
+      hashedEmail <- email.bcryptSafe(salt).toEither
+      queryResult <- Scanamo.query[SubmissionIdEmail](dynamoClient)(submissionsTableName)('email -> hashedEmail)
+        .sequence.left.map(err => new Exception(err.toString))
+    } yield queryResult
+  }
+
+  override def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]] = {
+    logger.info(s"deleting ${submissionIdsAndEmails.length} submissions from $submissionsTableName")
+    submissionIdsAndEmails.traverse { submissionIdAndEmail =>
+      Try(Scanamo
+        .delete(dynamoClient)(submissionsTableName)
+        ('email -> submissionIdAndEmail.email and 'submissionId -> submissionIdAndEmail.submissionId)).toEither
     }
+  }
 }
 
 object Dynamo {
