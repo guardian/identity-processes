@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.model.DeleteItemResult
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, DynamoClient, SubmissionTableUpdateDate}
 import org.scalatest.FreeSpec
 import com.github.t3hnar.bcrypt._
+import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, fixture}
 
 

@@ -2,6 +2,7 @@ package com.gu.identity.formstackbatonrequests
 import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate
 import io.circe.syntax._
 import circeCodecs._
+import com.gu.identity.formstackbatonrequests.sar.{FormstackLabelValue, FormstackSubmissionQuestionAnswer, SubmissionIdEmail}
 
 class FormstackServiceStub(
   accountFormsForGivenPageResponse: Either[Throwable, FormsResponse],

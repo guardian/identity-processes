@@ -2,6 +2,7 @@ package com.gu.identity.formstackbatonrequests
 
 import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, RER, RerPerformRequest, RerPerformResponse, RerRequest, RerResponse, SAR, SarPerformRequest, SarPerformResponse, SarRequest, SarResponse}
 import com.gu.identity.formstackbatonrequests.aws.S3Client
+import com.gu.identity.formstackbatonrequests.sar.{FormstackLabelValue, FormstackSubmissionQuestionAnswer}
 
 object PerformHandlerStubs {
   case class FormstackPerformSarHandlerStub(

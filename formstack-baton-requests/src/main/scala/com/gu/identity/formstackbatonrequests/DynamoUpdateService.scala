@@ -4,6 +4,7 @@ import java.time.{Instant, LocalDate, LocalDateTime}
 
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission}
+import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 import com.typesafe.scalalogging.LazyLogging
 
 case class DynamoUpdateService(

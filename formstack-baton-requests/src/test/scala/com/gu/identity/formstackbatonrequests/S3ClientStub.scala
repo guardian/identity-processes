@@ -2,6 +2,7 @@ package com.gu.identity.formstackbatonrequests
 
 import com.gu.identity.formstackbatonrequests.BatonModels.BatonRequestType
 import com.gu.identity.formstackbatonrequests.aws.{CompletedPathFound, FailedPathFound, NoResultsFound, S3Client, S3WriteSuccess, StatusResponse}
+import com.gu.identity.formstackbatonrequests.sar.FormstackSubmissionQuestionAnswer
 
 class S3ClientStub (
   checkForResultsResponse: Either[Throwable, StatusResponse],

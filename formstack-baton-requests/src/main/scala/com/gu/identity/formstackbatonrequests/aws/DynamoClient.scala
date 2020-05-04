@@ -3,7 +3,6 @@ package com.gu.identity.formstackbatonrequests.aws
 import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
 
-import com.gu.identity.formstackbatonrequests.SubmissionIdEmail
 import com.typesafe.scalalogging.LazyLogging
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClient}
 import com.gu.scanamo.Scanamo
@@ -11,6 +10,7 @@ import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
 import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult}
+import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 
 import scala.util.Try
 

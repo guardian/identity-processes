@@ -1,10 +1,11 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.sar
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
+import com.gu.identity.formstackbatonrequests.BatonModels._
+import com.gu.identity.formstackbatonrequests.circeCodecs._
+import com.gu.identity.formstackbatonrequests.{InitLambdaConfig, LambdaClientStub, S3ClientStub}
 import org.scalatest.{FreeSpec, Matchers}
-import circeCodecs._
-import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pending, SAR, SarInitiateRequest, SarInitiateResponse, SarStatusRequest, SarStatusResponse}
 
 class FormstackSarHandlerSpec extends FreeSpec with Matchers {
   val mockConfig: InitLambdaConfig = InitLambdaConfig("resultsBucket", "resultsPath", "performSarFunctionName")

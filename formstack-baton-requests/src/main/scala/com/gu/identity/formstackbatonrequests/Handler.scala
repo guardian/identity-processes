@@ -8,6 +8,8 @@ import io.circe.syntax._
 import circeCodecs._
 import com.gu.identity.formstackbatonrequests.BatonModels.{RER, RerInitiateRequest, RerPerformRequest, RerStatusRequest, SAR, SarInitiateRequest, SarPerformRequest, SarStatusRequest}
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, Lambda, S3}
+import com.gu.identity.formstackbatonrequests.rer.{FormstackPerformRerHandler, FormstackRerHandler}
+import com.gu.identity.formstackbatonrequests.sar.{FormstackPerformSarHandler, FormstackSarHandler}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source

@@ -6,6 +6,7 @@ import BatonModels.{SarPerformRequest, SarRequest, SarStatusRequest}
 import io.circe.syntax._
 import circeCodecs._
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, Lambda, S3}
+import com.gu.identity.formstackbatonrequests.sar.{FormstackPerformSarHandler, FormstackSarHandler}
 
 /* This object can be used for local runs of the lambda, for end-to-end testing. */
 

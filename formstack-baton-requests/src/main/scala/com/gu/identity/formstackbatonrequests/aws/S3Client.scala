@@ -2,9 +2,10 @@ package com.gu.identity.formstackbatonrequests.aws
 
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.{CannedAccessControlList, S3ObjectSummary}
-import com.gu.identity.formstackbatonrequests.{FormstackSubmissionQuestionAnswer, InitLambdaConfig, PerformLambdaConfig}
+import com.gu.identity.formstackbatonrequests.{InitLambdaConfig, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 import com.gu.identity.formstackbatonrequests.BatonModels.{BatonRequestType, RER, SAR}
+import com.gu.identity.formstackbatonrequests.sar.FormstackSubmissionQuestionAnswer
 
 import scala.collection.JavaConverters._
 import scala.util.Try
