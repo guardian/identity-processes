@@ -68,7 +68,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: !GetAtt FormstackBatonSarLambda.Arn
+                Resource:
+                  - !GetAtt FormstackBatonSarLambda.Arn
+                  - !GetAtt FormstackBatonRerLambda.Arn
 
   FormstackBatonSarLambdaRole:
     Type: AWS::IAM::Role
