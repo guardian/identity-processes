@@ -28,14 +28,17 @@ case class FormstackRerHandler(s3Client: S3Client, lambdaClient: LambdaClient, r
     logger.info(s"checking Formstack RER status for initiation reference: $initiationReference")
     s3Client.checkForResults(initiationReference, RER, rerHandlerConfig).map {
       case CompletedPathFound(resultLocations) =>
-        logger.info(s"RER completed: completed RER results for initiation reference $initiationReference found in s3: $resultLocations")
-        RerStatusResponse(initiationReference, Completed, None)
+        val message = s"RER completed: completed RER results for initiation reference $initiationReference found in s3: $resultLocations"
+        logger.info(message)
+        RerStatusResponse(initiationReference, Completed, message)
       case FailedPathFound() =>
-        logger.info(s"RER failed: failed path found in S3 for initiation reference $initiationReference. Please check FormstackPerformRerLambda logs")
-        RerStatusResponse(initiationReference, Failed, None)
+        val message = s"RER failed: failed path found in S3 for initiation reference $initiationReference. Please check FormstackPerformRerLambda logs"
+        logger.info(message)
+        RerStatusResponse(initiationReference, Failed, message)
       case NoResultsFound() =>
-        logger.info(s"RER pending: no results found in S3 for initiation reference $initiationReference.")
-        RerStatusResponse(initiationReference, Pending, None)
+        val message = s"RER pending: no results found in S3 for initiation reference $initiationReference."
+        logger.info(message)
+        RerStatusResponse(initiationReference, Pending, message)
     }
   }
 

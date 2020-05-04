@@ -58,7 +58,7 @@ object BatonModels {
   case class RerStatusResponse(
     initiationReference: String,
     status: BatonTaskStatus,
-    message: Option[String]
+    message: String
   ) extends RerResponse
   case class RerPerformResponse(
     initiationReference: String,

@@ -69,7 +69,7 @@ class FormstackRerHandlerSpec extends FreeSpec with Matchers {
 
     "should return completed status upon successful completion" in {
       val lambda = FormstackRerHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
-      val expectedResponse = RerStatusResponse("initiationReference", status = Completed, None)
+      val expectedResponse = RerStatusResponse("initiationReference", status = Completed, "RER completed: completed RER results for initiation reference initiationReference found in s3: List(s3Location)")
       lambda
         .handle(validStatusRequest)
         .map(response => response shouldBe expectedResponse)
@@ -77,7 +77,7 @@ class FormstackRerHandlerSpec extends FreeSpec with Matchers {
 
     "should return failed status upon unsuccessful completion" in {
       val lambda = FormstackRerHandler(S3ClientStub.withFailedResponse, LambdaClientStub.withSuccessResponse, mockConfig)
-      val expectedResponse = RerStatusResponse("initiationReference", status = Failed, None)
+      val expectedResponse = RerStatusResponse("initiationReference", status = Failed, "RER failed: failed path found in S3 for initiation reference initiationReference. Please check FormstackPerformRerLambda logs")
       lambda
         .handle(validStatusRequest)
         .map(response => response shouldBe expectedResponse)
@@ -85,7 +85,7 @@ class FormstackRerHandlerSpec extends FreeSpec with Matchers {
 
     "should return pending status when found to be neither success nor failure" in {
       val lambda = FormstackRerHandler(S3ClientStub.withPendingStatusResponse, LambdaClientStub.withSuccessResponse, mockConfig)
-      val expectedResponse = RerStatusResponse("initiationReference", status = Pending, None)
+      val expectedResponse = RerStatusResponse("initiationReference", status = Pending, "RER pending: no results found in S3 for initiation reference initiationReference.")
       lambda
         .handle(validStatusRequest)
         .map(response => response shouldBe expectedResponse)

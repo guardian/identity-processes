@@ -89,9 +89,9 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
       val response: RerResponse = RerStatusResponse(
         initiationReference = "someRequestId",
         status = Completed,
-        message = None
+        message = "completed RER"
       )
-      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","status":"completed","action":"status","requestType":"RER","dataProvider":"formstack"}"""
+      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","status":"completed","message":"completed RER","action":"status","requestType":"RER","dataProvider":"formstack"}"""
     }
 
     "should encode failed SarStatusResponse correctly" in {
@@ -107,7 +107,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
       val response: RerResponse = RerStatusResponse(
         initiationReference = "someRequestId",
         status = Failed,
-        message = Some("error making request")
+        message = "error making request"
       )
       response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","status":"failed","message":"error making request","action":"status","requestType":"RER","dataProvider":"formstack"}"""
     }
@@ -123,9 +123,9 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
       val response: RerResponse = RerStatusResponse(
         initiationReference = "someRequestId",
         status = Pending,
-        message = None
+        message = "RER pending"
       )
-      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","status":"pending","action":"status","requestType":"RER","dataProvider":"formstack"}"""
+      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","status":"pending","message":"RER pending","action":"status","requestType":"RER","dataProvider":"formstack"}"""
     }
 
     "should decode a valid SAR perform request" in {
