@@ -1,6 +1,7 @@
 package com.gu.identity.formstackbatonrequests
 
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, S3, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.services.{DynamoUpdateService, FormstackService}
 import com.typesafe.scalalogging.LazyLogging
 
 /* Script used to populate Formstack table from empty. When .updateDynamo is not provided a date, Dynamo will be

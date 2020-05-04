@@ -2,7 +2,8 @@ package com.gu.identity.formstackbatonrequests.rer
 
 import com.gu.identity.formstackbatonrequests.BatonModels._
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, S3Client, S3WriteSuccess}
-import com.gu.identity.formstackbatonrequests.{DynamoUpdateService, FormstackHandler, FormstackRequestService, PerformLambdaConfig}
+import com.gu.identity.formstackbatonrequests.services.{DynamoUpdateService, FormstackRequestService}
+import com.gu.identity.formstackbatonrequests.{FormstackHandler, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 
 case class FormstackPerformRerHandler(

@@ -10,6 +10,7 @@ import com.gu.identity.formstackbatonrequests.BatonModels.{RER, RerInitiateReque
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, Lambda, S3}
 import com.gu.identity.formstackbatonrequests.rer.{FormstackPerformRerHandler, FormstackRerHandler}
 import com.gu.identity.formstackbatonrequests.sar.{FormstackPerformSarHandler, FormstackSarHandler}
+import com.gu.identity.formstackbatonrequests.services.FormstackService
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source
