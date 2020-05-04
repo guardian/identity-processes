@@ -434,6 +434,23 @@ Resources:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${FormstackAccountTwoTokenPath}
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${EncryptionPasswordPath}
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BcryptSaltPath}
+        - PolicyName: SubmissionIdsTablePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:DeleteItem
+                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${SubmissionsTableName}
+        - PolicyName: LastUpdatedTablePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${LastUpdatedTableName}
 
   PerformFormstackRerLambda:
     Type: AWS::Lambda::Function

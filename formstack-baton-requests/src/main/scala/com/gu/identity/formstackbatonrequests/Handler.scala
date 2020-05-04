@@ -93,7 +93,7 @@ object Handler {
     rerHandler.handleRequest(inputStream, outputStream)
   }
 
-  def handlerPerformRer(inputStream: InputStream, outputStream: OutputStream): Unit = {
+  def handlePerformRer(inputStream: InputStream, outputStream: OutputStream): Unit = {
     val performRerHandlerConfig = FormstackConfig.getPerformHandlerConfig
     val performRerHandler =
       if (stage == "PROD")

@@ -12,7 +12,7 @@ deployments:
     type: aws-lambda
     parameters:
       bucket: identity-lambda
-      functionNames: [formstack-baton-sar-lambda-, formstack-baton-perform-sar-lambda-]
+      functionNames: [formstack-baton-sar-lambda-, formstack-baton-perform-sar-lambda-, formstack-baton-rer-lambda-, formstack-baton-perform-rer-lambda-]
       fileName: main.jar
       prefixStack: false
     dependencies: [formstack-baton-requests-cfn]
