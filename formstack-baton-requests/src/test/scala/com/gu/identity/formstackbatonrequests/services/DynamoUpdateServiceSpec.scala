@@ -1,6 +1,7 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.services
 
-import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate
+import com.gu.identity.formstackbatonrequests.aws.{DynamoClientStub, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import org.scalatest.{FreeSpec, Matchers}
 
 class DynamoUpdateServiceSpec extends FreeSpec with Matchers {

@@ -1,6 +1,9 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.rer
 
-import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, RerPerformRequest, RerPerformResponse, SarPerformRequest, SarPerformResponse}
+import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, RerPerformRequest, RerPerformResponse}
+import com.gu.identity.formstackbatonrequests._
+import com.gu.identity.formstackbatonrequests.aws.{DynamoClientStub, S3ClientStub}
+import com.gu.identity.formstackbatonrequests.services.FormstackServiceStub
 import org.scalatest.{FreeSpec, Matchers}
 
 class FormstackPerformRerHandlerSpec extends FreeSpec with Matchers {

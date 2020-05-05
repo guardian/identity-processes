@@ -1,9 +1,9 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.aws
 
 import java.time.LocalDateTime
 
 import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult}
-import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 
 class DynamoClientStub(
   mostRecentTimestampResponse: Either[Throwable, SubmissionTableUpdateDate],

@@ -1,19 +1,21 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.rer
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
+import com.gu.identity.formstackbatonrequests.BatonModels._
+import com.gu.identity.formstackbatonrequests.circeCodecs._
+import com.gu.identity.formstackbatonrequests.InitLambdaConfig
+import com.gu.identity.formstackbatonrequests.aws.{LambdaClientStub, S3ClientStub}
 import org.scalatest.{FreeSpec, Matchers}
-import circeCodecs._
-import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Failed, Pending, SAR, SarInitiateRequest, SarInitiateResponse, SarStatusRequest, SarStatusResponse}
 
-class FormstackSarHandlerSpec extends FreeSpec with Matchers {
+class FormstackRerHandlerSpec extends FreeSpec with Matchers {
   val mockConfig: InitLambdaConfig = InitLambdaConfig("resultsBucket", "resultsPath", "performSarFunctionName")
-  val validInitiateRequest: SarInitiateRequest = SarInitiateRequest("subjectEmail", "formstack", SAR)
-  val validStatusRequest: SarStatusRequest = SarStatusRequest("initiationReference")
+  val validInitiateRequest: RerInitiateRequest = RerInitiateRequest("subjectEmail", "formstack", RER)
+  val validStatusRequest: RerStatusRequest = RerStatusRequest("initiationReference")
 
-  "FormstackSarHandler" - {
+  "FormstackRerHandler" - {
     "should return stringified circe ParsingFailure if called initiate with invalid json" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+      val lambda = FormstackRerHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
       val invalidRequest = "invalidJson"
       val testInputStream = new ByteArrayInputStream(invalidRequest.getBytes)
       val testOutputStream = new ByteArrayOutputStream()
@@ -23,13 +25,13 @@ class FormstackSarHandlerSpec extends FreeSpec with Matchers {
     }
 
     "should returning a decoding failure if a dataprovider other than formstack is passed" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+      val lambda = FormstackRerHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
       val invalidProviderRequest =
         """{
           |"subjectId": "",
           |"subjectEmail" : "testSubjectEmail",
           |"dataProvider" : "zuora",
-          |"requestType": "SAR",
+          |"requestType": "RER",
           |"action" : "initiate"
           |}
           |""".stripMargin
@@ -41,14 +43,14 @@ class FormstackSarHandlerSpec extends FreeSpec with Matchers {
       response.contains("DecodingFailure(invalid dataProvider: zuora, List())") shouldBe true
     }
 
-    "should returning a decoding failure if a requestType other than SAR is passed" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+    "should returning a decoding failure if a requestType other than RER is passed" in {
+      val lambda = FormstackRerHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
       val invalidProviderRequest =
         """{
           |"subjectId": "",
           |"subjectEmail" : "testSubjectEmail",
           |"dataProvider" : "formstack",
-          |"requestType": "RER",
+          |"requestType": "SAR",
           |"action" : "initiate"
           |}
           |""".stripMargin
@@ -57,35 +59,35 @@ class FormstackSarHandlerSpec extends FreeSpec with Matchers {
       val testOutputStream = new ByteArrayOutputStream()
       lambda.handleRequest(testInputStream, testOutputStream)
       val response = new String(testOutputStream.toByteArray)
-      response.contains("DecodingFailure(excepted request type not found: RER, List())") shouldBe true
+      response.contains("DecodingFailure(excepted request type not found: SAR, List())") shouldBe true
     }
 
-    "should return a SarInitiateResponse after invoking the PerformSarLambda" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+    "should return a RerInitiateResponse after invoking the PerformRerLambda" in {
+      val lambda = FormstackRerHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
       lambda
         .handle(validInitiateRequest)
-        .map(response => response.isInstanceOf[SarInitiateResponse] shouldBe true )
+        .map(response => response.isInstanceOf[RerInitiateResponse] shouldBe true )
     }
 
     "should return completed status upon successful completion" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
-      val expectedResponse = SarStatusResponse(status = Completed, resultLocations = Some(List("s3Location")))
+      val lambda = FormstackRerHandler(S3ClientStub.withSuccessResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+      val expectedResponse = RerStatusResponse("initiationReference", status = Completed, "RER completed: completed RER results for initiation reference initiationReference found in s3: List(s3Location)")
       lambda
         .handle(validStatusRequest)
         .map(response => response shouldBe expectedResponse)
     }
 
     "should return failed status upon unsuccessful completion" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withFailedResponse, LambdaClientStub.withSuccessResponse, mockConfig)
-      val expectedResponse = SarStatusResponse(status = Failed)
+      val lambda = FormstackRerHandler(S3ClientStub.withFailedResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+      val expectedResponse = RerStatusResponse("initiationReference", status = Failed, "RER failed: failed path found in S3 for initiation reference initiationReference. Please check FormstackPerformRerLambda logs")
       lambda
         .handle(validStatusRequest)
         .map(response => response shouldBe expectedResponse)
     }
 
     "should return pending status when found to be neither success nor failure" in {
-      val lambda = FormstackSarHandler(S3ClientStub.withPendingStatusResponse, LambdaClientStub.withSuccessResponse, mockConfig)
-      val expectedResponse = SarStatusResponse(status = Pending)
+      val lambda = FormstackRerHandler(S3ClientStub.withPendingStatusResponse, LambdaClientStub.withSuccessResponse, mockConfig)
+      val expectedResponse = RerStatusResponse("initiationReference", status = Pending, "RER pending: no results found in S3 for initiation reference initiationReference.")
       lambda
         .handle(validStatusRequest)
         .map(response => response shouldBe expectedResponse)

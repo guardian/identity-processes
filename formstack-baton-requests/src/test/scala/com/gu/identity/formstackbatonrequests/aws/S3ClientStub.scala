@@ -1,7 +1,8 @@
-package com.gu.identity.formstackbatonrequests
+package com.gu.identity.formstackbatonrequests.aws
 
 import com.gu.identity.formstackbatonrequests.BatonModels.BatonRequestType
-import com.gu.identity.formstackbatonrequests.aws.{CompletedPathFound, FailedPathFound, NoResultsFound, S3Client, S3WriteSuccess, StatusResponse}
+import com.gu.identity.formstackbatonrequests.sar.FormstackSubmissionQuestionAnswer
+import com.gu.identity.formstackbatonrequests.{InitLambdaConfig, PerformLambdaConfig}
 
 class S3ClientStub (
   checkForResultsResponse: Either[Throwable, StatusResponse],
