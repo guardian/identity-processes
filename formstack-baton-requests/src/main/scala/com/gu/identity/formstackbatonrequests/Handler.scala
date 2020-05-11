@@ -20,19 +20,21 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
 
   val jsonPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
 
-  private def checkFormstackDataProvider(request: Req): Either[Throwable, Unit] =
+  private def checkFormstackDataProvider(request: Req): Either[Throwable, Unit] = {
+    val supportedProviders = List("formstack", "formstackrer")
     request match {
       case _: SarStatusRequest => Right(())
       case _: RerStatusRequest => Right(())
       case SarInitiateRequest(_, dataProvider, _) =>
-        Either.cond(dataProvider == "formstack", (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
+        Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
       case SarPerformRequest(_, _, dataProvider) =>
-        Either.cond(dataProvider == "formstack", (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
+        Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
       case RerInitiateRequest(_, dataProvider, _) =>
-        Either.cond(dataProvider == "formstack", (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
+        Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
       case RerPerformRequest(_, _, dataProvider) =>
-        Either.cond(dataProvider == "formstack", (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
+        Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
     }
+  }
 
 
   private def checkRequestTypeMatchesRequest(request: Req): Either[Throwable, Unit] =
