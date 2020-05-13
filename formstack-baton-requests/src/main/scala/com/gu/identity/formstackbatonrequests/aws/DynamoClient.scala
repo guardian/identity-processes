@@ -16,8 +16,8 @@ import scala.util.Try
 
 trait DynamoClient {
   def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]]
-  def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate]
-  def updateMostRecentTimestamp(lastUpdatedTableName: String, currentDateTime: LocalDateTime): Either[Throwable, Unit]
+  def mostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int): Either[Throwable, SubmissionTableUpdateDate]
+  def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, currentDateTime: LocalDateTime): Either[Throwable, Unit]
   def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]]
   def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]]
 }
@@ -25,7 +25,7 @@ trait DynamoClient {
 case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String)
 
 object SubmissionTableUpdateDate {
-  val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+  val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 }
 
 case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) extends DynamoClient with LazyLogging {
@@ -44,20 +44,20 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
     }
   }
 
-  override def mostRecentTimestamp(lastUpdatedTableName: String): Either[Throwable, SubmissionTableUpdateDate] = {
+  override def mostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int): Either[Throwable, SubmissionTableUpdateDate] = {
     logger.info(s"retrieving most recent timestamp from $lastUpdatedTableName")
     Scanamo.get[SubmissionTableUpdateDate](dynamoClient)(lastUpdatedTableName)(
-      'formstackSubmissionTableMetadata -> "lastUpdated"
+      'formstackSubmissionTableMetadata -> s"account${accountNumber}LastUpdated"
     ).map(dynamoResponse => dynamoResponse
       .left
       .map(err => new Exception(err.toString)))
-      .getOrElse(Left(new Exception("formstackSubmissionTableMetadata not found.")))
+      .getOrElse(Right(SubmissionTableUpdateDate(s"account${accountNumber}LastUpdated", "1970-01-01 00:00:00")))
   }
 
-  override def updateMostRecentTimestamp(lastUpdatedTableName: String, currentDateTime: LocalDateTime): Either[Throwable, Unit] = {
+  override def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, currentDateTime: LocalDateTime): Either[Throwable, Unit] = {
     val formattedDateTime = currentDateTime.format(SubmissionTableUpdateDate.formatter)
     logger.info(s"updating most recent timestamp in $lastUpdatedTableName to $formattedDateTime")
-    val recentUpdate = SubmissionTableUpdateDate("lastUpdated", formattedDateTime)
+    val recentUpdate = SubmissionTableUpdateDate(s"account${accountNumber}LastUpdated", formattedDateTime)
     Scanamo.put[SubmissionTableUpdateDate](dynamoClient)(lastUpdatedTableName)(recentUpdate)
       .getOrElse(Right())
       .fold(dynamoReadError => Left(new Exception(dynamoReadError.toString)), _ => Right(()))
