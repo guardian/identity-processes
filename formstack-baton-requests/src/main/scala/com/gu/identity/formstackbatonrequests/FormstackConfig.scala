@@ -5,7 +5,7 @@ import com.gu.identity.formstackbatonrequests.aws.ParameterStoreClient
 case class InitLambdaConfig (
   resultsBucket: String,
   resultsPath: String,
-  performFunctionName: String
+  stateMachineArn: String
 )
 
 case class FormstackAccountToken(account: Int, secret: String)
@@ -34,8 +34,8 @@ object FormstackConfig {
     (for {
       resultsBucket <- getEnvironmentVariable("RESULTS_BUCKET")
       resultsPath <- getEnvironmentVariable("RESULTS_PATH")
-      performFunctionName <- getEnvironmentVariable("PERFORM_FUNCTION_NAME")
-    } yield InitLambdaConfig(resultsBucket, resultsPath, performFunctionName))
+      stateMachineArn <- getEnvironmentVariable("STATE_MACHINE_ARN")
+    } yield InitLambdaConfig(resultsBucket, resultsPath, stateMachineArn))
       .getOrElse {
         throw new RuntimeException(
           s"Unable to retrieve environment variables for Formstack Init Handler")
