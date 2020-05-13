@@ -19,7 +19,7 @@ class FormstackPerformRerHandlerSpec extends FreeSpec with Matchers {
       "last-updated-table-name"
     )
 
-  val validRerPerformRequest = RerPerformRequest(
+  val validRerPerformRequest: RerPerformRequest = RerPerformRequest(
     initiationReference = "someRequestId",
     subjectEmail = "someSubjectEmail",
     dataProvider = "formstack"
@@ -37,15 +37,14 @@ class FormstackPerformRerHandlerSpec extends FreeSpec with Matchers {
     val expectedResponse = RerPerformResponse(
       initiationReference = "someRequestId",
       subjectEmail = "someSubjectEmail",
-      status = Completed,
-      None
+      status = Completed
     )
 
     lambda
-      .handle(validRerPerformRequest).map(res => res shouldBe expectedResponse)
+      .handle(validRerPerformRequest, null).map(res => res shouldBe expectedResponse)
   }
 
-  "should return a failed RerPerformResponse when request is successful but upload of status object to S3 is unsuccessful" in {
+  "should return an error when request is successful but upload of status object to S3 is unsuccessful" in {
 
     val lambda =
       FormstackPerformRerHandler(
@@ -54,18 +53,13 @@ class FormstackPerformRerHandlerSpec extends FreeSpec with Matchers {
         S3ClientStub.withFailedResponse,
         mockConfig)
 
-    val expectedResponse = RerPerformResponse(
-      initiationReference = "someRequestId",
-      subjectEmail = "someSubjectEmail",
-      status = Failed,
-      message = Some("S3 error")
-    )
+    val response = lambda.handle(validRerPerformRequest, null)
 
-    lambda
-      .handle(validRerPerformRequest) shouldBe Right(expectedResponse)
+    response.isLeft shouldBe true
+    response.left.map(err => err.getMessage shouldBe "S3 error")
   }
 
-  "should return a failed RerPerformResponse when Formstack API throws an error" in {
+  "should return an error when Formstack API throws an error" in {
 
     val lambda =
       FormstackPerformRerHandler(
@@ -74,15 +68,10 @@ class FormstackPerformRerHandlerSpec extends FreeSpec with Matchers {
         S3ClientStub.withSuccessResponse,
         mockConfig)
 
-    val expectedResponse = RerPerformResponse(
-      initiationReference = "someRequestId",
-      subjectEmail = "someSubjectEmail",
-      status = Failed,
-      message = Some("Formstack API error")
-    )
+    val response = lambda.handle(validRerPerformRequest, null)
 
-    lambda
-      .handle(validRerPerformRequest) shouldBe Right(expectedResponse)
+    response.isLeft shouldBe true
+    response.left.map(err => err.getMessage shouldBe "Formstack API error")
   }
 
   "should return a failed RerPerformResponse when DynamoDB throws an error" in {
@@ -94,14 +83,9 @@ class FormstackPerformRerHandlerSpec extends FreeSpec with Matchers {
         S3ClientStub.withSuccessResponse,
         mockConfig)
 
-    val expectedResponse = RerPerformResponse(
-      initiationReference = "someRequestId",
-      subjectEmail = "someSubjectEmail",
-      status = Failed,
-      message = Some("DynamoDB error")
-    )
+    val response = lambda.handle(validRerPerformRequest, null)
 
-    lambda
-      .handle(validRerPerformRequest) shouldBe Right(expectedResponse)
+    response.isLeft shouldBe true
+    response.left.map(err => err.getMessage shouldBe "DynamoDB error")
   }
 }

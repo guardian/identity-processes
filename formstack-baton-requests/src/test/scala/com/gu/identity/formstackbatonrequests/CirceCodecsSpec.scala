@@ -1,5 +1,7 @@
 package com.gu.identity.formstackbatonrequests
 
+import java.time.LocalDateTime
+
 import com.gu.identity.formstackbatonrequests.BatonModels._
 import org.scalatest.{FreeSpec, Matchers}
 import io.circe.parser._
@@ -164,8 +166,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
       val response: SarResponse = SarPerformResponse(
         status = Completed,
         initiationReference = "someRequestId",
-        subjectEmail = "testSubjectEmail",
-        message = None
+        subjectEmail = "testSubjectEmail"
       )
 
       response.asJson.printWith(jsonPrinter) shouldBe """{"status":"completed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","action":"perform","requestType":"SAR","dataProvider":"formstack"}"""
@@ -175,8 +176,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
       val response: RerResponse = RerPerformResponse(
         status = Completed,
         initiationReference = "someRequestId",
-        subjectEmail = "testSubjectEmail",
-        message = None
+        subjectEmail = "testSubjectEmail"
       )
 
       response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","status":"completed","action":"perform","requestType":"RER","dataProvider":"formstack"}"""
@@ -186,22 +186,107 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
       val response: SarResponse = SarPerformResponse(
         status = Failed,
         initiationReference = "someRequestId",
-        subjectEmail = "testSubjectEmail",
-        message = Some("Error writing to S3")
+        subjectEmail = "testSubjectEmail"
       )
 
-      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"failed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","message":"Error writing to S3","action":"perform","requestType":"SAR","dataProvider":"formstack"}"""
+      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"failed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","action":"perform","requestType":"SAR","dataProvider":"formstack"}"""
     }
 
     "should encode failed RerPerformResponse correctly" in {
       val response: RerResponse = RerPerformResponse(
         status = Failed,
         initiationReference = "someRequestId",
-        subjectEmail = "testSubjectEmail",
-        message = Some("Error writing to S3")
+        subjectEmail = "testSubjectEmail"
       )
 
-      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","status":"failed","message":"Error writing to S3","action":"perform","requestType":"RER","dataProvider":"formstack"}"""
+      response.asJson.printWith(jsonPrinter) shouldBe """{"initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","status":"failed","action":"perform","requestType":"RER","dataProvider":"formstack"}"""
+    }
+
+    "should decode valid UpdateDynamoRequest with account number" in {
+      val expectedResult: UpdateDynamoRequest = UpdateDynamoRequest(
+        requestType = SAR,
+        initiationReference = "someRequestId",
+        subjectEmail = "testSubjectEmail",
+        dataProvider = "formstack",
+        accountNumber = Some(1),
+        formPage = 1,
+        count = 25,
+        timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
+      )
+
+      val jsonRequest =
+        """{
+          |"requestType": "SAR",
+          |"initiationReference": "someRequestId",
+          |"subjectEmail": "testSubjectEmail",
+          |"dataProvider": "formstack",
+          |"accountNumber": 1,
+          |"formPage": 1,
+          |"count": 25,
+          |"timeOfStart": "2020-02-01T00:00"
+          |}
+          |""".stripMargin
+
+      decode[UpdateDynamoRequest](jsonRequest) shouldBe Right(expectedResult)
+    }
+
+    "should decode valid UpdateDynamoRequest without account number" in {
+      val expectedResult: UpdateDynamoRequest = UpdateDynamoRequest(
+        requestType = SAR,
+        initiationReference = "someRequestId",
+        subjectEmail = "testSubjectEmail",
+        dataProvider = "formstack",
+        accountNumber = None,
+        formPage = 1,
+        count = 25,
+        timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
+      )
+
+      val jsonRequest =
+        """{
+          |"requestType": "SAR",
+          |"initiationReference": "someRequestId",
+          |"subjectEmail": "testSubjectEmail",
+          |"dataProvider": "formstack",
+          |"formPage": 1,
+          |"count": 25,
+          |"timeOfStart": "2020-02-01T00:00"
+          |}
+          |""".stripMargin
+
+      decode[UpdateDynamoRequest](jsonRequest) shouldBe Right(expectedResult)
+    }
+
+    "should encode pending UpdateDynamoResponse" in {
+      val response: UpdateDynamoResponse = UpdateDynamoResponse(
+        status = Pending,
+        initiationReference = "someRequestId",
+        subjectEmail = "testSubjectEmail",
+        dataProvider = "formstack",
+        accountNumber = 1,
+        formPage = Some(3),
+        count = Some(75),
+        requestType = SAR,
+        timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
+      )
+
+      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"pending","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","dataProvider":"formstack","accountNumber":1,"formPage":3,"count":75,"requestType":"SAR","timeOfStart":"2020-02-01T00:00:00"}"""
+    }
+
+    "should encode completed UpdateDynamoResponse" in {
+      val response: UpdateDynamoResponse = UpdateDynamoResponse(
+        status = Completed,
+        initiationReference = "someRequestId",
+        subjectEmail = "testSubjectEmail",
+        dataProvider = "formstack",
+        accountNumber = 1,
+        formPage = None,
+        count = None,
+        requestType = SAR,
+        timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
+      )
+
+      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"completed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","dataProvider":"formstack","accountNumber":1,"requestType":"SAR","timeOfStart":"2020-02-01T00:00:00"}"""
     }
 
     "should decode valid FormsSubmissions with data" in {

@@ -1,5 +1,6 @@
 package com.gu.identity.formstackbatonrequests.sar
 
+import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.BatonModels._
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, S3Client, S3WriteSuccess}
 import com.gu.identity.formstackbatonrequests.services.{DynamoUpdateService, FormstackRequestService}
@@ -17,25 +18,23 @@ case class FormstackPerformSarHandler(
   config: PerformLambdaConfig)
   extends LazyLogging with FormstackHandler[SarRequest, SarResponse] {
 
-  val dynamoUpdateService = DynamoUpdateService(formstackClient, dynamoClient, config)
+  val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(formstackClient, dynamoClient, config)
 
   def initiateSar(request: SarPerformRequest): Either[Throwable, S3WriteSuccess] =
     for {
-      submissionTableUpdateDate <- dynamoClient.mostRecentTimestamp(config.lastUpdatedTableName)
-      _ <- dynamoUpdateService.updateDynamo(submissionTableUpdateDate)
       submissionIds <- dynamoClient.userSubmissions(request.subjectEmail.toLowerCase, config.bcryptSalt, config.submissionTableName)
       submissionData <- formstackClient.submissionData(submissionIds, config)
       writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, submissionData, SAR, config)
     } yield writeToS3Response
 
-  override def handle(request: SarRequest): Either[Throwable, SarResponse] =
+  override def handle(request: SarRequest, context: Context): Either[Throwable, SarResponse] =
     request match {
       case r: SarPerformRequest =>
         initiateSar(r) match {
-          case Right(_) => Right(SarPerformResponse(Completed, r.initiationReference, r.subjectEmail, None))
+          case Right(_) => Right(SarPerformResponse(Completed, r.initiationReference, r.subjectEmail))
           case Left(err) =>
             s3Client.writeFailedResults(r.initiationReference, err.getMessage, SAR, config)
-            Right(SarPerformResponse(Failed, r.initiationReference, r.subjectEmail, Some(err.getMessage)))
+                .flatMap(_ => Left(err))
         }
       case _ => Left(new Exception("Unable to retrieve email and initiation reference from request"))
     }
