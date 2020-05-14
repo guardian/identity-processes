@@ -11,7 +11,8 @@ class DynamoClientStub(
   writeSubmissionsResponse: Either[Throwable, List[BatchWriteItemResult]],
   userSubmissionsResponse: Either[Throwable, List[SubmissionIdEmail]],
   deleteUserSubmissionsResponse: Either[Throwable, List[DeleteItemResult]],
-  updateTableResponse: Either[Throwable, UpdateTableResult]
+  updateTableResponse: Either[Throwable, UpdateTableResult],
+  provisionedThroughputResponse: Either[Throwable, Long]
 ) extends DynamoClient {
   override def mostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int): Either[Throwable, SubmissionTableUpdateDate] = mostRecentTimestampResponse
   override def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, currentDateTime: LocalDateTime): Either[Throwable, Unit] = updateMostRecentTimestampResponse
@@ -19,6 +20,7 @@ class DynamoClientStub(
   override def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]] = userSubmissionsResponse
   override def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]] = deleteUserSubmissionsResponse
   override def updateWriteCapacity(units: Long, submissionsTableName: String): Either[Throwable, UpdateTableResult] = updateTableResponse
+  override def provisionedThroughput(submissionsTableName: String): Either[Throwable, Long] = provisionedThroughputResponse
 }
 
 object DynamoClientStub {
@@ -28,8 +30,9 @@ object DynamoClientStub {
   val userSubmissionsSuccess = Right(List(SubmissionIdEmail("test@test.com", "submissionId", 12345678, 1)))
   val deleteUserSubmissionsSuccess = Right(List.empty[DeleteItemResult])
   val updateWriteCapacitySuccess = Right(new UpdateTableResult())
+  val provisionedThroughputSuccess = Right(5L)
   val genericDynamoFailure = Left(new Exception("DynamoDB error"))
 
-  def withFailedResponse = new DynamoClientStub(genericDynamoFailure, genericDynamoFailure, genericDynamoFailure, genericDynamoFailure, genericDynamoFailure, genericDynamoFailure)
-  def withSuccessResponse = new DynamoClientStub(mostRecentTimestampSuccess, updateMostRecentTimestampSuccess, writeSubmissionsSuccess, userSubmissionsSuccess, deleteUserSubmissionsSuccess, updateWriteCapacitySuccess)
+  def withFailedResponse = new DynamoClientStub(genericDynamoFailure, genericDynamoFailure, genericDynamoFailure, genericDynamoFailure, genericDynamoFailure, genericDynamoFailure, genericDynamoFailure)
+  def withSuccessResponse = new DynamoClientStub(mostRecentTimestampSuccess, updateMostRecentTimestampSuccess, writeSubmissionsSuccess, userSubmissionsSuccess, deleteUserSubmissionsSuccess, updateWriteCapacitySuccess, provisionedThroughputSuccess)
 }

@@ -2,6 +2,7 @@ package com.gu.identity.formstackbatonrequests.updatedynamo
 
 import java.time.{LocalDate, LocalDateTime}
 
+import com.amazonaws.services.dynamodbv2.model.UpdateTableResult
 import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Pending, UpdateDynamoRequest, UpdateDynamoResponse}
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, S3Client, SubmissionTableUpdateDate}
@@ -18,6 +19,14 @@ case class UpdateDynamoHandler(
 
   val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(formstackClient, dynamoClient, config)
 
+  def updateWriteCapacity(units: Long, submissionsTableName: String): Either[Throwable, Unit] =
+    for {
+      provisionedThroughput <- dynamoClient.provisionedThroughput(submissionsTableName)
+      _ <- if (provisionedThroughput == units) {
+        Right(())
+      } else dynamoClient.updateWriteCapacity(units, submissionsTableName)
+    } yield ()
+
   def update(accountNumber: Int, formPage: Int, count: Int, timeOfStart: LocalDateTime, context: Context): Either[Throwable, UpdateStatus] = {
     val token = accountNumber match {
       case 1 => config.accountOneToken
@@ -29,9 +38,9 @@ case class UpdateDynamoHandler(
       if (timestampAsDate.toLocalDate != LocalDate.now) {
         logger.info(s"Updating Dynamo table with requests since $lastUpdate.")
         for {
-          _ <- dynamoClient.updateWriteCapacity(20L, config.submissionTableName)
+          _ <- updateWriteCapacity(20L, config.submissionTableName)
           status <- dynamoUpdateService.updateSubmissionsTable(formPage, lastUpdate, count, token, context)
-          _ <- dynamoClient.updateWriteCapacity(5L, config.submissionTableName)
+          _ <- updateWriteCapacity(5L, config.submissionTableName)
           _ <- if (status.completed) {
             dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, accountNumber, timeOfStart)
           } else Right(())
