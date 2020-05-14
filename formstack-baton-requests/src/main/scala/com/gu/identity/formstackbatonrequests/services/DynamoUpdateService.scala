@@ -74,9 +74,12 @@ case class DynamoUpdateService(
     val timestampAsDate = LocalDateTime.parse(submissionsTableUpdateDate.date, SubmissionTableUpdateDate.formatter)
     val timeOfStart = LocalDateTime.now
     if (timestampAsDate.toLocalDate != LocalDate.now) {
+      logger.info(s"updating submissions table with submissions since $timestampAsDate")
       for {
+        _ <- dynamoClient.updateWriteCapacity(20L, config.submissionTableName)
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackService.resultsPerPage, config.accountOneToken)
         _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackService.resultsPerPage, config.accountTwoToken)
+        _ <- dynamoClient.updateWriteCapacity(5L, config.submissionTableName)
         _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, timeOfStart)
       } yield ()
     } else Right(())
