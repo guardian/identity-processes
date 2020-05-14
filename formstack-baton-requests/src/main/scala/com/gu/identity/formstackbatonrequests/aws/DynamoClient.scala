@@ -9,7 +9,7 @@ import com.gu.scanamo.Scanamo
 import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
 import cats.implicits._
-import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult}
+import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult, ProvisionedThroughput, UpdateTableRequest, UpdateTableResult}
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 
 import scala.util.Try
@@ -20,6 +20,7 @@ trait DynamoClient {
   def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, currentDateTime: LocalDateTime): Either[Throwable, Unit]
   def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]]
   def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]]
+  def updateWriteCapacity(units: Long, submissionsTableName: String): Either[Throwable, UpdateTableResult]
 }
 
 case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String)
@@ -79,6 +80,13 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
         .delete(dynamoClient)(submissionsTableName)
         ('email -> submissionIdAndEmail.email and 'submissionId -> submissionIdAndEmail.submissionId)).toEither
     }
+  }
+
+  override def updateWriteCapacity(units: Long, submissionsTableName: String): Either[Throwable, UpdateTableResult] = {
+    val updateProvisionedThroughputRequest = new ProvisionedThroughput()
+        .withWriteCapacityUnits(units)
+        .withReadCapacityUnits(5L)
+    Try(dynamoClient.updateTable(submissionsTableName, updateProvisionedThroughputRequest)).toEither
   }
 }
 

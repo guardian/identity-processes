@@ -29,7 +29,9 @@ case class UpdateDynamoHandler(
       if (timestampAsDate.toLocalDate != LocalDate.now) {
         logger.info(s"Updating Dynamo table with requests since $lastUpdate.")
         for {
+          _ <- dynamoClient.updateWriteCapacity(20L, config.submissionTableName)
           status <- dynamoUpdateService.updateSubmissionsTable(formPage, lastUpdate, count, token, context)
+          _ <- dynamoClient.updateWriteCapacity(5L, config.submissionTableName)
           _ <- if (status.completed) {
             dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, accountNumber, timeOfStart)
           } else Right(())
