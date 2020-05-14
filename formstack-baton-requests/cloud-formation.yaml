@@ -116,7 +116,7 @@ Resources:
               - Effect: Allow
                 Action:
                 - states:StartExecution
-                Resource: !GetAtt FormstackSar.Arn
+                Resource: !Ref FormstackSar
 
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -327,7 +327,7 @@ Resources:
                 - Effect: Allow
                   Action:
                     - states:StartExecution
-                  Resource: !GetAtt FormstackRer.Arn
+                  Resource: !Ref FormstackRer
 
   FormstackBatonRerLambda:
     Type: AWS::Lambda::Function
@@ -608,18 +608,18 @@ Resources:
             "States": {
               "UpdateDynamoInParallel": {
                 "Type": "Parallel",
-                "End": true,
+                "Next": "PerformSar",
                 "Branches": [
                   {
                     "StartAt": "AddAccountOneParam",
                     "States": {
                       "AddAccountOneParam": {
                         "Type": "Pass",
-                        "Next": "UpdateDynamo",
+                        "Next": "UpdateDynamoWithAccountOne",
                         "Result": "1",
                         "ResultPath": "$.accountNumber"
                       },
-                      "UpdateDynamo": {
+                      "UpdateDynamoWithAccountOne": {
                         "Type": "Task",
                         "Resource": "${updateLambdaArn}",
                         "Next": "CheckAccountOneUpdateCompletion"
@@ -630,10 +630,14 @@ Resources:
                           {
                             "Variable": "$.status",
                             "StringEquals": "pending",
-                            "Next": "UpdateDynamo"
+                            "Next": "UpdateDynamoWithAccountOne"
                           }
                         ],
-                        "Default": "PerformSar"
+                        "Default": "AccountOneUpdateComplete"
+                      },
+                      "AccountOneUpdateComplete": {
+                        "Type": "Pass",
+                        "End": true
                       }
                     }
                   },
@@ -642,14 +646,14 @@ Resources:
                     "States": {
                       "AddAccountTwoParam": {
                         "Type": "Pass",
-                        "Next": "UpdateDynamo",
+                        "Next": "UpdateDynamoWithAccountTwo",
                         "Result": "2",
                         "ResultPath": "$.accountNumber"
                       },
-                      "UpdateDynamo": {
+                      "UpdateDynamoWithAccountTwo": {
                         "Type": "Task",
                         "Resource": "${updateLambdaArn}",
-                        "Next": "CheckMasterclassSarCompletion"
+                        "Next": "CheckAccountTwoUpdateCompletion"
                       },
                       "CheckAccountTwoUpdateCompletion": {
                         "Type": "Choice",
@@ -657,26 +661,29 @@ Resources:
                           {
                             "Variable": "$.status",
                             "StringEquals": "pending",
-                            "Next": "UpdateDynamo"
+                            "Next": "UpdateDynamoWithAccountTwo"
                           }
                         ],
-                        "Default": "PerformSar"
+                        "Default": "AccountTwoUpdateComplete"
+                      },
+                      "AccountTwoUpdateComplete": {
+                        "Type": "Pass",
+                        "End": true
                       }
                     }
                   }
                 ]
               },
-              "PerformAccountTwoSar": {
+              "PerformSar": {
                 "Type": "Task",
                 "Resource": "${sarLambdaArn}",
                 "End": true
               }
             }
           }
-        - {
+        -
           sarLambdaArn: !GetAtt PerformFormstackSarLambda.Arn
           updateLambdaArn: !GetAtt UpdateDynamoLambda.Arn
-        }
       RoleArn: !GetAtt StatesExecutionRole.Arn
 
   FormstackRer:
@@ -692,18 +699,18 @@ Resources:
             "States": {
               "UpdateDynamoInParallel": {
                 "Type": "Parallel",
-                "End": true,
+                "Next": "PerformRer",
                 "Branches": [
                   {
                     "StartAt": "AddAccountOneParam",
                     "States": {
                       "AddAccountOneParam": {
                         "Type": "Pass",
-                        "Next": "UpdateDynamo",
+                        "Next": "UpdateDynamoWithAccountOne",
                         "Result": "1",
                         "ResultPath": "$.accountNumber"
                       },
-                      "UpdateDynamo": {
+                      "UpdateDynamoWithAccountOne": {
                         "Type": "Task",
                         "Resource": "${updateLambdaArn}",
                         "Next": "CheckAccountOneUpdateCompletion"
@@ -714,10 +721,14 @@ Resources:
                           {
                             "Variable": "$.status",
                             "StringEquals": "pending",
-                            "Next": "UpdateDynamo"
+                            "Next": "UpdateDynamoWithAccountOne"
                           }
                         ],
-                        "Default": "PerformRer"
+                        "Default": "AccountOneUpdateComplete"
+                      },
+                      "AccountOneUpdateComplete": {
+                        "Type": "Pass",
+                        "End": true
                       }
                     }
                   },
@@ -726,11 +737,11 @@ Resources:
                     "States": {
                       "AddAccountTwoParam": {
                         "Type": "Pass",
-                        "Next": "UpdateDynamo",
+                        "Next": "UpdateDynamoWithAccountTwo",
                         "Result": "2",
                         "ResultPath": "$.accountNumber"
                       },
-                      "UpdateDynamo": {
+                      "UpdateDynamoWithAccountTwo": {
                         "Type": "Task",
                         "Resource": "${updateLambdaArn}",
                         "Next": "CheckAccountTwoUpdateCompletion"
@@ -741,10 +752,14 @@ Resources:
                           {
                             "Variable": "$.status",
                             "StringEquals": "pending",
-                            "Next": "UpdateDynamo"
+                            "Next": "UpdateDynamoWithAccountTwo"
                           }
                         ],
-                        "Default": "PerformRer"
+                        "Default": "AccountTwoUpdateComplete"
+                      },
+                      "AccountTwoUpdateComplete": {
+                        "Type": "Pass",
+                        "End": true
                       }
                     }
                   }
@@ -757,8 +772,7 @@ Resources:
               }
             }
           }
-        - {
+        -
           rerLambdaArn: !GetAtt PerformFormstackRerLambda.Arn
           updateLambdaArn: !GetAtt UpdateDynamoLambda.Arn
-        }
       RoleArn: !GetAtt StatesExecutionRole.Arn
