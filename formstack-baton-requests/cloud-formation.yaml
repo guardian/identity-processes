@@ -168,7 +168,7 @@ Resources:
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+        WriteCapacityUnits: 20
 
   FormstackSubmissionsLastUpdated:
     Condition: IsProd
