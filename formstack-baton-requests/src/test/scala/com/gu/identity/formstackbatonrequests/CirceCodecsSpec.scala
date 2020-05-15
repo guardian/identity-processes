@@ -270,7 +270,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
         timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
       )
 
-      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"pending","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","dataProvider":"formstack","accountNumber":1,"formPage":3,"count":75,"requestType":"SAR","timeOfStart":"2020-02-01T00:00:00"}"""
+      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"pending","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","dataProvider":"formstack","accountNumber":1,"formPage":3,"count":75,"requestType":"SAR","timeOfStart":"2020-02-01T00:00:00","action":"perform"}"""
     }
 
     "should encode completed UpdateDynamoResponse" in {
@@ -286,7 +286,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
         timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
       )
 
-      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"completed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","dataProvider":"formstack","accountNumber":1,"requestType":"SAR","timeOfStart":"2020-02-01T00:00:00"}"""
+      response.asJson.printWith(jsonPrinter) shouldBe """{"status":"completed","initiationReference":"someRequestId","subjectEmail":"testSubjectEmail","dataProvider":"formstack","accountNumber":1,"requestType":"SAR","timeOfStart":"2020-02-01T00:00:00","action":"perform"}"""
     }
 
     "should decode valid FormsSubmissions with data" in {

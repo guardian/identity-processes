@@ -19,14 +19,6 @@ case class UpdateDynamoHandler(
 
   val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(formstackClient, dynamoClient, config)
 
-  def updateWriteCapacity(units: Long, submissionsTableName: String): Either[Throwable, Unit] =
-    for {
-      provisionedThroughput <- dynamoClient.provisionedThroughput(submissionsTableName)
-      _ <- if (provisionedThroughput == units) {
-        Right(())
-      } else dynamoClient.updateWriteCapacity(units, submissionsTableName)
-    } yield ()
-
   def update(accountNumber: Int, formPage: Int, count: Int, timeOfStart: LocalDateTime, context: Context): Either[Throwable, UpdateStatus] = {
     val token = accountNumber match {
       case 1 => config.accountOneToken
@@ -38,9 +30,7 @@ case class UpdateDynamoHandler(
       if (timestampAsDate.toLocalDate != LocalDate.now) {
         logger.info(s"Updating Dynamo table with requests since $lastUpdate.")
         for {
-          _ <- updateWriteCapacity(20L, config.submissionTableName)
           status <- dynamoUpdateService.updateSubmissionsTable(formPage, lastUpdate, count, token, context)
-          _ <- updateWriteCapacity(5L, config.submissionTableName)
           _ <- if (status.completed) {
             dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, accountNumber, timeOfStart)
           } else Right(())

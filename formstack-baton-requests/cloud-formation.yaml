@@ -508,8 +508,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:BatchWriteItem
-                  - dynamodb:UpdateTable
-                  - dynamodb:DescribeTable
                 Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${SubmissionsTableName}
         - PolicyName: LastUpdatedTablePolicy
           PolicyDocument:

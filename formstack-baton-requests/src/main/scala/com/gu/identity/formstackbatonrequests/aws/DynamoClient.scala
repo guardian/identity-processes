@@ -20,8 +20,6 @@ trait DynamoClient {
   def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, currentDateTime: LocalDateTime): Either[Throwable, Unit]
   def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]]
   def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]]
-  def updateWriteCapacity(units: Long, submissionsTableName: String): Either[Throwable, UpdateTableResult]
-  def provisionedThroughput(submissionsTableName: String): Either[Throwable, Long]
 }
 
 case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String)
@@ -81,16 +79,6 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
         .delete(dynamoClient)(submissionsTableName)
         ('email -> submissionIdAndEmail.email and 'submissionId -> submissionIdAndEmail.submissionId)).toEither
     }
-  }
-
-  override def provisionedThroughput(submissionsTableName: String): Either[Throwable, Long] =
-    Try(dynamoClient.describeTable(submissionsTableName).getTable.getProvisionedThroughput.getWriteCapacityUnits.toLong).toEither
-
-  override def updateWriteCapacity(units: Long, submissionsTableName: String): Either[Throwable, UpdateTableResult] = {
-    val updateProvisionedThroughputRequest = new ProvisionedThroughput()
-        .withWriteCapacityUnits(units)
-        .withReadCapacityUnits(5L)
-    Try(dynamoClient.updateTable(submissionsTableName, updateProvisionedThroughputRequest)).toEither
   }
 }
 

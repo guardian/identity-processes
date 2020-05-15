@@ -70,7 +70,10 @@ object circeCodecs {
       addAdditionalFields(pr.asJsonObject, "RER", "perform")
   }
 
-  implicit val updateDynamoResponseEncoder: Encoder[UpdateDynamoResponse] = deriveEncoder
+  implicit val updateDynamoResponseEncoder: Encoder[UpdateDynamoResponse] =
+    Encoder.encodeJson.contramap[UpdateDynamoResponse] { res =>
+      res.asJsonObject.add("action", "perform".asJson).asJson
+    }
 
   implicit val requestTypeEncoder: Encoder[BatonRequestType] = Encoder.instance {
     case SAR => "SAR".asJson
