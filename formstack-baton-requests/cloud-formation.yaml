@@ -675,6 +675,7 @@ Resources:
               },
               "PerformSar": {
                 "Type": "Task",
+                "InputPath": "$[0]",
                 "Resource": "${sarLambdaArn}",
                 "End": true
               }
@@ -766,6 +767,7 @@ Resources:
               },
               "PerformRer": {
                 "Type": "Task",
+                "InputPath": "$[0]",
                 "Resource": "${rerLambdaArn}",
                 "End": true
               }
