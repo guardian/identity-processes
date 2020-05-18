@@ -1,5 +1,6 @@
 package com.gu.identity.formstackbatonrequests.services
 
+import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClientStub, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import org.scalatest.{FreeSpec, Matchers}
@@ -17,15 +18,8 @@ class DynamoUpdateServiceSpec extends FreeSpec with Matchers {
       "last-updated-table-name"
     )
 
-  val dynamoUpdateService = DynamoUpdateService(FormstackServiceStub.withSuccessResponse, DynamoClientStub.withSuccessResponse, mockConfig)
+  val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(FormstackServiceStub.withSuccessResponse, DynamoClientStub.withSuccessResponse, mockConfig)
   "DynamoUpdateService" - {
-    "should update dynamo with submissions from Formstack" in {
-
-      val expectedResponse = Right(())
-
-      dynamoUpdateService
-        .updateDynamo(SubmissionTableUpdateDate("lastUpdated", "2020-01-01 00:00:00")) shouldBe expectedResponse
-    }
 
     "should detect fields with email addresses and return a list of SubmissionIdEmail" in {
 

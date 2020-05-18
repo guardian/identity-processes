@@ -1,12 +1,15 @@
 package com.gu.identity.formstackbatonrequests.services
 
-import java.time.{Instant, LocalDate, LocalDateTime}
+import java.time.Instant
 
+import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission}
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
+
+case class UpdateStatus(completed: Boolean, formsPage: Option[Int], count: Option[Int], token: FormstackAccountToken)
 
 case class DynamoUpdateService(
   formstackClient: FormstackRequestService,
@@ -51,7 +54,7 @@ case class DynamoUpdateService(
   }
 
 
-  def updateSubmissionsTable(formsPage: Int, lastUpdate: SubmissionTableUpdateDate, count: Int, token: FormstackAccountToken): Either[Throwable, Unit] = {
+  def updateSubmissionsTable(formsPage: Int, lastUpdate: SubmissionTableUpdateDate, count: Int, token: FormstackAccountToken, context: Context): Either[Throwable, UpdateStatus] = {
     logger.info(s"----------Getting page $formsPage of forms.----------")
     formstackClient.accountFormsForGivenPage(formsPage, token) match {
       case Left(err) => Left(err)
@@ -64,24 +67,11 @@ case class DynamoUpdateService(
         val errors = formResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString))
+        } else if (count < response.total & context.getRemainingTimeInMillis > 300000) {
+          updateSubmissionsTable(formsPage + 1, lastUpdate, count + FormstackService.resultsPerPage, token, context)
         } else if (count < response.total) {
-          updateSubmissionsTable(formsPage + 1, lastUpdate, count + FormstackService.resultsPerPage, token)
-        } else Right(())
+          Right(UpdateStatus(completed = false, Some(formsPage + 1), Some(count + FormstackService.resultsPerPage), token))
+        } else Right(UpdateStatus(completed = true, None, None, token))
     }
-  }
-
-  def updateDynamo(submissionsTableUpdateDate: SubmissionTableUpdateDate): Either[Throwable, Unit] = {
-    val timestampAsDate = LocalDateTime.parse(submissionsTableUpdateDate.date, SubmissionTableUpdateDate.formatter)
-    val timeOfStart = LocalDateTime.now
-    if (timestampAsDate.toLocalDate != LocalDate.now) {
-      logger.info(s"updating submissions table with submissions since $timestampAsDate")
-      for {
-        _ <- dynamoClient.updateWriteCapacity(20L, config.submissionTableName)
-        _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackService.resultsPerPage, config.accountOneToken)
-        _ <- updateSubmissionsTable(1, submissionsTableUpdateDate, FormstackService.resultsPerPage, config.accountTwoToken)
-        _ <- dynamoClient.updateWriteCapacity(5L, config.submissionTableName)
-        _ <- dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, timeOfStart)
-      } yield ()
-    } else Right(())
   }
 }

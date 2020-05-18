@@ -6,17 +6,19 @@ import io.circe.{Decoder, DecodingFailure, Encoder, Printer}
 import io.circe.parser._
 import io.circe.syntax._
 import circeCodecs._
-import com.gu.identity.formstackbatonrequests.BatonModels.{RER, RerInitiateRequest, RerPerformRequest, RerStatusRequest, SAR, SarInitiateRequest, SarPerformRequest, SarStatusRequest}
-import com.gu.identity.formstackbatonrequests.aws.{Dynamo, Lambda, S3}
+import com.amazonaws.services.lambda.runtime.Context
+import com.gu.identity.formstackbatonrequests.BatonModels.{RER, RerInitiateRequest, RerPerformRequest, RerStatusRequest, SAR, SarInitiateRequest, SarPerformRequest, SarStatusRequest, UpdateDynamoRequest}
+import com.gu.identity.formstackbatonrequests.aws.{Dynamo, S3, StepFunction}
 import com.gu.identity.formstackbatonrequests.rer.{FormstackPerformRerHandler, FormstackRerHandler}
 import com.gu.identity.formstackbatonrequests.sar.{FormstackPerformSarHandler, FormstackSarHandler}
 import com.gu.identity.formstackbatonrequests.services.FormstackService
+import com.gu.identity.formstackbatonrequests.updatedynamo.UpdateDynamoHandler
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source
 
 trait FormstackHandler[Req, Res] extends LazyLogging {
-  def handle(request: Req): Either[Throwable, Res]
+  def handle(request: Req, context: Context): Either[Throwable, Res]
 
   val jsonPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
 
@@ -33,6 +35,8 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
         Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
       case RerPerformRequest(_, _, dataProvider) =>
         Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
+      case UpdateDynamoRequest(_, _, _, dataProvider, _, _, _, _) =>
+        Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
     }
   }
 
@@ -47,7 +51,7 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
     }
 
 
-  def handleRequest(input: InputStream, output: OutputStream)(
+  def handleRequest(input: InputStream, output: OutputStream, context: Context)(
       implicit decoder: Decoder[Req],
       encoder: Encoder[Res]): Unit = {
     try {
@@ -55,7 +59,7 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
         request <- decode[Req](Source.fromInputStream(input).mkString)
         _ <- checkFormstackDataProvider(request)
         _ <- checkRequestTypeMatchesRequest(request)
-        response <- handle(request)
+        response <- handle(request, context)
       } yield response
 
       response match {
@@ -71,15 +75,21 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
 
 object Handler {
 
-  val stage = sys.env.getOrElse("STAGE", "CODE") match {
+  val stage: String = sys.env.getOrElse("STAGE", "CODE") match {
     case "PROD" => "PROD"
     case _      => "CODE"
   }
 
+  def handleUpdateDynamo(inputStream: InputStream, outputStream: OutputStream, context: Context): Unit = {
+    val performUpdateConfig = FormstackConfig.getPerformHandlerConfig
+    val updateHandler = UpdateDynamoHandler(Dynamo(), S3, FormstackService, performUpdateConfig)
+    updateHandler.handleRequest(inputStream, outputStream, context)
+  }
+
   def handleSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
     val sarHandlerConfig = FormstackConfig.getInitHandlerConfig
-    val sarHandler = FormstackSarHandler(S3, Lambda, sarHandlerConfig)
-    sarHandler.handleRequest(inputStream, outputStream)
+    val sarHandler = FormstackSarHandler(S3, StepFunction, sarHandlerConfig)
+    sarHandler.handleRequest(inputStream, outputStream, null)
   }
 
   def handlePerformSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
@@ -88,14 +98,14 @@ object Handler {
       if (stage == "PROD")
         FormstackPerformSarHandler(Dynamo(), FormstackService, S3, performSarHandlerConfig)
       else PerformHandlerStubs.FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
-    performSarHandler.handleRequest(inputStream, outputStream)
+    performSarHandler.handleRequest(inputStream, outputStream, null)
   }
 
 
   def handleRer(inputStream: InputStream, outputStream: OutputStream): Unit = {
     val rerHandlerConfig = FormstackConfig.getInitHandlerConfig
-    val rerHandler = FormstackRerHandler(S3, Lambda, rerHandlerConfig)
-    rerHandler.handleRequest(inputStream, outputStream)
+    val rerHandler = FormstackRerHandler(S3, StepFunction, rerHandlerConfig)
+    rerHandler.handleRequest(inputStream, outputStream, null)
   }
 
   def handlePerformRer(inputStream: InputStream, outputStream: OutputStream): Unit = {
@@ -104,7 +114,7 @@ object Handler {
       if (stage == "PROD")
         FormstackPerformRerHandler(Dynamo(), FormstackService, S3, performRerHandlerConfig)
       else PerformHandlerStubs.FormstackPerformRerHandlerStub(S3, performRerHandlerConfig)
-    performRerHandler.handleRequest(inputStream, outputStream)
+    performRerHandler.handleRequest(inputStream, outputStream, null)
   }
 
 }

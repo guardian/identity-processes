@@ -19,7 +19,7 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
       "last-updated-table-name"
     )
 
-  val validSarPerformRequest = SarPerformRequest(
+  val validSarPerformRequest: SarPerformRequest = SarPerformRequest(
     initiationReference = "someRequestId",
     subjectEmail = "someSubjectEmail",
     dataProvider = "formstack"
@@ -37,15 +37,14 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
     val expectedResponse = SarPerformResponse(
       status = Completed,
       initiationReference = "someRequestId",
-      subjectEmail = "someSubjectEmail",
-      None
+      subjectEmail = "someSubjectEmail"
     )
 
     lambda
-      .handle(validSarPerformRequest).map(res => res shouldBe expectedResponse)
+      .handle(validSarPerformRequest, null).map(res => res shouldBe expectedResponse)
   }
 
-  "should return a failed SarPerformResponse when request is successful but upload to S3 is unsuccessful" in {
+  "should return an error when request is successful but upload to S3 is unsuccessful" in {
 
     val lambda =
       FormstackPerformSarHandler(
@@ -54,18 +53,13 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
         S3ClientStub.withFailedResponse,
         mockConfig)
 
-    val expectedResponse = SarPerformResponse(
-      status = Failed,
-      initiationReference = "someRequestId",
-      subjectEmail = "someSubjectEmail",
-      message = Some("S3 error")
-    )
+    val response = lambda.handle(validSarPerformRequest, null)
 
-    lambda
-      .handle(validSarPerformRequest) shouldBe Right(expectedResponse)
+    response.isLeft shouldBe true
+    response.left.map(err => err.getMessage shouldBe "S3 error")
   }
 
-  "should return a failed SarPerformResponse when Formstack API throws an error" in {
+  "should return an error when Formstack API throws an error" in {
 
     val lambda =
       FormstackPerformSarHandler(
@@ -74,18 +68,13 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
         S3ClientStub.withSuccessResponse,
         mockConfig)
 
-    val expectedResponse = SarPerformResponse(
-      status = Failed,
-      initiationReference = "someRequestId",
-      subjectEmail = "someSubjectEmail",
-      message = Some("Formstack API error")
-    )
+    val response = lambda.handle(validSarPerformRequest, null)
 
-    lambda
-      .handle(validSarPerformRequest) shouldBe Right(expectedResponse)
+    response.isLeft shouldBe true
+    response.left.map(err => err.getMessage shouldBe "Formstack API error")
   }
 
-  "should return a failed SarPerformResponse when DynamoDB throws an error" in {
+  "should return an error when DynamoDB throws an error" in {
 
     val lambda =
       FormstackPerformSarHandler(
@@ -94,14 +83,9 @@ class FormstackPerformSarHandlerSpec extends FreeSpec with Matchers {
         S3ClientStub.withSuccessResponse,
         mockConfig)
 
-    val expectedResponse = SarPerformResponse(
-      status = Failed,
-      initiationReference = "someRequestId",
-      subjectEmail = "someSubjectEmail",
-      message = Some("DynamoDB error")
-    )
+    val response = lambda.handle(validSarPerformRequest, null)
 
-    lambda
-      .handle(validSarPerformRequest) shouldBe Right(expectedResponse)
+    response.isLeft shouldBe true
+    response.left.map(err => err.getMessage shouldBe "DynamoDB error")
   }
 }

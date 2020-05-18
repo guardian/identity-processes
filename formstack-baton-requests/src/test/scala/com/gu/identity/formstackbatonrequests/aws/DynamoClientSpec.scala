@@ -86,29 +86,35 @@ class DynamoClientSpec extends FreeSpec with Matchers with BeforeAndAfterAll {
       matchingSubmissions.left.get.getMessage shouldBe "Invalid salt version"
     }
 
+    "should return 1970-01-01 00:00:00 as the timestamp if cannot find the mostRecentTimestamp" in {
+      val lastUpdatedTimestamp = client.mostRecentTimestamp(lastUpdatedTable, 1)
+      lastUpdatedTimestamp shouldBe Right(SubmissionTableUpdateDate("account1LastUpdated", "1970-01-01 00:00:00"))
+    }
+
     "should update most recent timestamp in Dynamo" in {
       val dateTime = LocalDateTime.of(2020, 1, 1, 0, 0)
-      val response = client.updateMostRecentTimestamp(lastUpdatedTable, dateTime)
+      val response = client.updateMostRecentTimestamp(lastUpdatedTable, 1, dateTime)
       response.isRight shouldBe true
     }
 
     "should get mostRecentTimestamp" in {
-      val lastUpdatedTimestamp = client.mostRecentTimestamp(lastUpdatedTable)
+      val lastUpdatedTimestamp = client.mostRecentTimestamp(lastUpdatedTable, 1)
 
       lastUpdatedTimestamp.isRight shouldBe true
+      lastUpdatedTimestamp shouldBe Right(SubmissionTableUpdateDate("account1LastUpdated", "2020-01-01 00:00:00"))
     }
 
     "should return an updated timestamp that is more recent that the last updated timestamp" in {
       val newDateTime = LocalDateTime.of(2020, 2, 1, 0, 0)
-      val oldUpdatedTimestamp = client.mostRecentTimestamp(lastUpdatedTable)
-      val updateTimestamp = client.updateMostRecentTimestamp(lastUpdatedTable, newDateTime)
-      val newUpdatedTimestamp = client.mostRecentTimestamp(lastUpdatedTable)
+      val oldUpdatedTimestamp = client.mostRecentTimestamp(lastUpdatedTable, 1)
+      val updateTimestamp = client.updateMostRecentTimestamp(lastUpdatedTable, 1, newDateTime)
+      val newUpdatedTimestamp = client.mostRecentTimestamp(lastUpdatedTable, 1)
 
       oldUpdatedTimestamp.isRight shouldBe true
       updateTimestamp.isRight shouldBe true
-      oldUpdatedTimestamp.right.get shouldBe SubmissionTableUpdateDate("lastUpdated", "2020-01-01 00:00:00")
+      oldUpdatedTimestamp.right.get shouldBe SubmissionTableUpdateDate("account1LastUpdated", "2020-01-01 00:00:00")
       newUpdatedTimestamp.isRight shouldBe true
-      newUpdatedTimestamp.right.get shouldBe SubmissionTableUpdateDate("lastUpdated", "2020-02-01 00:00:00")
+      newUpdatedTimestamp.right.get shouldBe SubmissionTableUpdateDate("account1LastUpdated", "2020-02-01 00:00:00")
     }
   }
 

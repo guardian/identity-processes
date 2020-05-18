@@ -1,5 +1,7 @@
 package com.gu.identity.formstackbatonrequests
 
+import java.time.LocalDateTime
+
 object BatonModels {
 
   sealed trait BatonTaskStatus
@@ -22,16 +24,16 @@ object BatonModels {
     override def id: String = "RER"
   }
 
-  sealed trait PerformRequest
-  sealed trait PerformResponse
+  sealed trait BatonRequest
+  sealed trait BatonResponse
 
-  sealed trait SarRequest
+  sealed trait SarRequest extends BatonRequest
 
   case class SarInitiateRequest(subjectEmail: String, dataProvider: String, requestType: BatonRequestType) extends SarRequest
   case class SarStatusRequest(initiationReference: String) extends SarRequest
-  case class SarPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends SarRequest with PerformRequest
+  case class SarPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends SarRequest
 
-  sealed trait SarResponse
+  sealed trait SarResponse extends BatonResponse
 
   case class SarInitiateResponse(initiationReference: String) extends SarResponse
   case class SarStatusResponse(
@@ -42,17 +44,16 @@ object BatonModels {
   case class SarPerformResponse(
     status: BatonTaskStatus,
     initiationReference: String,
-    subjectEmail: String,
-    message: Option[String]
-  ) extends SarResponse with PerformResponse
+    subjectEmail: String
+  ) extends SarResponse
 
-  sealed trait RerRequest
+  sealed trait RerRequest extends BatonRequest
 
   case class RerInitiateRequest(subjectEmail: String, dataProvider: String, requestType: BatonRequestType) extends RerRequest
   case class RerStatusRequest(initiationReference: String) extends RerRequest
-  case class RerPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends RerRequest with PerformRequest
+  case class RerPerformRequest(initiationReference: String, subjectEmail: String, dataProvider: String) extends RerRequest
 
-  sealed trait RerResponse
+  sealed trait RerResponse extends BatonResponse
 
   case class RerInitiateResponse(initiationReference: String, message: String, status: BatonTaskStatus) extends RerResponse
   case class RerStatusResponse(
@@ -63,7 +64,29 @@ object BatonModels {
   case class RerPerformResponse(
     initiationReference: String,
     subjectEmail: String,
+    status: BatonTaskStatus
+  ) extends RerResponse
+
+  case class UpdateDynamoRequest(
+    requestType: BatonRequestType,
+    initiationReference: String,
+    subjectEmail: String,
+    dataProvider: String,
+    accountNumber: Option[Int],
+    formPage: Int,
+    count: Int,
+    timeOfStart: LocalDateTime
+  ) extends BatonRequest
+
+  case class UpdateDynamoResponse(
     status: BatonTaskStatus,
-    message: Option[String]
-  ) extends RerResponse with PerformResponse
+    initiationReference: String,
+    subjectEmail: String,
+    dataProvider: String,
+    accountNumber: Int,
+    formPage: Option[Int],
+    count: Option[Int],
+    requestType: BatonRequestType,
+    timeOfStart: LocalDateTime
+  ) extends BatonResponse
 }

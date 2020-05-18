@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
   "com.gu" %% "scanamo" % "1.0.0-M6" excludeAll ExclusionRule(organization = "com.amazonaws"), //brings obsolete aws version 1.11.256
   "com.amazonaws" % "aws-java-sdk-dynamodb" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-s3" % amazonSdkVersion,
-  "com.amazonaws" % "aws-java-sdk-lambda" % amazonSdkVersion,
+  "com.amazonaws" % "aws-java-sdk-stepfunctions" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-ssm" % amazonSdkVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
