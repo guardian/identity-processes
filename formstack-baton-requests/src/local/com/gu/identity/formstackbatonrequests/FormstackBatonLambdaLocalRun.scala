@@ -65,18 +65,10 @@ object FormstackBatonLambdaLocalRun extends App {
     println("lambda output was: " + responseString)
   }
 
-  private def requestUpdateStreams(request: UpdateDynamoRequest): InputOutputStreams = {
-    val jsonRequest = request.asJson.noSpaces
-    println(jsonRequest)
-    val testInputStream = new ByteArrayInputStream(jsonRequest.getBytes)
-    val testOutputStream = new ByteArrayOutputStream()
-    InputOutputStreams(testInputStream, testOutputStream)
-  }
-
   def updateDynamoTestRun(request: UpdateDynamoRequest): Unit = {
     val updateConfig = FormstackConfig.getPerformHandlerConfig
     val updateLambda = UpdateDynamoHandler(Dynamo(), S3, FormstackService, updateConfig)
-    val streams = requestUpdateStreams(request)
+    val streams = requestStreams(request)
     updateLambda.handleRequest(streams.inputStream, streams.outputStream, null)
     val responseString = new String(streams.outputStream.toByteArray)
     println("lambda output was: " + responseString)
