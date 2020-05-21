@@ -36,6 +36,8 @@ Parameters:
   SubmissionsTableName:
     Type: String
     Default: formstack-submission-ids
+  BatonAccountId:
+    Type: String
 
 Conditions:
   IsProd: !Equals [ !Ref Stage, PROD ]
@@ -49,7 +51,7 @@ Resources:
         - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
           Protocol: https
 
-  BatonInvokeRole:
+  BatonInvokeRole: #TODO delete once Baton is migrated to new account
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "formstack-baton-lambda-role-${Stage}"
@@ -58,6 +60,29 @@ Resources:
           - Effect: Allow
             Principal:
               AWS: !Sub "arn:aws:iam::942464564246:root"
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt FormstackBatonSarLambda.Arn
+                  - !GetAtt FormstackBatonRerLambda.Arn
+
+  BatonAccountInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "baton-formstack-lambda-role-${Stage}"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${BatonAccountId}:root"
             Action:
               - sts:AssumeRole
       Path: /
