@@ -11,7 +11,7 @@ Parameters:
   ResultsBucket:
     Description: Bucket where results and status updates are uploaded to
     Type: String
-    Default: baton-results
+    Default: gu-baton-results
   VpcId:
     Description: Vpc where the lambda is being created
     Type: String
@@ -50,29 +50,6 @@ Resources:
       Subscription:
         - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
           Protocol: https
-
-  BatonInvokeRole: #TODO delete once Baton is migrated to new account
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "formstack-baton-lambda-role-${Stage}"
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::942464564246:root"
-            Action:
-              - sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: LambdaPolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - !GetAtt FormstackBatonSarLambda.Arn
-                  - !GetAtt FormstackBatonRerLambda.Arn
 
   BatonAccountInvokeRole:
     Type: AWS::IAM::Role
