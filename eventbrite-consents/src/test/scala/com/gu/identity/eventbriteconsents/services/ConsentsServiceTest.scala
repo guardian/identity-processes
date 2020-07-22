@@ -19,6 +19,12 @@ class ConsentsServiceTest extends FlatSpec with MockitoSugar {
     val masterclassesCredentials = EventbriteCredentials("masterclassesOrganisationId", "masterclassesToken")
     val eventsCredentials = EventbriteCredentials("eventsOrganisationId", "eventsToken")
     val consentsService = new ConsentsService(config, eventbriteClient, identityClient)
+
+    when(config.eventsCredentials) thenReturn eventsCredentials
+    when(config.masterclassesCredentials) thenReturn masterclassesCredentials
+    when(config.idapiAccessToken) thenReturn "idapiAccessToken"
+    when(config.idapiHost) thenReturn "idapiHost"
+    when(config.syncFrequencyHours) thenReturn 2
   }
 
   def createAttendee(email: String) = EventbriteAttendee(Some(Vector(
@@ -50,25 +56,19 @@ class ConsentsServiceTest extends FlatSpec with MockitoSugar {
     val fixtures = createFixtures()
     import fixtures._
 
-    when(config.eventsCredentials) thenReturn eventsCredentials
-    when(config.masterclassesCredentials) thenReturn masterclassesCredentials
-    when(config.idapiAccessToken) thenReturn "idapiAccessToken"
-    when(config.idapiHost) thenReturn "idapiHost"
-    when(config.syncFrequencyHours) thenReturn 2
     when(config.isDebug) thenReturn false
 
-
     when(eventbriteClient.findConsents(eql(masterclassesCredentials), any[Instant], eql(""))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont1")), Some(Vector(createAttendee("email1@email.com"), createAttendee("email2@email.com"))))
+      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont1"), 1, 1), Some(Vector(createAttendee("email1@email.com"), createAttendee("email2@email.com"))))
 
     when(eventbriteClient.findConsents(eql(masterclassesCredentials), any[Instant], eql("cont1"))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None), Some(Vector(notAttending2, createAttendee("email3@email.com"))))
+      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None, 1, 1), Some(Vector(notAttending2, createAttendee("email3@email.com"))))
 
     when(eventbriteClient.findConsents(eql(eventsCredentials), any[Instant], eql(""))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont2")), Some(Vector(notAttending1, notAttending2)))
+      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont2"), 1, 1), Some(Vector(notAttending1, notAttending2)))
 
     when(eventbriteClient.findConsents(eql(eventsCredentials), any[Instant], eql("cont2"))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None), Some(Vector(createAttendee("email4@email.com"))))
+      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None, 1, 1), Some(Vector(createAttendee("email4@email.com"))))
 
     consentsService.syncConsents()
     verify(identityClient).updateEventConsent("email1@email.com")
@@ -82,22 +82,16 @@ class ConsentsServiceTest extends FlatSpec with MockitoSugar {
     val fixtures = createFixtures()
     import fixtures._
 
-    when(config.eventsCredentials) thenReturn eventsCredentials
-    when(config.masterclassesCredentials) thenReturn masterclassesCredentials
-    when(config.idapiAccessToken) thenReturn "idapiAccessToken"
-    when(config.idapiHost) thenReturn "idapiHost"
-    when(config.syncFrequencyHours) thenReturn 2
     when(config.isDebug) thenReturn false
 
-
     when(eventbriteClient.findConsents(eql(masterclassesCredentials), any[Instant], eql(""))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont1")), Some(Vector(notAttending2, notAttending1)))
+      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont1"), 1, 1), Some(Vector(notAttending2, notAttending1)))
 
     when(eventbriteClient.findConsents(eql(masterclassesCredentials), any[Instant], eql("cont1"))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None), Some(Vector(notAttending2)))
+      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None, 1, 1), Some(Vector(notAttending2)))
 
     when(eventbriteClient.findConsents(eql(eventsCredentials), any[Instant], eql(""))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None), Some(Vector(notAttending1, notAttending2)))
+      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None, 1, 1), Some(Vector(notAttending1, notAttending2)))
 
 
     consentsService.syncConsents()
@@ -110,28 +104,35 @@ class ConsentsServiceTest extends FlatSpec with MockitoSugar {
     val fixtures = createFixtures()
     import fixtures._
 
-    when(config.eventsCredentials) thenReturn eventsCredentials
-    when(config.masterclassesCredentials) thenReturn masterclassesCredentials
-    when(config.idapiAccessToken) thenReturn "idapiAccessToken"
-    when(config.idapiHost) thenReturn "idapiHost"
-    when(config.syncFrequencyHours) thenReturn 2
     when(config.isDebug) thenReturn true
 
-
     when(eventbriteClient.findConsents(eql(masterclassesCredentials), any[Instant], eql(""))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont1")), Some(Vector(createAttendee("email1@email.com"), createAttendee("email2@email.com"))))
+      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont1"), 1, 1), Some(Vector(createAttendee("email1@email.com"), createAttendee("email2@email.com"))))
 
     when(eventbriteClient.findConsents(eql(masterclassesCredentials), any[Instant], eql("cont1"))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None), Some(Vector(notAttending2, createAttendee("email3@email.com"))))
+      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None, 1, 1), Some(Vector(notAttending2, createAttendee("email3@email.com"))))
 
     when(eventbriteClient.findConsents(eql(eventsCredentials), any[Instant], eql(""))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont2")), Some(Vector(notAttending1, notAttending2)))
+      EventbriteResponse(EventbritePagination(has_more_items = true, continuation = Some("cont2"), 1, 1), Some(Vector(notAttending1, notAttending2)))
 
     when(eventbriteClient.findConsents(eql(eventsCredentials), any[Instant], eql("cont2"))) thenReturn
-      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None), Some(Vector(createAttendee("email4@email.com"))))
+      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None, 1, 1), Some(Vector(createAttendee("email4@email.com"))))
 
     consentsService.syncConsents()
     verifyZeroInteractions(identityClient)
   }
 
+  "syncConsents" should "throw an error when there are additional pages to process but no continuation token is found" in {
+    val fixtures = createFixtures()
+    import fixtures._
+
+    when(config.isDebug) thenReturn false
+
+    when(eventbriteClient.findConsents(eql(masterclassesCredentials), any[Instant], eql(""))) thenReturn
+      EventbriteResponse(EventbritePagination(has_more_items = false, continuation = None, 2, 1), None)
+
+    assertThrows[RuntimeException] {
+      consentsService.syncConsents()
+    }
+  }
 }

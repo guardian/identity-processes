@@ -18,10 +18,21 @@ case class EventbriteAttendee(answers: Option[Vector[EventbriteAnswer]], profile
   val answersList: Vector[EventbriteAnswer] = answers.toVector.flatten
 }
 
-case class EventbritePagination(has_more_items: Boolean, continuation: Option[String]) {
-  val continuationToken: Option[String] = this match {
-    case EventbritePagination(true, Some(cont)) => Some(cont)
-    case _ => None
+case class EventbritePagination(
+  has_more_items: Boolean = false,
+  continuation: Option[String] = None,
+  page_count: Int,
+  page_number: Int
+) {
+  def continuationToken: Option[String] = {
+    if (this.page_count > this.page_number && this.continuation.isEmpty) {
+      throw new RuntimeException("Eventbrite pagination shows there are more pages to process but continuation token is absent")
+    } else {
+      this match {
+        case EventbritePagination(true, Some(cont), _, _) => Some(cont)
+        case _ => None
+      }
+    }
   }
 }
 

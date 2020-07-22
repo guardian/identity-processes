@@ -29,7 +29,9 @@ Run with SBT
 ```
 export idapiHost=not_used_in_debug
 export idapiAccessToken=not_used_in_debug
+export masterclassesOrganisation=set_this
 export masterclassesToken=set_this
+export eventsOrganisation=set_this
 export eventsToken=set_this
 export syncFrequencyHours=4
 export isDebug=true
