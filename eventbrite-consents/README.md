@@ -37,7 +37,6 @@ export isDebug=true
 sbt run
 ```
 
-
 or run the com.gu.identity.eventbriteconsents.Lambda.main function with environment variables set in Intellij.
 
 ## Unit tests
