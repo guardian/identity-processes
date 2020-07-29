@@ -24,12 +24,13 @@ To run the app locally set the environment variables for the app (including API 
 in DEV and PROD can be found in the Lambda environment configuration on the AWS console. Be careful, if `isDebug=false` then
 emails could potentially be sent to users if idapiHost and idapiAccessToken are set.
 
-
 Run with SBT
 ```
 export idapiHost=not_used_in_debug
 export idapiAccessToken=not_used_in_debug
+export masterclassesOrganisation=set_this
 export masterclassesToken=set_this
+export eventsOrganisation=set_this
 export eventsToken=set_this
 export syncFrequencyHours=4
 export isDebug=true
