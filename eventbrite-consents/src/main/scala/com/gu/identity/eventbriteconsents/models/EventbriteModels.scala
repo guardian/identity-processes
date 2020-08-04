@@ -18,9 +18,9 @@ case class EventbriteAttendee(answers: Option[Vector[EventbriteAnswer]], profile
   val answersList: Vector[EventbriteAnswer] = answers.toVector.flatten
 }
 
-case class EventbritePagination(has_more_items: Boolean, continuation: Option[String]) {
+case class EventbritePagination(has_more_items: Option[Boolean], continuation: Option[String]) {
   val continuationToken: Option[String] = this match {
-    case EventbritePagination(true, Some(cont)) => Some(cont)
+    case EventbritePagination(Some(true), Some(cont)) => Some(cont)
     case _ => None
   }
 }
