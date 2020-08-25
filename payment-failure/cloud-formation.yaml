@@ -30,12 +30,22 @@ Parameters:
   SQSQueueUrl:
     Description: url of the queue that contains payment failure messages
     Type: String
+  AlarmEmailAddress:
+    Description: Contact email for alarms
+    Type: String
 
 Conditions:
   IsProd: !Equals
     - !Ref 'Stage'
     - PROD
 Resources:
+  TopicSendEmail:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: SendEmailTopic
+      Subscription:
+        - Endpoint: !Ref 'AlarmEmailAddress'
+          Protocol: email
   TopicPagerDutyAlerts:
     Type: AWS::SNS::Topic
     Properties:
@@ -148,6 +158,7 @@ Resources:
   PaymentFailureDeadLetterQueueAlert:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmName: !Sub 'payment-failure-lambda-${Stage} Message added to payment failure dead letter queue'
       AlarmDescription: Alarm if payment failure dead letter queue grows beyond 1
         message
       Namespace: AWS/SQS
@@ -161,13 +172,14 @@ Resources:
       Threshold: '0'
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
       OKActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
 
   PaymentFailureQueueLengthAlert:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmName: !Sub 'payment-failure-lambda-${Stage} Too many messages on the payment failure queue'
       AlarmDescription: Alarm if payment failure queue grows beyond 300
         message
       Namespace: AWS/SQS
@@ -181,6 +193,6 @@ Resources:
       Threshold: '300'
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
       OKActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
