@@ -46,13 +46,6 @@ Resources:
       Subscription:
         - Endpoint: !Ref 'AlarmEmailAddress'
           Protocol: email
-  TopicPagerDutyAlerts:
-    Type: AWS::SNS::Topic
-    Properties:
-      DisplayName: PagerDutyTopic
-      Subscription:
-      - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
-        Protocol: https
   PaymentFailureLambdaRole:
     Type: AWS::IAM::Role
     Properties:

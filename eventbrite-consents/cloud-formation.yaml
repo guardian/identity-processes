@@ -24,6 +24,9 @@ Parameters:
     AllowedValues:
       - DEV
       - PROD
+  AlarmEmailAddress:
+    Description: Contact email for alarms
+    Type: String
 
 Conditions:
   IsProd: !Equals
@@ -43,13 +46,13 @@ Mappings:
       syncFrequencyHours: 4
 
 Resources:
-  TopicPagerDutyAlerts:
+  TopicSendEmail:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: PagerDutyTopic
+      DisplayName: SendEmailTopic
       Subscription:
-      - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
-        Protocol: https
+        - Endpoint: !Ref 'AlarmEmailAddress'
+          Protocol: email
 
   EventbriteConsentsLambda:
     Type: AWS::Serverless::Function
@@ -95,6 +98,7 @@ Resources:
   EventbriteConsentsLambdaErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmName: !Sub 'eventbrite-consents-lambda-${Stage} failed execution'
       AlarmDescription: Alert when eventbrite consents lambda errors
       Namespace: AWS/Lambda
       Dimensions:
@@ -107,4 +111,4 @@ Resources:
       Period: '60'
       EvaluationPeriods: '1'
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
