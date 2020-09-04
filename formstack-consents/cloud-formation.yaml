@@ -20,6 +20,9 @@ Parameters:
   FormstackSharedSecret:
     Description: The shared secret is included in the form submission data
     Type: String
+  AlarmEmailAddress:
+    Description: Contact email for alarms
+    Type: String
 
 Conditions:
   IsProd: !Equals
@@ -27,13 +30,13 @@ Conditions:
   - PROD
 
 Resources:
-  TopicPagerDutyAlerts:
+  TopicSendEmail:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: PagerDutyTopic
+      DisplayName: SendEmailTopic
       Subscription:
-      - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
-        Protocol: https
+        - Endpoint: !Ref 'AlarmEmailAddress'
+          Protocol: email
 
   FormstackConsentsLambda:
     Type: AWS::Serverless::Function
@@ -95,6 +98,7 @@ Resources:
   FormstackConsentsLambdaErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmName: !Sub 'formstack-consents-lambda-${Stage} failed execution'
       AlarmDescription: Alert when formstack consents lambda errors
       Namespace: AWS/Lambda
       Dimensions:
@@ -107,4 +111,4 @@ Resources:
       Period: '60'
       EvaluationPeriods: '1'
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']

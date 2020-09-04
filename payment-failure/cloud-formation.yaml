@@ -30,19 +30,22 @@ Parameters:
   SQSQueueUrl:
     Description: url of the queue that contains payment failure messages
     Type: String
+  AlarmEmailAddress:
+    Description: Contact email for alarms
+    Type: String
 
 Conditions:
   IsProd: !Equals
     - !Ref 'Stage'
     - PROD
 Resources:
-  TopicPagerDutyAlerts:
+  TopicSendEmail:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: PagerDutyTopic
+      DisplayName: SendEmailTopic
       Subscription:
-      - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
-        Protocol: https
+        - Endpoint: !Ref 'AlarmEmailAddress'
+          Protocol: email
   PaymentFailureLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -148,8 +151,8 @@ Resources:
   PaymentFailureDeadLetterQueueAlert:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Alarm if payment failure dead letter queue grows beyond 1
-        message
+      AlarmName: !Sub 'payment-failure-lambda-${Stage} Message added to payment failure dead letter queue'
+      AlarmDescription: Alarm if payment failure dead letter queue grows beyond 1 message
       Namespace: AWS/SQS
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
@@ -161,15 +164,15 @@ Resources:
       Threshold: '0'
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
       OKActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
 
   PaymentFailureQueueLengthAlert:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Alarm if payment failure queue grows beyond 300
-        message
+      AlarmName: !Sub 'payment-failure-lambda-${Stage} Too many messages on the payment failure queue'
+      AlarmDescription: Alarm if payment failure queue grows beyond 300 messages
       Namespace: AWS/SQS
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
@@ -181,6 +184,6 @@ Resources:
       Threshold: '300'
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
       OKActions:
-      - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']

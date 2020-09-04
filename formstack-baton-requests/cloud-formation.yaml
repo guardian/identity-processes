@@ -38,18 +38,21 @@ Parameters:
     Default: formstack-submission-ids
   BatonAccountId:
     Type: String
+  AlarmEmailAddress:
+    Description: Contact email for alarms
+    Type: String
 
 Conditions:
   IsProd: !Equals [ !Ref Stage, PROD ]
 
 Resources:
-  TopicPagerDutyAlerts:
+  TopicSendEmail:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: PagerDutyTopic
+      DisplayName: SendEmailTopic
       Subscription:
-        - Endpoint: https://events.pagerduty.com/adapter/cloudwatch_sns/v1/96fdc0179acb4c5db3e059d775ea6a9e
-          Protocol: https
+        - Endpoint: !Ref 'AlarmEmailAddress'
+          Protocol: email
 
   BatonAccountInvokeRole:
     Type: AWS::IAM::Role
@@ -556,6 +559,7 @@ Resources:
   FormstackBatonRequestsLambdaErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmName: !Sub 'formstack-baton-requests-lambda-${Stage} failed execution'
       AlarmDescription: Alert when formstack baton request lambdas error
       Namespace: AWS/Lambda
       Dimensions:
@@ -570,7 +574,7 @@ Resources:
       Period: '60'
       EvaluationPeriods: '1'
       AlarmActions:
-        - !If [IsProd, !Ref 'TopicPagerDutyAlerts', !Ref 'AWS::NoValue']
+        - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
 
   # ****************************************************************************
   # Step Function and Role
