@@ -152,8 +152,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub 'payment-failure-lambda-${Stage} Message added to payment failure dead letter queue'
-      AlarmDescription: Alarm if payment failure dead letter queue grows beyond 1
-        message
+      AlarmDescription: Alarm if payment failure dead letter queue grows beyond 1 message
       Namespace: AWS/SQS
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
@@ -173,8 +172,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub 'payment-failure-lambda-${Stage} Too many messages on the payment failure queue'
-      AlarmDescription: Alarm if payment failure queue grows beyond 300
-        message
+      AlarmDescription: Alarm if payment failure queue grows beyond 300 messages
       Namespace: AWS/SQS
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
