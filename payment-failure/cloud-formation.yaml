@@ -165,8 +165,6 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
       - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
-      OKActions:
-      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
 
   PaymentFailureQueueLengthAlert:
     Type: AWS::CloudWatch::Alarm
@@ -184,6 +182,4 @@ Resources:
       Threshold: '300'
       ComparisonOperator: GreaterThanThreshold
       AlarmActions:
-      - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
-      OKActions:
       - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
