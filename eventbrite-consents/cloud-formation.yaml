@@ -107,8 +107,8 @@ Resources:
       MetricName: Errors
       Statistic: Sum
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: '1'
-      Period: '60'
+      Threshold: '2'
+      Period: '36000' # 10 hours in seconds
       EvaluationPeriods: '1'
       AlarmActions:
       - !If [IsProd, !Ref 'TopicSendEmail', !Ref 'AWS::NoValue']
