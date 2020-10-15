@@ -43,7 +43,7 @@ addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
 )
 
-enablePlugins(RiffRaffArtifact, DependencyGraphPlugin)
+enablePlugins(RiffRaffArtifact)
 riffRaffPackageType := assembly.value
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
