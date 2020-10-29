@@ -33,13 +33,13 @@ class IdentityClient(idapiUrl: String, idapiAccessToken: String) extends LazyLog
         } yield if (error.description.contains("Bad email format")) {
           logger.error("Invalid email address, could not process consents: " + emailAddress)
         } else {
-          throwRuntimeException
+          throwRuntimeException()
         }
       }
-      case _ => throwRuntimeException
+      case _ => throwRuntimeException()
     }
 
-    def throwRuntimeException: Nothing = {
+    def throwRuntimeException(): Nothing = {
       throw new RuntimeException(s"Unexpected response from idapi when syncing email $emailAddress $code $body")
     }
   }
