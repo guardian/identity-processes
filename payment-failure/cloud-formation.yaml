@@ -124,6 +124,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PaymentFailureDeadLetterQueue.Arn
         maxReceiveCount: 5
+      DelaySeconds: 300
 
   PaymentFailureSqsWriteRole:
     Type: AWS::SQS::QueuePolicy
