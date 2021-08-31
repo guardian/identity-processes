@@ -51,7 +51,7 @@ Resources:
           idapiAccessToken: !Sub ${IdentityAPIKey}
           formstackSharedSecret: !Sub ${FormstackSharedSecret}
       Handler: com.gu.identity.formstackconsents.Lambda::handler
-      Runtime: java8
+      Runtime: java8.al2
       CodeUri:
         Bucket: identity-lambda
         Key: !Sub identity/${Stage}/formstack-consents-lambda/main.jar
