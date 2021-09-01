@@ -144,7 +144,7 @@ Resources:
           RESULTS_BUCKET: !Ref ResultsBucket
           RESULTS_PATH: !Sub formstack-results/${Stage}
           STATE_MACHINE_ARN: !Ref FormstackSar
-      MemorySize: 384
+      MemorySize: 1024
       Runtime: java8.al2
       Timeout: 120
       VpcConfig:
@@ -276,7 +276,7 @@ Resources:
           BCRYPT_SALT_PATH: !Ref BcryptSaltPath
           SUBMISSION_TABLE_NAME: !Ref SubmissionsTableName
           LAST_UPDATED_TABLE_NAME: !Ref LastUpdatedTableName
-      MemorySize: 384
+      MemorySize: 1024
       Runtime: java8.al2
       Timeout: 900
       VpcConfig:
@@ -349,7 +349,7 @@ Resources:
           RESULTS_BUCKET: !Ref ResultsBucket
           RESULTS_PATH: !Sub formstack-results/${Stage}
           STATE_MACHINE_ARN: !Ref FormstackRer
-      MemorySize: 384
+      MemorySize: 1024
       Runtime: java8.al2
       Timeout: 120
       VpcConfig:
@@ -446,7 +446,7 @@ Resources:
           BCRYPT_SALT_PATH: !Ref BcryptSaltPath
           SUBMISSION_TABLE_NAME: !Ref SubmissionsTableName
           LAST_UPDATED_TABLE_NAME: !Ref LastUpdatedTableName
-      MemorySize: 384
+      MemorySize: 1024
       Runtime: java8.al2
       Timeout: 900
       VpcConfig:

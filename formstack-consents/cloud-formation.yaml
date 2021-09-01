@@ -41,7 +41,7 @@ Resources:
   FormstackConsentsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      MemorySize: 512
+      MemorySize: 1024
       FunctionName: !Sub FormstackConsentsLambda-${Stage}
       Timeout: 120
       Description: Lambda to send email to user who has signed up to a newsletter via Formstack
