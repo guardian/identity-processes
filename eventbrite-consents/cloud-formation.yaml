@@ -57,7 +57,7 @@ Resources:
   EventbriteConsentsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      MemorySize: 512
+      MemorySize: 1024
       FunctionName: !Sub EventbriteConsentsLambda-${Stage}
       Timeout: 120
       Description: Lambda to send email to user who has signed up to a newsletter via Eventbrite
@@ -72,7 +72,7 @@ Resources:
           syncFrequencyHours: !FindInMap [SyncFrequencyMap, values, syncFrequencyHours]
           isDebug: !FindInMap [IsDebugMap, !Ref Stage, value]
       Handler: com.gu.identity.eventbriteconsents.Lambda::handler
-      Runtime: java8
+      Runtime: java8.al2
       CodeUri:
         Bucket: identity-lambda
         Key: !Sub identity/${Stage}/eventbrite-consents-lambda/main.jar

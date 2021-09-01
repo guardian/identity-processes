@@ -102,9 +102,9 @@ Resources:
       FunctionName: !Sub PaymentFailureLambda-${Stage}
       Handler: com.gu.identity.paymentfailure.Lambda::handler
       Role: !GetAtt PaymentFailureLambdaRole.Arn
-      Runtime: java8
+      Runtime: java8.al2
       Timeout: 30
-      MemorySize: 512
+      MemorySize: 1024
 
   PaymentFailureLambdaLogGroup:
     Type: AWS::Logs::LogGroup
