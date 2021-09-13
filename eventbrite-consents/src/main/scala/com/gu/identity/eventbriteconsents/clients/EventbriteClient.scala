@@ -27,8 +27,8 @@ class EventbriteClient {
         "changed_since" -> formattedLastRun,
         "continuation" -> continuationToken
       )
+      .timeout(2000, 10000)
       .asString
-
 
     if (response.code == 200) {
       parse(response.body).flatMap(_.as[EventbriteResponse]) match {
