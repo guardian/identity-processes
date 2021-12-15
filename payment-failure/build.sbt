@@ -1,3 +1,5 @@
+import sun.security.tools.PathList
+
 name := "payment-failure-lambda"
 
 organization := "com.gu"
@@ -44,10 +46,10 @@ assemblyJarName := "main.jar"
 // - org.slf4j/slf4j-api/jars/slf4j-api-1.8.0-beta1.jar:module-info.class
 // Uses the advice in the stack overflow answer by Elesion Olalekan Fuad and the comment by note:
 // https://stackoverflow.com/questions/25144484/sbt-assembly-deduplication-found-error
-assemblyMergeStrategy in assembly := {
+assembly / assemblyMergeStrategy := {
   case PathList("module-info.class") => MergeStrategy.discard
   case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
 }
 
