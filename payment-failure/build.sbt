@@ -1,5 +1,3 @@
-import sun.security.tools.PathList
-
 name := "payment-failure-lambda"
 
 organization := "com.gu"
