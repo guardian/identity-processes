@@ -4,7 +4,7 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 val circeVersion = "0.11.0"
-val log4jVersion = log4jVersion
+val log4jVersion = "2.16.0"
 
 libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
