@@ -30,17 +30,17 @@ scalacOptions += "-Ypartial-unification"
 
 assemblyJarName := "main.jar"
 
-assemblyMergeStrategy in assembly := {
+assembly / assemblyMergeStrategy := {
   case PathList("module-info.class") => MergeStrategy.discard
   case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
 }
 
-startDynamoDBLocal := startDynamoDBLocal.dependsOn(compile in Test).value
-test in Test := (test in Test).dependsOn(startDynamoDBLocal).value
-testOnly in Test := (testOnly in Test).dependsOn(startDynamoDBLocal).evaluated
-testOptions in Test += dynamoDBLocalTestCleanup.value
+startDynamoDBLocal := startDynamoDBLocal.dependsOn(Test / compile).value
+Test / test := (Test / test).dependsOn(startDynamoDBLocal).value
+Test / testOnly := (Test / testOnly).dependsOn(startDynamoDBLocal).evaluated
+Test / testOptions += dynamoDBLocalTestCleanup.value
 
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
