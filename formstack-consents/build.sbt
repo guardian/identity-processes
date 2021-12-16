@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.3.3",
   "joda-time" % "joda-time" % "2.3",
   "org.joda" % "joda-convert" % "1.6",
-  "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
+  ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test"
