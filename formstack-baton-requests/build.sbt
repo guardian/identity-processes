@@ -5,6 +5,7 @@ version := "0.1"
 scalaVersion := "2.12.8"
 val circeVersion = "0.13.0"
 val amazonSdkVersion = "1.11.755"
+val log4jVersion = "2.16.0"
 
 libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
@@ -15,8 +16,8 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk-ssm" % amazonSdkVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
-  "org.apache.logging.log4j" % "log4j-api" % "2.16.0",
-  "org.apache.logging.log4j" % "log4j-core" % "2.16.0",
+  "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
+  "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "org.scalaj" %% "scalaj-http" % "2.4.2",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
