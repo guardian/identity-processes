@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk-ssm" % amazonSdkVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
+  "com.amazonaws" % "aws-lambda-java-log4j2" % "1.4.0",
   "org.scalaj" %% "scalaj-http" % "2.4.2",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
