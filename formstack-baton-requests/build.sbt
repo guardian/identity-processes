@@ -1,3 +1,5 @@
+import sys.process._
+
 name := "formstack-baton-requests"
 
 version := "0.1"
@@ -37,11 +39,6 @@ assembly / assemblyMergeStrategy := {
     oldStrategy(x)
 }
 
-startDynamoDBLocal := startDynamoDBLocal.dependsOn(Test / compile).value
-Test / test := (Test / test).dependsOn(startDynamoDBLocal).value
-Test / testOnly := (Test / testOnly).dependsOn(startDynamoDBLocal).evaluated
-Test / testOptions += dynamoDBLocalTestCleanup.value
-
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
 )
@@ -51,3 +48,11 @@ riffRaffPackageType := assembly.value
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
 riffRaffArtifactResources += (file("cloud-formation.yaml") -> "formstack-baton-requests-cfn/cloud-formation.yaml")
+
+Test / testOptions += Tests.Setup { () =>
+  "./localenv/start-dependencies.sh".!
+}
+
+Test / testOptions += Tests.Cleanup { () =>
+  "./localenv/stop-dependencies.sh".!
+}
