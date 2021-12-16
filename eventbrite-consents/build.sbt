@@ -15,7 +15,8 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion,
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
-  "com.amazonaws" % "aws-lambda-java-log4j2" % "1.4.0",
+  "org.apache.logging.log4j" % "log4j-api" % "2.16.0",
+  "org.apache.logging.log4j" % "log4j-core" % "2.16.0",
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test"
