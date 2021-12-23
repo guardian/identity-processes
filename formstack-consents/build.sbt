@@ -4,6 +4,7 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 val circeVersion = "0.11.0"
+val log4jVersion = "2.16.0"
 
 libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
@@ -17,7 +18,9 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.3.3",
   "joda-time" % "joda-time" % "2.3",
   "org.joda" % "joda-convert" % "1.6",
-  "org.jlib" % "jlib-awslambda-logback" % "1.0.0",
+  ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
+  "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
+  "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test"
