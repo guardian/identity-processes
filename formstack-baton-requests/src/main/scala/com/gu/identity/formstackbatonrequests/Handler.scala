@@ -1,13 +1,14 @@
 package com.gu.identity.formstackbatonrequests
 
-import java.io.{InputStream, OutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream, OutputStream}
+import java.time.LocalDateTime
 
 import io.circe.{Decoder, DecodingFailure, Encoder, Printer}
 import io.circe.parser._
 import io.circe.syntax._
 import circeCodecs._
 import com.amazonaws.services.lambda.runtime.Context
-import com.gu.identity.formstackbatonrequests.BatonModels.{RER, RerInitiateRequest, RerPerformRequest, RerStatusRequest, SAR, SarInitiateRequest, SarPerformRequest, SarStatusRequest, UpdateDynamoRequest}
+import com.gu.identity.formstackbatonrequests.BatonModels.{BatonRequest, RER, RerInitiateRequest, RerPerformRequest, RerRequest, RerStatusRequest, SAR, SarInitiateRequest, SarPerformRequest, SarRequest, SarStatusRequest, UpdateDynamoRequest}
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, S3, StepFunction}
 import com.gu.identity.formstackbatonrequests.rer.{FormstackPerformRerHandler, FormstackRerHandler}
 import com.gu.identity.formstackbatonrequests.sar.{FormstackPerformSarHandler, FormstackSarHandler}
@@ -75,10 +76,7 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
 
 object Handler {
 
-  val stage: String = sys.env.getOrElse("STAGE", "CODE") match {
-    case "PROD" => "PROD"
-    case _      => "CODE"
-  }
+  val stage: String = "PROD"
 
   def handleUpdateDynamo(inputStream: InputStream, outputStream: OutputStream, context: Context): Unit = {
     val performUpdateConfig = FormstackConfig.getPerformHandlerConfig
@@ -117,4 +115,41 @@ object Handler {
     performRerHandler.handleRequest(inputStream, outputStream, null)
   }
 
+}
+
+object LocalRun extends App {
+
+  case class InputOutputStreams(inputStream: ByteArrayInputStream, outputStream: ByteArrayOutputStream)
+
+  private def requestStreams(request: BatonRequest): InputOutputStreams = {
+    val jsonRequest = request match {
+      case r: SarRequest => r.asJson.noSpaces
+      case r: RerRequest => r.asJson.noSpaces
+      case r: UpdateDynamoRequest => r.asJson.noSpaces
+    }
+    val testInputStream = new ByteArrayInputStream(jsonRequest.getBytes)
+    val testOutputStream = new ByteArrayOutputStream()
+    InputOutputStreams(testInputStream, testOutputStream)
+  }
+
+  val updateDynamoRequest =
+    UpdateDynamoRequest(
+      requestType = SAR,
+      initiationReference = "initiationReference",
+      subjectEmail = "example@test.com",
+      dataProvider = "formstack",
+      accountNumber = Some(1),
+      formPage = 1,
+      count = FormstackService.resultsPerPage,
+      timeOfStart = LocalDateTime.now,
+    )
+//
+//  println(Option(System.getenv("RESULTS_BUCKET")))
+  val updateConfig = FormstackConfig.getPerformHandlerConfig
+//  println(updateConfig)
+  val updateLambda = UpdateDynamoHandler(Dynamo(), S3, FormstackService, updateConfig)
+  val streams = requestStreams(updateDynamoRequest)
+  updateLambda.handleRequest(streams.inputStream, streams.outputStream, null)
+  val responseString = new String(streams.outputStream.toByteArray)
+  println("lambda output was: " + responseString)
 }

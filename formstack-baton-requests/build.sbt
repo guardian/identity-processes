@@ -56,3 +56,19 @@ Test / testOptions += Tests.Setup { () =>
 Test / testOptions += Tests.Cleanup { () =>
   "./localenv/stop-dependencies.sh".!
 }
+
+Compile / run / fork := true
+Compile / mainClass := Some("com.gu.identity.formstackbatonrequests.LocalRun")
+Compile / run / mainClass := Some("com.gu.identity.formstackbatonrequests.LocalRun")
+run / javaOptions  += "-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005,suspend=y"
+run / envVars := Map(
+  "BCRYPT_SALT_PATH" ->	"/identity/formstack-baton-requests/bcrypt-salt",
+  "ENCRYPTION_PASSWORD_PATH" ->	"/identity/formstack-baton-requests/encryption-password",
+  "FORMSTACK_ACCOUNT_ONE_TOKEN_PATH" ->	"/identity/formstack-baton-requests/formstack-account-one-token",
+  "FORMSTACK_ACCOUNT_TWO_TOKEN_PATH" ->	"/identity/formstack-baton-requests/formstack-account-two-token",
+  "LAST_UPDATED_TABLE_NAME" ->	"formstack-submissions-last-updated",
+  "RESULTS_BUCKET" ->	"gu-baton-results",
+  "RESULTS_PATH" ->	"formstack-results/PROD",
+  "STAGE" ->	"PROD",
+  "SUBMISSION_TABLE_NAME" ->	"formstack-submission-ids",
+)

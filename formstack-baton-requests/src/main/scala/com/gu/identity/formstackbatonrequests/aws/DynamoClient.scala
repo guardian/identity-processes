@@ -9,6 +9,8 @@ import com.gu.scanamo.Scanamo
 import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
 import cats.implicits._
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.retry.{PredefinedRetryPolicies, RetryPolicy}
 import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult, ProvisionedThroughput, UpdateTableRequest, UpdateTableResult}
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 
@@ -83,9 +85,23 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
 }
 
 object Dynamo {
+  import com.amazonaws.retry.{PredefinedRetryPolicies, RetryPolicy}
+  import com.amazonaws.retry.PredefinedRetryPolicies._
+
+  val retryPolicy = new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, DYNAMODB_DEFAULT_BACKOFF_STRATEGY, 10, false, false)
+
   val defaultDynamoClient: AmazonDynamoDB = AmazonDynamoDBClient
     .builder()
     .withRegion(AwsCredentials.region)
     .withCredentials(AwsCredentials.credentials)
+    .withClientConfiguration(
+      new ClientConfiguration()
+        .withRetryPolicy(retryPolicy)
+        .withMaxErrorRetry(10)
+        .withClientExecutionTimeout(60000)
+        .withConnectionTimeout(60000)
+        .withRequestTimeout(60000)
+        .withSocketTimeout(60000)
+    )
     .build()
 }
