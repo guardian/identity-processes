@@ -24,6 +24,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
 
   override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = {
     val response = Http(s"https://www.formstack.com/api/v2/form.json")
+      .timeout(5000, 60000)
       .header("Authorization", accountToken.secret)
       .params(
         Seq(
@@ -45,6 +46,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     encryptionPassword: String,
     accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = {
     val response = Http(s"https://www.formstack.com/api/v2/form/$formId/submission.json")
+      .timeout(5000, 60000)
       .headers(
         Seq(
           ("Authorization", accountToken.secret),
@@ -81,6 +83,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     submissionIdEmails.traverse { submissionIdEmail =>
       val response =
         Http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
+          .timeout(5000, 60000)
           .header("Authorization", accountToken.secret)
           .param("encryption_password", encryptionPassword)
           .asString
@@ -101,6 +104,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
       val labelsAndValuesOrError = submission.data.map { responseValues =>
         val fieldId = responseValues.field
         val response = Http(s"https://www.formstack.com/api/v2/field/$fieldId")
+          .timeout(5000, 60000)
           .header("Authorization", accountToken.secret)
           .asString
 
@@ -135,6 +139,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
       val token = tokens.find( token => token.account == submissionIdEmail.accountNumber).get
       val response =
         Http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
+          .timeout(5000, 60000)
           .method("DELETE")
           .header("Authorization", token.secret)
           .asString
