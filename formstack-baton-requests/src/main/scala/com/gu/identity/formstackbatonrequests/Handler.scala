@@ -143,10 +143,8 @@ object LocalRun extends App {
       count = FormstackService.resultsPerPage,
       timeOfStart = LocalDateTime.now,
     )
-//
-//  println(Option(System.getenv("RESULTS_BUCKET")))
+
   val updateConfig = FormstackConfig.getPerformHandlerConfig
-//  println(updateConfig)
   val updateLambda = UpdateDynamoHandler(Dynamo(), S3, FormstackService, updateConfig)
   val streams = requestStreams(updateDynamoRequest)
   updateLambda.handleRequest(streams.inputStream, streams.outputStream, null)
