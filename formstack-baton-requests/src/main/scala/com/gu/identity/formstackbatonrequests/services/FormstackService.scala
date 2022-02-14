@@ -69,7 +69,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     /* There are a couple of forms that the Formstack API can't seem to decrypt. There seems to be no way around this
      *  so we capture this specific error and skip these forms. */
     if(response.body.contains("An error occurred while decrypting the submissions"))
-      Left(FormstackDecryptionError(response.body))
+      Left(FormstackDecryptionError(s"${response.body} | form id: ${formId}"))
     else
       decode[FormSubmissions](response.body)
   }
@@ -89,8 +89,13 @@ object FormstackService extends FormstackRequestService with LazyLogging {
         logger.error(response.body)
       }
 
-      decode[Submission](response.body)
-    }
+      /* There are a couple of forms that the Formstack API can't seem to decrypt. There seems to be no way around this
+      *  so we capture this specific error and skip these forms. */
+      if(response.body.contains("An error occurred while decrypting the submission"))
+        Left(FormstackDecryptionError(s"${response.body} | submission id: ${submissionIdEmail.submissionId}"))
+      else
+        decode[Submission](response.body)
+      }
   }
 
   private def getSubmissionQuestionsAnswers(
