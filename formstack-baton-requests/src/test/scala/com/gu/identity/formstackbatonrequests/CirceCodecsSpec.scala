@@ -210,7 +210,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
         dataProvider = "formstack",
         accountNumber = Some(1),
         formPage = 1,
-        count = 25,
+        count = 100,
         timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
       )
 
@@ -222,7 +222,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
           |"dataProvider": "formstack",
           |"accountNumber": 1,
           |"formPage": 1,
-          |"count": 25,
+          |"count": 100,
           |"timeOfStart": "2020-02-01T00:00"
           |}
           |""".stripMargin
@@ -238,7 +238,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
         dataProvider = "formstack",
         accountNumber = None,
         formPage = 1,
-        count = 25,
+        count = 100,
         timeOfStart = LocalDateTime.of(2020, 2, 1, 0, 0)
       )
 
@@ -249,7 +249,7 @@ class CirceCodecsSpec extends FreeSpec with Matchers {
           |"subjectEmail": "testSubjectEmail",
           |"dataProvider": "formstack",
           |"formPage": 1,
-          |"count": 25,
+          |"count": 100,
           |"timeOfStart": "2020-02-01T00:00"
           |}
           |""".stripMargin

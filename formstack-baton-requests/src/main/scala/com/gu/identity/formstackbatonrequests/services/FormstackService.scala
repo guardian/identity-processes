@@ -20,7 +20,7 @@ case class FormstackDecryptionError(message: String) extends Throwable
 
 object FormstackService extends FormstackRequestService with LazyLogging {
 
-  val resultsPerPage = 25
+  val resultsPerPage = 100
 
   override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = {
     val response = Http(s"https://www.formstack.com/api/v2/form.json")
