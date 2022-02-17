@@ -20,7 +20,8 @@ case class FormstackDecryptionError(message: String) extends Throwable
 
 object FormstackService extends FormstackRequestService with LazyLogging {
 
-  val resultsPerPage = 25
+  val formResultsPerPage = 25
+  val submissionResultsPerPage = 100
 
   override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = {
     val response = Http(s"https://www.formstack.com/api/v2/form.json")
@@ -28,7 +29,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
       .params(
         Seq(
           ("page", page.toString),
-          ("per_page", resultsPerPage.toString)
+          ("per_page", formResultsPerPage.toString)
         )
       ).asString
 
@@ -54,7 +55,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
       .params(
         Seq(
           ("page", page.toString),
-          ("per_page", resultsPerPage.toString),
+          ("per_page", submissionResultsPerPage.toString),
           ("data", "true"),
           ("expand_data", "true"),
           ("sort", "DESC"),

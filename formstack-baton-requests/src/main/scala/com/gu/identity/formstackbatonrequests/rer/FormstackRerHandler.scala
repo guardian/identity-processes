@@ -24,7 +24,7 @@ case class FormstackRerHandler(s3Client: S3Client, lambdaClient: StepFunctionCli
       "formstack",
       None,
       1,
-      FormstackService.resultsPerPage,
+      FormstackService.formResultsPerPage,
       LocalDateTime.now
     )
 
