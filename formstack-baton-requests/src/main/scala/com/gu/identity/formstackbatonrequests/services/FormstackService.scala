@@ -6,8 +6,9 @@ import com.gu.identity.formstackbatonrequests.circeCodecs._
 import com.gu.identity.formstackbatonrequests.sar.{FormstackLabelValue, FormstackSubmissionQuestionAnswer, SubmissionIdEmail}
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
+import io.circe.Decoder
 import io.circe.parser.decode
-import scalaj.http.Http
+import scalaj.http.{Http, HttpResponse}
 
 trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
@@ -74,30 +75,41 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     else
       decode[FormSubmissions](response.body)
   }
+  
+  val skippableErrorMessages = List(
+    "A valid submission id was not supplied",
+    "A valid form could not be found"
+  )
 
+  def isSkippableError(response: HttpResponse[String] ) : Boolean = !response.is2xx && skippableErrorMessages.exists(response.body.contains)
+
+  def decodeIfNotSkippableError[T: Decoder](response: HttpResponse[String]): Either[Throwable, Option[T]] = decode[T](response.body) match {
+    case Left(_) if isSkippableError(response) =>
+      logger.info(s"skipping response with status: ${response.statusLine}")
+      Right(None)
+    case Left(e) => Left(e)
+    case Right(submission) => Right(Some(submission))
+  }
+  
   private def getSubmissions(
     submissionIdEmails: List[SubmissionIdEmail],
     accountToken: FormstackAccountToken,
     encryptionPassword: String): Either[Throwable, List[Submission]] = {
-    submissionIdEmails.traverse { submissionIdEmail =>
+    val submissionResults: Either[Throwable, List[Option[Submission]]] = submissionIdEmails.traverse { submissionIdEmail =>
       val response =
         Http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
           .header("Authorization", accountToken.secret)
           .param("encryption_password", encryptionPassword)
           .asString
-
+          
       if(!response.is2xx) {
         logger.error(response.body)
       }
-
-      /* There are a couple of forms that the Formstack API can't seem to decrypt. There seems to be no way around this
-      *  so we capture this specific error and skip these forms. */
-      if(response.body.contains("An error occurred while decrypting the submission"))
-        Left(FormstackDecryptionError(s"${response.body} | submission id: ${submissionIdEmail.submissionId}"))
-      else
-        decode[Submission](response.body)
-      }
-  }
+      
+          decodeIfNotSkippableError[Submission](response)
+    }
+    submissionResults.map(_.flatten)
+   }
 
   private def getSubmissionQuestionsAnswers(
     submissions: List[Submission],
@@ -137,7 +149,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
   override def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
     logger.info(s"deleting ${submissionIdEmails.length} submissions.")
     val tokens = List(config.accountOneToken, config.accountTwoToken)
-    submissionIdEmails.traverse { submissionIdEmail =>
+    val deletionResponses: Either[Throwable, List[Option[SubmissionDeletionReponse]] ]= submissionIdEmails.traverse { submissionIdEmail =>
       val token = tokens.find( token => token.account == submissionIdEmail.accountNumber).get
       val response =
         Http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
@@ -149,7 +161,9 @@ object FormstackService extends FormstackRequestService with LazyLogging {
         logger.error(response.body)
       }
 
-      decode[SubmissionDeletionReponse](response.body)
+      decodeIfNotSkippableError[SubmissionDeletionReponse](response)
     }
+
+    deletionResponses.map(_.flatten) 
   }
 }
