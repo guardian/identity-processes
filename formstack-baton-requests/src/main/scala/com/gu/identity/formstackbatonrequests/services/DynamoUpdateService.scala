@@ -55,8 +55,9 @@ case class DynamoUpdateService(
   private def writeSubmissionsPage(
                                     form: Form,
                                     lastUpdate: SubmissionTableUpdateDate,
-                                    submissionPage: Int = 1,
                                     token: FormstackAccountToken
+                                  )(
+                                    submissionPage: Int = 1
                                   ): Either[Throwable, Int] = for {
     response <- formstackClient.formSubmissionsForGivenPage(
       page = submissionPage,
@@ -98,20 +99,21 @@ case class DynamoUpdateService(
                                 token: FormstackAccountToken
                               ): Either[Throwable, Unit] = {
 
+    val writeSubmissionsPageFunction = writeSubmissionsPage(
+      form: Form,
+      lastUpdate: SubmissionTableUpdateDate,
+      token: FormstackAccountToken
+    ) _
+
     logger.info(
       s"Requesting page $submissionPage for form ${form.id}."
     )
 
-    val processedPages = writeSubmissionsPage(
-      form: Form,
-      lastUpdate: SubmissionTableUpdateDate,
-      submissionPage,
-      token: FormstackAccountToken
-    )
+    val processedPages = writeSubmissionsPageFunction(submissionPage)
 
     processedPages match {
       case Right(pages) if submissionPage < pages =>
-        writeSubmissions(form, lastUpdate, submissionPage + 1, token)
+        writeSubmissionsPageFunction(submissionPage + 1).map(_ => ())
       case Right(_) =>
         Right(())
       case Left(err) =>
