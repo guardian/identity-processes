@@ -53,7 +53,6 @@ case class DynamoUpdateService(
     }
   }
 
-
   def updateSubmissionsTable(formsPage: Int, lastUpdate: SubmissionTableUpdateDate, count: Int, token: FormstackAccountToken, context: Context): Either[Throwable, UpdateStatus] = {
     logger.info(s"----------Getting page $formsPage of forms.----------")
     formstackClient.accountFormsForGivenPage(formsPage, token) match {
