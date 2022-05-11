@@ -1,20 +1,22 @@
 package com.gu.identity.formstackbatonrequests.services
 
-import java.time.Instant
-
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult
 import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
-import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission}
+import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission, FormSubmissions}
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 
+import java.time.Instant
+
+
 case class UpdateStatus(completed: Boolean, formsPage: Option[Int], count: Option[Int], token: FormstackAccountToken)
 
 case class DynamoUpdateService(
-  formstackClient: FormstackRequestService,
-  dynamoClient: DynamoClient,
-  config: PerformLambdaConfig) extends LazyLogging {
+                                formstackClient: FormstackRequestService,
+                                dynamoClient: DynamoClient,
+                                config: PerformLambdaConfig) extends LazyLogging {
 
   def submissionsWithEmailAndAccount(submissions: List[FormSubmission], accountNumber: Int): List[SubmissionIdEmail] = {
     val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,6}\b""".r
@@ -27,29 +29,94 @@ case class DynamoUpdateService(
     }
   }
 
-  private def skipDecryptionError(err: Throwable): Either[Throwable, Unit] = {
-    err match {
-      case _: FormstackDecryptionError => Right(())
+  private def skipDecryptionError(formSubmissionError: Throwable): Either[Throwable, FormSubmissions] = {
+    formSubmissionError match {
+      case _: FormstackDecryptionError => Right(FormSubmissions(
+        submissions = List.empty,
+        pages = 0
+      ))
       case err => Left(err)
     }
   }
 
-  private def writeSubmissions(form: Form, lastUpdate: SubmissionTableUpdateDate, submissionPage: Int = 1, token: FormstackAccountToken): Either[Throwable, Unit] = {
-    formstackClient.formSubmissionsForGivenPage(submissionPage, form.id, lastUpdate, config.encryptionPassword, token) match {
-      case Left(err) => skipDecryptionError(err)
-      case Right(response) =>
-        logger.info(s"Received page $submissionPage of submissions out of ${response.pages} pages for form ${form.id}.")
-        val submissionsIdsWithEmails = submissionsWithEmailAndAccount(response.submissions, token.account)
-        logger.info(s"Writing ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo")
-        dynamoClient.writeSubmissions(submissionsIdsWithEmails, config.bcryptSalt, config.submissionTableName) match {
-          case Right(batchWriteItemsResults) if batchWriteItemsResults.exists { result =>
-            val unprocessedItems = result.getUnprocessedItems
-            !unprocessedItems.isEmpty
-          } => Left(new Exception(s"Some items could not be written to DynamoDB: $batchWriteItemsResults"))
-          case Right(_) if submissionPage < response.pages => writeSubmissions(form, lastUpdate, submissionPage + 1, token)
-          case Right(_) => Right(())
-          case Left(err) => Left(err)
-        }
+  private def failUnprocessedItems(batchWriteItemsResults: Seq[BatchWriteItemResult]): Either[Throwable, Seq[BatchWriteItemResult]] = {
+    val unprocessedItems = batchWriteItemsResults.exists {
+      !_.getUnprocessedItems.isEmpty
+    }
+
+    if (unprocessedItems) {
+      Left(new Exception(s"Some items could not be written to DynamoDB: $batchWriteItemsResults"))
+    } else {
+      Right(batchWriteItemsResults)
+    }
+  }
+
+  private def writeSubmissionsPage(
+                                    form: Form,
+                                    lastUpdate: SubmissionTableUpdateDate,
+                                    token: FormstackAccountToken
+                                  )(
+                                    submissionPage: Int = 1
+                                  ): Either[Throwable, Int] = for {
+    response <- formstackClient.formSubmissionsForGivenPage(
+      page = submissionPage,
+      formId = form.id,
+      minTime = lastUpdate,
+      encryptionPassword = config.encryptionPassword,
+      accountToken = token
+    ).left.flatMap(skipDecryptionError)
+
+    _ = logger.info(
+      s"Received page $submissionPage of submissions out of ${response.pages} pages for form ${form.id}."
+    )
+
+    submissionsIdsWithEmails = submissionsWithEmailAndAccount(
+      submissions = response.submissions,
+      accountNumber = token.account
+    )
+
+    _ = logger.info(
+      s"Writing ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo"
+    )
+
+    _ <- dynamoClient.writeSubmissions(
+      submissionIdsAndEmails = submissionsIdsWithEmails,
+      salt = config.bcryptSalt,
+      submissionsTableName = config.submissionTableName
+    ).flatMap(failUnprocessedItems)
+
+    _ = logger.info(
+      s"Wrote ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo"
+    )
+
+  } yield response.pages
+
+  private def writeSubmissions(
+                                form: Form,
+                                lastUpdate: SubmissionTableUpdateDate,
+                                submissionPage: Int = 1,
+                                token: FormstackAccountToken
+                              ): Either[Throwable, Unit] = {
+
+    val writeSubmissionsPageFunction = writeSubmissionsPage(
+      form: Form,
+      lastUpdate: SubmissionTableUpdateDate,
+      token: FormstackAccountToken
+    ) _
+
+    logger.info(
+      s"Requesting page $submissionPage for form ${form.id}."
+    )
+
+    val processedPages = writeSubmissionsPageFunction(submissionPage)
+
+    processedPages match {
+      case Right(pages) if submissionPage < pages =>
+        writeSubmissionsPageFunction(submissionPage + 1).map(_ => ())
+      case Right(_) =>
+        Right(())
+      case Left(err) =>
+        Left(err)
     }
   }
 
@@ -64,20 +131,12 @@ case class DynamoUpdateService(
           writeSubmissions(form, lastUpdate, token = token)
         }
         val errors = formResults.collect { case Left(err) => err }
-
-        val formCount = count + FormstackService.formResultsPerPage
-        val nextPage = formsPage + 1
-
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString))
         } else if (count < response.total & context.getRemainingTimeInMillis > 300000) {
-          logger.info(s"Continuing to page/formCount: ${nextPage}/${formCount}")
-
-          updateSubmissionsTable(nextPage, lastUpdate, formCount, token, context)
+          updateSubmissionsTable(formsPage + 1, lastUpdate, count + FormstackService.formResultsPerPage, token, context)
         } else if (count < response.total) {
-          logger.info(s"Approaching execution time limit, stopping at page/formCount: ${nextPage}/${formCount}")
-
-          Right(UpdateStatus(completed = false, Some(nextPage), Some(formCount), token))
+          Right(UpdateStatus(completed = false, Some(formsPage + 1), Some(count + FormstackService.formResultsPerPage), token))
         } else Right(UpdateStatus(completed = true, None, None, token))
     }
   }
