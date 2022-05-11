@@ -4,11 +4,12 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClientStub, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{EitherValues, FreeSpec, Matchers}
 
 class DynamoUpdateServiceSpec
   extends FreeSpec
     with Matchers
+    with EitherValues
     with MockFactory {
 
   val mockConfig: PerformLambdaConfig =
@@ -81,7 +82,7 @@ class DynamoUpdateServiceSpec
         context = mockContext
       )
 
-      statusUpdate shouldBe Right(expectedUpdateStatus)
+      statusUpdate.right.value shouldBe expectedUpdateStatus
     }
 
     "successfully calls updateSubmissionsTable with < 30s of lambda runtime available" in {
@@ -113,7 +114,60 @@ class DynamoUpdateServiceSpec
         context = mockContext
       )
 
-      statusUpdate shouldBe Right(expectedUpdateStatus)
+      statusUpdate.right.value shouldBe expectedUpdateStatus
+    }
+
+    "receives a formstack error when calling updateSubmissionsTable" in {
+      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+        formstackClient = FormstackServiceStub.withFailedResponse,
+        dynamoClient = DynamoClientStub.withSuccessResponse,
+        config = mockConfig
+      )
+
+      val mockContext = stub[Context]
+
+      (mockContext.getRemainingTimeInMillis _)
+        .when()
+        .anyNumberOfTimes()
+        .returns(millisLessThan30s)
+
+      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+        formsPage = dummyFormsPage,
+        lastUpdate = dummySubmissionsTableUpdateDate,
+        count = dummyCount,
+        token = dummyToken,
+        context = mockContext
+      )
+
+      statusUpdate.left.value shouldBe FormstackServiceStub.genericFormstackError
+    }
+
+    "receives dynamodb errors when calling updateSubmissionsTable" in {
+      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+        formstackClient = FormstackServiceStub.withSuccessResponse,
+        dynamoClient = DynamoClientStub.withFailedResponse,
+        config = mockConfig
+      )
+
+      val mockContext = stub[Context]
+
+      (mockContext.getRemainingTimeInMillis _)
+        .when()
+        .anyNumberOfTimes()
+        .returns(millisLessThan30s)
+
+      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+        formsPage = dummyFormsPage,
+        lastUpdate = dummySubmissionsTableUpdateDate,
+        count = dummyCount,
+        token = dummyToken,
+        context = mockContext
+      )
+
+      // The current implementation turns a list of exceptions into a string
+      // and then creates an exception using that string, for simplicity we'll
+      // just check for failure here.
+      statusUpdate.left.value shouldBe a[Exception]
     }
   }
 }
