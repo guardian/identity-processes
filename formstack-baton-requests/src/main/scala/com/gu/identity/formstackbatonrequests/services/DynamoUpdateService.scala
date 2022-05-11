@@ -53,7 +53,6 @@ case class DynamoUpdateService(
     }
   }
 
-
   def updateSubmissionsTable(formsPage: Int, lastUpdate: SubmissionTableUpdateDate, count: Int, token: FormstackAccountToken, context: Context): Either[Throwable, UpdateStatus] = {
     logger.info(s"----------Getting page $formsPage of forms.----------")
     formstackClient.accountFormsForGivenPage(formsPage, token) match {
@@ -65,12 +64,20 @@ case class DynamoUpdateService(
           writeSubmissions(form, lastUpdate, token = token)
         }
         val errors = formResults.collect { case Left(err) => err }
+
+        val formCount = count + FormstackService.formResultsPerPage
+        val nextPage = formsPage + 1
+
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString))
         } else if (count < response.total & context.getRemainingTimeInMillis > 300000) {
-          updateSubmissionsTable(formsPage + 1, lastUpdate, count + FormstackService.formResultsPerPage, token, context)
+          logger.info(s"Continuing to page/formCount: ${nextPage}/${formCount}")
+
+          updateSubmissionsTable(nextPage, lastUpdate, formCount, token, context)
         } else if (count < response.total) {
-          Right(UpdateStatus(completed = false, Some(formsPage + 1), Some(count + FormstackService.formResultsPerPage), token))
+          logger.info(s"Approaching execution time limit, stopping at page/formCount: ${nextPage}/${formCount}")
+
+          Right(UpdateStatus(completed = false, Some(nextPage), Some(formCount), token))
         } else Right(UpdateStatus(completed = true, None, None, token))
     }
   }

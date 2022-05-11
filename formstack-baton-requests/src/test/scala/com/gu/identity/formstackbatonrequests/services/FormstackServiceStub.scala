@@ -40,9 +40,9 @@ object FormstackServiceStub {
   val deleteDataSuccess =
     Right(List(SubmissionDeletionReponse(1)))
 
-  val genericFormstackError = Left(new Exception("Formstack API error"))
+  val genericFormstackError = new Exception("Formstack API error")
+  val genericFormstackErrorLeft = Left(genericFormstackError)
 
-
-  def withFailedResponse = new FormstackServiceStub(genericFormstackError, genericFormstackError, genericFormstackError, genericFormstackError)
+  def withFailedResponse = new FormstackServiceStub(genericFormstackErrorLeft, genericFormstackErrorLeft, genericFormstackErrorLeft, genericFormstackErrorLeft)
   def withSuccessResponse = new FormstackServiceStub(accountFormsForGivenPageSuccess, formSubmissionsForGivenPageSuccess, submissionDataSuccess, deleteDataSuccess)
 }
