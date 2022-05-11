@@ -38,96 +38,82 @@ class DynamoUpdateServiceSpec
       }
     }
 
+    val millisLongerThan30s = 300001
+    val millisLessThan30s = 290000
+
+    val dummyFormsPage = 1
+    val dummyCount = 0
+    val dummyToken = FormstackAccountToken(
+      account = 0,
+      secret = "baz"
+    )
+    val dummySubmissionsTableUpdateDate = SubmissionTableUpdateDate(
+      formstackSubmissionTableMetadata = "foo",
+      date = "bar"
+    )
+
     "successfully calls updateSubmissionsTable with > 30s of lambda runtime available" in {
-      FormstackServiceStub.formSubmissionsForGivenPageSuccess.map { _ =>
-        val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
-          formstackClient = FormstackServiceStub.withSuccessResponse,
-          dynamoClient = DynamoClientStub.withSuccessResponse,
-          config = mockConfig
-        )
+      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+        formstackClient = FormstackServiceStub.withSuccessResponse,
+        dynamoClient = DynamoClientStub.withSuccessResponse,
+        config = mockConfig
+      )
 
-        val millisLongerThan30s = 300001
-        val dummyFormsPage = 1
-        val dummyCount = 0
-        val dummyToken = FormstackAccountToken(
-          account = 0,
-          secret = "baz"
-        )
-        val dummySubmissionsTableUpdateDate = SubmissionTableUpdateDate(
-          formstackSubmissionTableMetadata = "foo",
-          date = "bar"
-        )
+      val mockContext = stub[Context]
 
-        val mockContext = stub[Context]
+      (mockContext.getRemainingTimeInMillis _)
+        .when()
+        .anyNumberOfTimes()
+        .returns(millisLongerThan30s)
 
-        (mockContext.getRemainingTimeInMillis _)
-          .when()
-          .anyNumberOfTimes()
-          .returns(millisLongerThan30s)
+      val expectedUpdateStatus = UpdateStatus(
+        completed = true,
+        formsPage = None,
+        count = None,
+        token = dummyToken
+      )
 
-        val expectedUpdateStatus = UpdateStatus(
-          completed = true,
-          formsPage = None,
-          count =  None,
-          token = dummyToken
-        )
+      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+        formsPage = dummyFormsPage,
+        lastUpdate = dummySubmissionsTableUpdateDate,
+        count = dummyCount,
+        token = dummyToken,
+        context = mockContext
+      )
 
-        val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
-          formsPage = dummyFormsPage,
-          lastUpdate = dummySubmissionsTableUpdateDate,
-          count = dummyCount,
-          token = dummyToken,
-          context = mockContext
-        )
-
-        statusUpdate shouldBe Right(expectedUpdateStatus)
-      }
+      statusUpdate shouldBe Right(expectedUpdateStatus)
     }
 
     "successfully calls updateSubmissionsTable with < 30s of lambda runtime available" in {
-      FormstackServiceStub.formSubmissionsForGivenPageSuccess.map { _ =>
-        val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
-          formstackClient = FormstackServiceStub.withSuccessResponse,
-          dynamoClient = DynamoClientStub.withSuccessResponse,
-          config = mockConfig
-        )
+      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+        formstackClient = FormstackServiceStub.withSuccessResponse,
+        dynamoClient = DynamoClientStub.withSuccessResponse,
+        config = mockConfig
+      )
 
-        val millisLessThan30s = 290000
-        val dummyFormsPage = 1
-        val dummyCount = 0
-        val dummyToken = FormstackAccountToken(
-          account = 0,
-          secret = "baz"
-        )
-        val dummySubmissionsTableUpdateDate = SubmissionTableUpdateDate(
-          formstackSubmissionTableMetadata = "foo",
-          date = "bar"
-        )
+      val mockContext = stub[Context]
 
-        val mockContext = stub[Context]
+      (mockContext.getRemainingTimeInMillis _)
+        .when()
+        .anyNumberOfTimes()
+        .returns(millisLessThan30s)
 
-        (mockContext.getRemainingTimeInMillis _)
-          .when()
-          .anyNumberOfTimes()
-          .returns(millisLessThan30s)
+      val expectedUpdateStatus = UpdateStatus(
+        completed = false,
+        formsPage = Some(dummyFormsPage + 1),
+        count = Some(FormstackService.formResultsPerPage),
+        token = dummyToken
+      )
 
-        val expectedUpdateStatus = UpdateStatus(
-          completed = false,
-          formsPage = Some(dummyFormsPage + 1),
-          count =  Some(FormstackService.formResultsPerPage),
-          token = dummyToken
-        )
+      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+        formsPage = dummyFormsPage,
+        lastUpdate = dummySubmissionsTableUpdateDate,
+        count = dummyCount,
+        token = dummyToken,
+        context = mockContext
+      )
 
-        val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
-          formsPage = dummyFormsPage,
-          lastUpdate = dummySubmissionsTableUpdateDate,
-          count = dummyCount,
-          token = dummyToken,
-          context = mockContext
-        )
-
-        statusUpdate shouldBe Right(expectedUpdateStatus)
-      }
+      statusUpdate shouldBe Right(expectedUpdateStatus)
     }
   }
 }
