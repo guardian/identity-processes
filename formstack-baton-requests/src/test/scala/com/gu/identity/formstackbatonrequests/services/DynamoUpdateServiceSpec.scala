@@ -83,5 +83,51 @@ class DynamoUpdateServiceSpec
         statusUpdate shouldBe Right(expectedUpdateStatus)
       }
     }
+
+    "successfully calls updateSubmissionsTable with < 30s of lambda runtime available" in {
+      FormstackServiceStub.formSubmissionsForGivenPageSuccess.map { _ =>
+        val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+          formstackClient = FormstackServiceStub.withSuccessResponse,
+          dynamoClient = DynamoClientStub.withSuccessResponse,
+          config = mockConfig
+        )
+
+        val millisLessThan30s = 290000
+        val dummyFormsPage = 1
+        val dummyCount = 0
+        val dummyToken = FormstackAccountToken(
+          account = 0,
+          secret = "baz"
+        )
+        val dummySubmissionsTableUpdateDate = SubmissionTableUpdateDate(
+          formstackSubmissionTableMetadata = "foo",
+          date = "bar"
+        )
+
+        val mockContext = stub[Context]
+
+        (mockContext.getRemainingTimeInMillis _)
+          .when()
+          .anyNumberOfTimes()
+          .returns(millisLessThan30s)
+
+        val expectedUpdateStatus = UpdateStatus(
+          completed = false,
+          formsPage = Some(dummyFormsPage + 1),
+          count =  Some(FormstackService.formResultsPerPage),
+          token = dummyToken
+        )
+
+        val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+          formsPage = dummyFormsPage,
+          lastUpdate = dummySubmissionsTableUpdateDate,
+          count = dummyCount,
+          token = dummyToken,
+          context = mockContext
+        )
+
+        statusUpdate shouldBe Right(expectedUpdateStatus)
+      }
+    }
   }
 }
