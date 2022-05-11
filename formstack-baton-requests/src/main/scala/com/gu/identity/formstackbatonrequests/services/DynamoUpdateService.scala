@@ -1,8 +1,6 @@
 package com.gu.identity.formstackbatonrequests.services
 
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult
-
-import java.time.Instant
 import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission, FormSubmissions}
@@ -10,13 +8,15 @@ import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 
+import java.time.Instant
+
 
 case class UpdateStatus(completed: Boolean, formsPage: Option[Int], count: Option[Int], token: FormstackAccountToken)
 
 case class DynamoUpdateService(
-  formstackClient: FormstackRequestService,
-  dynamoClient: DynamoClient,
-  config: PerformLambdaConfig) extends LazyLogging {
+                                formstackClient: FormstackRequestService,
+                                dynamoClient: DynamoClient,
+                                config: PerformLambdaConfig) extends LazyLogging {
 
   def submissionsWithEmailAndAccount(submissions: List[FormSubmission], accountNumber: Int): List[SubmissionIdEmail] = {
     val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,6}\b""".r
@@ -39,10 +39,9 @@ case class DynamoUpdateService(
     }
   }
 
-  private def failUnprocessedItems(batchWriteItemsResults: Seq[BatchWriteItemResult]): Either[Throwable, Seq[BatchWriteItemResult]] ={
-    val unprocessedItems = batchWriteItemsResults.exists { result =>
-      val unprocessedItems = result.getUnprocessedItems
-      !unprocessedItems.isEmpty
+  private def failUnprocessedItems(batchWriteItemsResults: Seq[BatchWriteItemResult]): Either[Throwable, Seq[BatchWriteItemResult]] = {
+    val unprocessedItems = batchWriteItemsResults.exists {
+      !_.getUnprocessedItems.isEmpty
     }
 
     if (unprocessedItems) {
