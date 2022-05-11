@@ -42,7 +42,6 @@ object FormstackServiceStub {
 
   val genericFormstackError = Left(new Exception("Formstack API error"))
 
-
   def withFailedResponse = new FormstackServiceStub(genericFormstackError, genericFormstackError, genericFormstackError, genericFormstackError)
   def withSuccessResponse = new FormstackServiceStub(accountFormsForGivenPageSuccess, formSubmissionsForGivenPageSuccess, submissionDataSuccess, deleteDataSuccess)
 }
