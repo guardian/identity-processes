@@ -29,7 +29,7 @@ object FormstackServiceStub {
           FormSubmission("765", Map("fieldWithEmail"-> ResponseValue("email2@test.com".asJson))),
           FormSubmission("654", Map("fieldWithoutEmail"-> ResponseValue("noEmail".asJson))),
         ),
-  pages = 1))
+  pages = 3))
 
   val submissionDataSuccess =
     Right(List(FormstackSubmissionQuestionAnswer(
