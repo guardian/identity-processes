@@ -81,7 +81,6 @@ class DynamoUpdateServiceSpec
         token = dummyToken,
         context = mockContext
       )
-
       statusUpdate.right.value shouldBe expectedUpdateStatus
     }
 
