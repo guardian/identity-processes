@@ -112,11 +112,14 @@ case class DynamoUpdateService(
 
     processedPages match {
       case Right(pages) if submissionPage < pages =>
-        writeSubmissionsPageFunction(submissionPage + 1).map(_ => ())
-      case Right(_) =>
-        Right(())
-      case Left(err) =>
-        Left(err)
+        (submissionPage + 1 to pages)
+          .map(writeSubmissionsPageFunction(_))
+          .collectFirst {
+            case Left(err) => Left(err)
+          }.getOrElse(Right(()))
+
+      case Right(_) => Right(())
+      case Left(err) => Left(err)
     }
   }
 
