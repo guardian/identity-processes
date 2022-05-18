@@ -57,39 +57,45 @@ case class DynamoUpdateService(
                                     token: FormstackAccountToken
                                   )(
                                     submissionPage: Int = 1
-                                  ): Either[Throwable, Int] = for {
-    response <- formstackClient.formSubmissionsForGivenPage(
-      page = submissionPage,
-      formId = form.id,
-      minTime = lastUpdate,
-      encryptionPassword = config.encryptionPassword,
-      accountToken = token
-    ).left.flatMap(skipDecryptionError)
-
-    _ = logger.info(
-      s"Received page $submissionPage of submissions out of ${response.pages} pages for form ${form.id}."
+                                  ): Either[Throwable, Int] = {
+    logger.info(
+      s"(Form ${form.id} / SubmissionPage $submissionPage): Requesting submissionPage"
     )
 
-    submissionsIdsWithEmails = submissionsWithEmailAndAccount(
-      submissions = response.submissions,
-      accountNumber = token.account
-    )
+    for {
+      response <- formstackClient.formSubmissionsForGivenPage(
+        page = submissionPage,
+        formId = form.id,
+        minTime = lastUpdate,
+        encryptionPassword = config.encryptionPassword,
+        accountToken = token
+      ).left.flatMap(skipDecryptionError)
 
-    _ = logger.info(
-      s"Writing ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo"
-    )
+      _ = logger.info(
+        s"(Form ${form.id} / SubmissionPage $submissionPage): Received submissionPage of ${response.pages} pages"
+      )
 
-    _ <- dynamoClient.writeSubmissions(
-      submissionIdsAndEmails = submissionsIdsWithEmails,
-      salt = config.bcryptSalt,
-      submissionsTableName = config.submissionTableName
-    ).flatMap(failUnprocessedItems)
+      submissionsIdsWithEmails = submissionsWithEmailAndAccount(
+        submissions = response.submissions,
+        accountNumber = token.account
+      )
 
-    _ = logger.info(
-      s"Wrote ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo"
-    )
+      _ = logger.info(
+        s"(Form ${form.id} / SubmissionPage $submissionPage): Writing ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo"
+      )
 
-  } yield response.pages
+      _ <- dynamoClient.writeSubmissions(
+        submissionIdsAndEmails = submissionsIdsWithEmails,
+        salt = config.bcryptSalt,
+        submissionsTableName = config.submissionTableName
+      ).flatMap(failUnprocessedItems)
+
+      _ = logger.info(
+        s"(Form ${form.id} / SubmissionPage $submissionPage): Wrote ${submissionsIdsWithEmails.length} submission id(s) and emails to Dynamo"
+      )
+
+    } yield response.pages
+  }
 
   private def writeSubmissions(
                                 form: Form,
@@ -104,16 +110,14 @@ case class DynamoUpdateService(
       token: FormstackAccountToken
     ) _
 
-    logger.info(
-      s"Requesting page $submissionPage for form ${form.id}."
-    )
-
     val processedPages = writeSubmissionsPageFunction(submissionPage)
 
     processedPages match {
       case Right(pages) if submissionPage < pages =>
         (submissionPage + 1 to pages)
+          .par
           .map(writeSubmissionsPageFunction(_))
+          .toList
           .collectFirst {
             case Left(err) => Left(err)
           }.getOrElse(Right(()))
@@ -124,7 +128,7 @@ case class DynamoUpdateService(
   }
 
   def updateSubmissionsTable(formsPage: Int, lastUpdate: SubmissionTableUpdateDate, count: Int, token: FormstackAccountToken, context: Context): Either[Throwable, UpdateStatus] = {
-    logger.info(s"----------Getting page $formsPage of forms.----------")
+    logger.info(s"----Getting page $formsPage of forms----")
     formstackClient.accountFormsForGivenPage(formsPage, token) match {
       case Left(err) => Left(err)
       case Right(response) =>
