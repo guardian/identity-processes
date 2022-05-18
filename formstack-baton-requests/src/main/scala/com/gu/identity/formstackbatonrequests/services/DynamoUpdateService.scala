@@ -91,6 +91,24 @@ case class DynamoUpdateService(
 
   } yield response.pages
 
+  private def writeSubmissionsPages(startingPage: Int)(
+    writePage: (Int) => Either[Throwable, Int]
+  ): Either[Throwable, Unit] = {
+    val processedPages = writePage(startingPage)
+
+    processedPages match {
+      case Right(pages) if startingPage < pages =>
+        (startingPage + 1 to pages)
+          .map(writePage(_))
+          .collectFirst {
+            case Left(err) => Left(err)
+          }.getOrElse(Right(()))
+        
+      case Right(_) => Right(())
+      case Left(err) => Left(err)
+    }
+  }
+
   private def writeSubmissions(
                                 form: Form,
                                 lastUpdate: SubmissionTableUpdateDate,
@@ -108,16 +126,7 @@ case class DynamoUpdateService(
       s"Requesting page $submissionPage for form ${form.id}."
     )
 
-    val processedPages = writeSubmissionsPageFunction(submissionPage)
-
-    processedPages match {
-      case Right(pages) if submissionPage < pages =>
-        writeSubmissionsPageFunction(submissionPage + 1).map(_ => ())
-      case Right(_) =>
-        Right(())
-      case Left(err) =>
-        Left(err)
-    }
+    writeSubmissionsPages(submissionPage)(writeSubmissionsPageFunction)
   }
 
   def updateSubmissionsTable(formsPage: Int, lastUpdate: SubmissionTableUpdateDate, count: Int, token: FormstackAccountToken, context: Context): Either[Throwable, UpdateStatus] = {
