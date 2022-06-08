@@ -29,12 +29,16 @@ case class DynamoUpdateService(
     }
   }
 
-  private def skipDecryptionError(formSubmissionError: Throwable): Either[Throwable, FormSubmissions] = {
+  private def skipSafeErrors(formSubmissionError: Throwable): Either[Throwable, FormSubmissions] = {
     formSubmissionError match {
-      case _: FormstackDecryptionError => Right(FormSubmissions(
-        submissions = List.empty,
-        pages = 0
-      ))
+      case err: FormstackSkippableError => {
+        logger.warn("Found skippable error while processing form submissions!", err)
+
+        Right(FormSubmissions(
+          submissions = List.empty,
+          pages = 0
+        ))
+      }
       case err => Left(err)
     }
   }
@@ -69,7 +73,7 @@ case class DynamoUpdateService(
         minTime = lastUpdate,
         encryptionPassword = config.encryptionPassword,
         accountToken = token
-      ).left.flatMap(skipDecryptionError)
+      ).left.flatMap(skipSafeErrors)
 
       _ = logger.info(
         s"(Form ${form.id} / SubmissionPage $submissionPage): Received submissionPage of ${response.pages} pages"
