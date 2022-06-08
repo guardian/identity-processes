@@ -2,6 +2,7 @@ package com.gu.identity.formstackbatonrequests.services
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClientStub, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.services.FormstackServiceStub.{accountFormsForGivenPageSuccess, deleteDataSuccess, submissionDataSuccess}
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{EitherValues, FreeSpec, Matchers}
@@ -139,6 +140,50 @@ class DynamoUpdateServiceSpec
       )
 
       statusUpdate.left.value shouldBe FormstackServiceStub.genericFormstackError
+    }
+
+    "does not fail when encountering a skippable error in formSubmissionsForGivenPageResponse" in {
+      val skippableFormstackError = FormstackAuthError("Error")
+      val skippableFormstackErrorLeft = Left(skippableFormstackError)
+
+      val withSkippableErrorsFormstackSubmission = new FormstackServiceStub(
+        accountFormsForGivenPageResponse = accountFormsForGivenPageSuccess,
+        formSubmissionsForGivenPageResponse = skippableFormstackErrorLeft,
+        submissionDataResponse = submissionDataSuccess,
+        deleteDataResponse = deleteDataSuccess
+      )
+
+      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+        formstackClient = withSkippableErrorsFormstackSubmission,
+        dynamoClient = DynamoClientStub.withSuccessResponse,
+        config = mockConfig
+      )
+
+      val mockContext = stub[Context]
+
+      (mockContext.getRemainingTimeInMillis _)
+        .when()
+        .anyNumberOfTimes()
+        .returns(millisLessThan30s)
+
+      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+        formsPage = dummyFormsPage,
+        lastUpdate = dummySubmissionsTableUpdateDate,
+        count = dummyCount,
+        token = dummyToken,
+        context = mockContext
+      )
+
+      val expectedUpdateStatus = UpdateStatus(
+        completed = false,
+        formsPage = Some(dummyFormsPage + 1),
+        count = Some(FormstackService.formResultsPerPage),
+        token = dummyToken
+      )
+
+      skippableFormstackError shouldBe a[FormstackSkippableError]
+
+      statusUpdate.right.value shouldBe expectedUpdateStatus
     }
 
     "receives dynamodb errors when calling updateSubmissionsTable" in {

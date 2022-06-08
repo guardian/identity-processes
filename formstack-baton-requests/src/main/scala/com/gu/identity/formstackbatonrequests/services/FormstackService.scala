@@ -16,7 +16,9 @@ trait FormstackRequestService {
   def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]]
 }
 
-case class FormstackDecryptionError(message: String) extends Throwable
+sealed trait FormstackSkippableError extends Throwable
+case class FormstackDecryptionError(message: String) extends FormstackSkippableError
+case class FormstackAuthError(message: String) extends FormstackSkippableError
 
 object FormstackService extends FormstackRequestService with LazyLogging {
 
@@ -69,10 +71,15 @@ object FormstackService extends FormstackRequestService with LazyLogging {
 
     /* There are a couple of forms that the Formstack API can't seem to decrypt. There seems to be no way around this
      *  so we capture this specific error and skip these forms. */
-    if(response.body.contains("An error occurred while decrypting the submissions"))
-      Left(FormstackDecryptionError(s"${response.body} | form id: ${formId}"))
-    else
-      decode[FormSubmissions](response.body)
+    // We also skip responses from Formstack that contain "Incorrect password". These are undocumented, and we do not know why they happen.
+
+    response.body match {
+      case message if message.contains("An error occurred while decrypting the submissions") =>
+        Left(FormstackDecryptionError(s"${response.body} | form id: ${formId}"))
+      case message if message.contains("Incorrect password") =>
+        Left(FormstackAuthError(s"${response.body} | form id: ${formId}"))
+      case _ => decode[FormSubmissions](response.body)
+    }
   }
 
   private def getSubmissions(
