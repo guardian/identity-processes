@@ -4,9 +4,9 @@ Upon a submission to one of the [Formstack](https://guardiannewsandmedia.formsta
 
 When the user clicks the link in the email, an identity account will be created for them and they will be signed up to the newsletter.
 
-Example Formstack newsletter signup forms used for [Professional Networks]:(https://www.theguardian.com/guardian-professional)
-- [Teacher Newsletter](https://www.theguardian.com/teacher-network/2018/mar/21/guardian-teacher-network-newsletter-sign-up)
-- [Society Newsletter](https://www.theguardian.com/society/2018/jun/20/society-weekly-email-newsletter-sign-up)
+28/9/2022 - Formstack forms are not widely used for editorial newsletters as there is a features for dedicated sign-up pages (eg https://www.theguardian.com/lifeandstyle/2015/oct/19/observer-food-monthly-newsletter) and in-article sign up forms in DCR.
+
+A Formstack newsletter signup form is used for Guardian Traveller on the holidays site (https://holidays.theguardian.com/newsletter/) (run by a third party.)
 
 **Notes:**
 
