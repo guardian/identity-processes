@@ -6,10 +6,10 @@ sealed trait Newsletter {
   val consent: String
 }
 
-case object Holidays extends Newsletter {
+case object Traveller extends Newsletter {
   val formId = "1945214"
-  val listType = "set-consents"
-  val consent = "holidays"
+  val listType = "set-lists"
+  val consent = "guardian-traveller"
 }
 
 case object Students extends Newsletter {
