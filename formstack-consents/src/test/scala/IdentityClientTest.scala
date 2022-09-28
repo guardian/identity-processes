@@ -18,13 +18,13 @@ class IdentityClientTest extends WordSpec with Matchers with MockitoSugar {
   val faultyFormstackSubmission1 = FormstackSubmission("3082194", "test@exampledomain.com", "secretkey", Some(true)) // no opt in required
   val faultyFormstackSubmission2 = FormstackSubmission("3534972", "test@exampledomain.com", "secretkey", None) // missing required opt in
 
-  val holidayRequestBody = "{\"email\":\"test@exampledomain.com\",\"set-consents\":[\"holidays\"]}"
+  val supporterRequestBody = "{\"email\":\"test@exampledomain.com\",\"set-consents\":[\"supporter\"]}"
 
   val studentsRequestBody = "{\"email\":\"test@exampledomain.com\",\"set-lists\":[\"guardian-students\"]}"
 
   "The IdentityClient" should {
     "Correctly encode an Identity Request when the newsletter list-type is set-consents" in {
-      IdentityClient.createRequestBody(email, Holidays).shouldEqual(holidayRequestBody)
+      IdentityClient.createRequestBody(email, EventMarketingConsentCollection).shouldEqual(supporterRequestBody)
     }
 
     "Correctly encode an Identity Request when the newsletter list-type is set-lists" in {
