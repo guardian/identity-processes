@@ -13,7 +13,7 @@ import scala.util.Try
 
 class IdentityClient(config: Config) extends StrictLogging {
 
-  val newsletters: List[Newsletter] = List(Holidays, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection, EventMarketingConsentCollection)
+  val newsletters: List[Newsletter] = List(Traveller, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection, EventMarketingConsentCollection)
 
   val optInForms: List[MarketingConsent] = List(EventMarketingConsentCollection)
 
@@ -101,7 +101,7 @@ object IdentityClient {
     // and sometimes the listType is 'set-consents'. See example body of POST request to IDAPI below.
     //  {
     //    "email" : "example.test@exampledomain.co.uk",
-    //    "set-consents" : "holidays"
+    //    "set-consents" : "supporter"
     //  }
 
     implicit val identityRequestEncoder = IdentityClient.identityRequestEncoder(newsletter)
