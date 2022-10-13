@@ -8,7 +8,7 @@ import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLam
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Decoder
 import io.circe.parser.decode
-import scalaj.http.{Http, HttpResponse}
+import scalaj.http.{BaseHttp, Http, HttpResponse}
 
 trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
@@ -21,13 +21,12 @@ sealed trait FormstackSkippableError extends Throwable
 case class FormstackDecryptionError(message: String) extends FormstackSkippableError
 case class FormstackAuthError(message: String) extends FormstackSkippableError
 
-object FormstackService extends FormstackRequestService with LazyLogging {
+case class FormstackService(http:BaseHttp = Http) extends FormstackRequestService with LazyLogging {
 
-  val formResultsPerPage = 25
-  val submissionResultsPerPage = 100
+import FormstackService._
 
   override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = {
-    val response = Http(s"https://www.formstack.com/api/v2/form.json")
+    val response = http(s"https://www.formstack.com/api/v2/form.json")
       .header("Authorization", accountToken.secret)
       .params(
         Seq(
@@ -48,7 +47,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     minTime: SubmissionTableUpdateDate,
     encryptionPassword: String,
     accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = {
-    val response = Http(s"https://www.formstack.com/api/v2/form/$formId/submission.json")
+    val response = http(s"https://www.formstack.com/api/v2/form/$formId/submission.json")
       .headers(
         Seq(
           ("Authorization", accountToken.secret),
@@ -104,15 +103,15 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     encryptionPassword: String): Either[Throwable, List[Submission]] = {
     val submissionResults: Either[Throwable, List[Option[Submission]]] = submissionIdEmails.traverse { submissionIdEmail =>
       val response =
-        Http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
+        http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
           .header("Authorization", accountToken.secret)
           .param("encryption_password", encryptionPassword)
           .asString
-          
+
       if(!response.is2xx) {
         logger.error(response.body)
       }
-      
+
           decodeIfNotSkippableError[Submission](response)
     }
     submissionResults.map(_.flatten)
@@ -125,7 +124,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     submissions.traverse { submission =>
       val labelsAndValuesOrError = submission.data.map { responseValues =>
         val fieldId = responseValues.field
-        val response = Http(s"https://www.formstack.com/api/v2/field/$fieldId")
+        val response = http(s"https://www.formstack.com/api/v2/field/$fieldId")
           .header("Authorization", accountToken.secret)
           .asString
 
@@ -159,7 +158,7 @@ object FormstackService extends FormstackRequestService with LazyLogging {
     val deletionResponses: Either[Throwable, List[Option[SubmissionDeletionReponse]] ]= submissionIdEmails.traverse { submissionIdEmail =>
       val token = tokens.find( token => token.account == submissionIdEmail.accountNumber).get
       val response =
-        Http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
+        http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
           .method("DELETE")
           .header("Authorization", token.secret)
           .asString
@@ -173,4 +172,9 @@ object FormstackService extends FormstackRequestService with LazyLogging {
 
     deletionResponses.map(_.flatten) 
   }
+}
+
+object FormstackService{
+  val formResultsPerPage = 25
+  val submissionResultsPerPage = 100
 }
