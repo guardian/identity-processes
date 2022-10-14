@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission, FormSubmissions}
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
+import com.gu.identity.formstackbatonrequests.services.Util.extractEmails
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -19,10 +20,10 @@ case class DynamoUpdateService(
                                 config: PerformLambdaConfig) extends LazyLogging {
 
   def submissionsWithEmailAndAccount(submissions: List[FormSubmission], accountNumber: Int): List[SubmissionIdEmail] = {
-    val emailReg = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,6}\b""".r
+
     submissions.foldLeft(List.empty[SubmissionIdEmail]) { (acc, submission) =>
       val submissionValues = submission.data.map(field => field._2.value).toList
-      val emailList = submissionValues.collect { case jsonValue => emailReg.findAllIn(jsonValue.toString).toList }.flatten
+      val emailList = submissionValues.collect { case jsonValue => extractEmails(jsonValue.toString) }.flatten
       val receivedByLambdaTimestamp = Instant.now.getEpochSecond
       val submissionsIdEmails = emailList.map(email => SubmissionIdEmail(email.toLowerCase, submission.id, receivedByLambdaTimestamp, accountNumber))
       submissionsIdEmails ::: acc
