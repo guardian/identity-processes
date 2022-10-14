@@ -4,6 +4,7 @@ import cats.implicits._
 import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate
 import com.gu.identity.formstackbatonrequests.circeCodecs._
 import com.gu.identity.formstackbatonrequests.sar.{FormstackLabelValue, FormstackSubmissionQuestionAnswer, SubmissionIdEmail}
+import com.gu.identity.formstackbatonrequests.services.Util.extractEmails
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Decoder
@@ -16,6 +17,12 @@ trait FormstackRequestService {
   def submissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]]
   def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]]
 }
+
+case class SubmissionsResponse(found: List[Submission], notFound: List[SubmissionIdEmail])
+sealed trait getSubmissionResult
+case class Found(submission:Submission) extends getSubmissionResult
+case class Skipped(submissionIdEmail: SubmissionIdEmail) extends getSubmissionResult
+case class AccountQuestionsAnswersResult(found: List[FormstackSubmissionQuestionAnswer], notFound: List[SubmissionIdEmail] )
 
 sealed trait FormstackSkippableError extends Throwable
 case class FormstackDecryptionError(message: String) extends FormstackSkippableError
@@ -96,12 +103,16 @@ import FormstackService._
     case Left(e) => Left(e)
     case Right(submission) => Right(Some(submission))
   }
-  
+
+  def validateEmail(expectedEmail:String, submission: Submission) = submission.data.exists{
+    subData => extractEmails(subData.value).contains(expectedEmail)
+  }
+
   private def getSubmissions(
     submissionIdEmails: List[SubmissionIdEmail],
     accountToken: FormstackAccountToken,
-    encryptionPassword: String): Either[Throwable, List[Submission]] = {
-    val submissionResults: Either[Throwable, List[Option[Submission]]] = submissionIdEmails.traverse { submissionIdEmail =>
+    encryptionPassword: String): Either[Throwable, SubmissionsResponse] = {
+    val submissionResults: Either[Throwable, List[getSubmissionResult]] = submissionIdEmails.traverse { submissionIdEmail =>
       val response =
         http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
           .header("Authorization", accountToken.secret)
@@ -112,10 +123,26 @@ import FormstackService._
         logger.error(response.body)
       }
 
-          decodeIfNotSkippableError[Submission](response)
+      decodeIfNotSkippableError[Submission](response).map{
+        case None => Skipped(submissionIdEmail)
+        case Some(submission) =>
+          //validate the submission we found in formstack actually contains references to the email we were looking for
+          if (validateEmail(submissionIdEmail.email, submission))
+            Found(submission)
+          else {
+            logger.warn(s"found submission by id = ${submissionIdEmail.submissionId} but the requested email was not found, skipping")
+            Skipped(submissionIdEmail)
+          }
+      }
     }
-    submissionResults.map(_.flatten)
-   }
+
+    submissionResults.map{ subResults =>
+      SubmissionsResponse(
+        found = subResults.collect{ case f:Found => f.submission},
+        notFound = subResults.collect{ case s:Skipped => s.submissionIdEmail}
+      )
+    }
+  }
 
   private def getSubmissionQuestionsAnswers(
     submissions: List[Submission],
@@ -139,17 +166,23 @@ import FormstackService._
       labelsAndValuesOrError.map(labelsAndValues => FormstackSubmissionQuestionAnswer(submission.id, submission.timestamp, labelsAndValues))
     }
   }
+  def getSubQandAForAccount(accountSubmissions: List[SubmissionIdEmail], token:FormstackAccountToken, encryptionPassword: String): Either[Throwable, AccountQuestionsAnswersResult] = {
+      for {
+        submissionsResponse <- getSubmissions(accountSubmissions, token, encryptionPassword)
+        labelsAndValues <- getSubmissionQuestionsAnswers(submissionsResponse.found, token)
+      } yield AccountQuestionsAnswersResult(found = labelsAndValues, notFound = submissionsResponse.notFound)
+  }
 
   override def submissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = {
     logger.info(s"retrieving submission data for ${submissionIdEmails.length} submissions")
-    val tokens = List(config.accountOneToken, config.accountTwoToken)
-    tokens.traverse { token =>
-      val accountSubmissions = submissionIdEmails.filter(sub => sub.accountNumber == token.account)
-      for {
-        fieldsAndValues <- getSubmissions(accountSubmissions, token, config.encryptionPassword)
-        labelsAndValues <- getSubmissionQuestionsAnswers(fieldsAndValues, token)
-      } yield labelsAndValues
-    }.map(accountSubmissions => accountSubmissions.flatten)
+    val accountTwoSubmissions = submissionIdEmails.filter(_.accountNumber == config.accountTwoToken.account)
+    for {
+      accountTwoResults <- getSubQandAForAccount(accountTwoSubmissions, config.accountTwoToken, config.encryptionPassword)
+      accountOneSubmissions = submissionIdEmails.filter(_.accountNumber == config.accountOneToken.account)
+      submissionsToFetchFromAccountOne = accountOneSubmissions ++ accountTwoResults.notFound
+      accountOneResults <- getSubQandAForAccount(submissionsToFetchFromAccountOne, config.accountOneToken, config.encryptionPassword)
+    } yield accountOneResults.found ++ accountTwoResults.found
+
   }
 
   override def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
