@@ -1,5 +1,6 @@
 package com.gu.identity.formstackbatonrequests.services
 
+import com.gu.identity.formstackbatonrequests.circeCodecs.{Submission, SubmissionData}
 import com.gu.identity.formstackbatonrequests.sar.{FormstackLabelValue, FormstackSubmissionQuestionAnswer, SubmissionIdEmail}
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import org.scalamock.scalatest.MockFactory
@@ -18,6 +19,19 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
     bcryptSalt = "bcryptSalt",
     submissionTableName = "not used",
     lastUpdatedTableName = "not used")
+
+  val submission111 = Submission(
+    id = "111",
+    timestamp = "2012-03-07 21:31:09",
+    data = List(SubmissionData("field1", "some@email.com")))
+
+  val submission222 = Submission(
+    id = "222",
+    timestamp = "2013-03-07 21:31:09",
+    data = List(SubmissionData("field2", "another@email.com"))
+  )
+
+
 
   val submissionIdEmail111 = SubmissionIdEmail(
     email = "some@email.com",
@@ -59,13 +73,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       |}
       |""".stripMargin
 
-  val parsedSuccessResponse1 = FormstackSubmissionQuestionAnswer(
-    id = "111",
-    timestamp = "2012-03-07 21:31:09",
-    fields = List(
-      FormstackLabelValue("Email address", "some@email.com")
-    )
-  )
+
   val successFieldBody2 =
     """
       |{
@@ -93,15 +101,6 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       |  ]
       |}
       |""".stripMargin
-
-  val parsedSuccessResponse2 = FormstackSubmissionQuestionAnswer(
-    id = "222",
-    timestamp = "2013-03-07 21:31:09",
-    fields = List(
-      FormstackLabelValue("Another Email address field", "another@email.com")
-    )
-  )
-
 
   def successRequest(responseBody: String, token: FormstackAccountToken) = mockRequest(responseBody, 200, token)
 
@@ -147,6 +146,22 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
 
   "FormstackService.submissionData" - {
 
+    val parsedSuccessResponse111 = FormstackSubmissionQuestionAnswer(
+      id = "111",
+      timestamp = "2012-03-07 21:31:09",
+      fields = List(
+        FormstackLabelValue("Email address", "some@email.com")
+      )
+    )
+
+    val parsedSuccessResponse2222 = FormstackSubmissionQuestionAnswer(
+      id = "222",
+      timestamp = "2013-03-07 21:31:09",
+      fields = List(
+        FormstackLabelValue("Another Email address field", "another@email.com")
+      )
+    )
+
     "return submissions data from account 1" in {
       val http = stub[BaseHttp]
       (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
@@ -156,7 +171,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountOneToken))
 
       val formstackService = FormstackService(http)
-      formstackService.submissionData(List(submissionIdEmail111, submissionIdEmail222), config) shouldBe Right(List(parsedSuccessResponse1, parsedSuccessResponse2))
+      formstackService.submissionData(List(submissionIdEmail111, submissionIdEmail222), config) shouldBe Right(List(parsedSuccessResponse111, parsedSuccessResponse2222))
     }
 
     "return submissions data from account 2" in {
@@ -169,7 +184,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
 
       val formstackService = FormstackService(http)
       val account2SubmissionIds = List(submissionIdEmail111, submissionIdEmail222).map(_.copy(accountNumber = 2))
-      formstackService.submissionData(submissionIdEmails = account2SubmissionIds, config) shouldBe Right(List(parsedSuccessResponse1, parsedSuccessResponse2))
+      formstackService.submissionData(submissionIdEmails = account2SubmissionIds, config) shouldBe Right(List(parsedSuccessResponse111, parsedSuccessResponse2222))
     }
 
     "return submissions data from account 1 and account 2" in {
@@ -183,7 +198,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       val formstackService = FormstackService(http)
       val mixedSubmissionIds = List(submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2))
 
-      formstackService.submissionData(submissionIdEmails = mixedSubmissionIds, config) shouldBe Right(List(parsedSuccessResponse1, parsedSuccessResponse2))
+      formstackService.submissionData(submissionIdEmails = mixedSubmissionIds, config) shouldBe Right(List(parsedSuccessResponse111, parsedSuccessResponse2222))
     }
 
     "return error if a non skippable error occurs " in {
@@ -209,7 +224,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
 
       val formstackService = FormstackService(http)
       val submissionIds = List(submissionIdEmail111, submissionIdEmail222)
-      formstackService.submissionData(submissionIdEmails = submissionIds, config) shouldBe Right(List(parsedSuccessResponse2))
+      formstackService.submissionData(submissionIdEmails = submissionIds, config) shouldBe Right(List(parsedSuccessResponse2222))
     }
 
     //All the forms in account 2 are going to be moved to account 1 gradually so we don't really know if a submission we have in dynamo as belonging to account 2 is now in account 1
@@ -232,7 +247,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
             val mixedSubmissionIds = List(submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2))
 
             //our list of submissions to retrieve are 111 from account 1 and 222 from account 2, but we expect it to get 222 from account 1 as well
-            formstackService.submissionData(mixedSubmissionIds, config) shouldBe Right(List(parsedSuccessResponse1, parsedSuccessResponse2))
+            formstackService.submissionData(mixedSubmissionIds, config) shouldBe Right(List(parsedSuccessResponse111, parsedSuccessResponse2222))
 
       //just to verify the two calls that are made to the same endpoint are done in the correct sequence of first attempting account two and then account one
       inSequence {
@@ -243,7 +258,141 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       }
       }
   }
+  "FormstackService.getValidatedSubmissionData" - {
 
+
+    "return submissions data from account 1" in {
+      val http = stub[BaseHttp]
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(successResponse222, config.accountOneToken))
+
+      val formstackService = FormstackService(http)
+      val expected = ValidatedSubmissions(
+        accountOneResponse = SubmissionsResponse(found = List(submission111, submission222), notFound = List.empty),
+        accountTwoResponse = SubmissionsResponse(found = List.empty, notFound = List.empty),
+      )
+      formstackService.getValidatedSubmissionData(List(submissionIdEmail111, submissionIdEmail222), config) shouldBe Right(expected)
+    }
+    "return submissions data from account 2" in {
+      val http = stub[BaseHttp]
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountTwoToken))
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(successResponse222, config.accountTwoToken))
+
+      val formstackService = FormstackService(http)
+      val expected = ValidatedSubmissions(
+        accountOneResponse = SubmissionsResponse(found = List.empty, notFound = List.empty),
+        accountTwoResponse = SubmissionsResponse(found = List(submission111, submission222), notFound = List.empty),
+      )
+      val account2SubmissionIdEmails = List(
+        submissionIdEmail111.copy(accountNumber = config.accountTwoToken.account),
+        submissionIdEmail222.copy(accountNumber = config.accountTwoToken.account))
+      formstackService.getValidatedSubmissionData(account2SubmissionIdEmails, config) shouldBe Right(expected)
+    }
+
+    "return submissions data from account 1 and 2" in {
+      val http = stub[BaseHttp]
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(successResponse222, config.accountTwoToken))
+
+      val formstackService = FormstackService(http)
+      val expected = ValidatedSubmissions(
+        accountOneResponse = SubmissionsResponse(found =  List(submission111), notFound = List.empty),
+        accountTwoResponse = SubmissionsResponse(found = List(submission222), notFound = List.empty),
+      )
+      val mixedAccountSubmissionIdEmails = List(
+        submissionIdEmail111.copy(accountNumber = config.accountOneToken.account),
+        submissionIdEmail222.copy(accountNumber = config.accountTwoToken.account))
+      formstackService.getValidatedSubmissionData(mixedAccountSubmissionIdEmails, config) shouldBe Right(expected)
+    }
+
+    "if submissions expected to be in account 2 is not there get it from account 1 " in {
+      val http = stub[BaseHttp]
+      val submissionNotFoundInAccountTwo = NotFoundRequest(config.accountTwoToken)
+      val submissionFoundInAccountOne = successRequest(successResponse222, config.accountOneToken)
+      //we assume the first call is in token 2 so we return the mocked response that would throw a null pointer exception if the token one is passed because of how the stub is set up
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(submissionNotFoundInAccountTwo).noMoreThanOnce()
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(submissionFoundInAccountOne).noMoreThanOnce()
+
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
+
+
+      val formstackService = FormstackService(http)
+
+      val subsmissionIdEmail11FromAccount2 = submissionIdEmail222.copy(accountNumber = 2)
+      val mixedAccountSubmissionIdEmails = List(
+        submissionIdEmail111,
+        subsmissionIdEmail11FromAccount2)
+
+      val expected = ValidatedSubmissions(
+        accountOneResponse =  SubmissionsResponse(found = List(submission111, submission222), notFound = List.empty),
+        accountTwoResponse = SubmissionsResponse(found =  List.empty, notFound = List(subsmissionIdEmail11FromAccount2)),
+      )
+
+      formstackService.getValidatedSubmissionData(mixedAccountSubmissionIdEmails, config) shouldBe Right(expected)
+
+      //just to verify the two calls that are made to the same endpoint are done in the correct sequence of first attempting account two and then account one
+      inSequence {
+        (submissionNotFoundInAccountTwo.header _).verify("Authorization", config.accountTwoToken.secret)
+        (submissionNotFoundInAccountTwo.asString _).verify()
+        (submissionFoundInAccountOne.header _).verify("Authorization", config.accountOneToken.secret)
+        (submissionFoundInAccountOne.asString _).verify()
+      }
+    }
+  }
+  "FormstackService.validateAndFixSubmissionIdEmails" - {
+    "return the list unchanged if all the submissions are found in the expected account" in {
+      val submissionsIds = List(
+        submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2)
+      )
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http) {
+        override def getValidatedSubmissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig) = Right(
+          ValidatedSubmissions(
+            accountOneResponse =  SubmissionsResponse(found = List(submission111), notFound = List.empty),
+            accountTwoResponse = SubmissionsResponse(found =  List(submission222), notFound = List.empty),
+          ))
+      }
+
+      formstackService.validateAndFixSubmissionIdEmails(submissionsIds, config)  shouldBe Right(submissionsIds)
+    }
+
+    "fix the account number if a submission is expected in account 2 but it's actually found in account 1" in {
+      val account2Submissions = List(
+        submissionIdEmail111.copy(accountNumber = 2),
+        submissionIdEmail222.copy(accountNumber = 2)
+      )
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http) {
+        override def getValidatedSubmissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig) = Right(
+          ValidatedSubmissions(
+            accountOneResponse =  SubmissionsResponse(found = List(submission111, submission222), notFound = List.empty),
+            accountTwoResponse = SubmissionsResponse(found =  List.empty, notFound = List(submissionIdEmail111)),
+          ))
+      }
+      val SubmissionIdsAllInAccountOne = List(
+        submissionIdEmail111,
+        submissionIdEmail222
+      )
+      formstackService.validateAndFixSubmissionIdEmails(account2Submissions, config)  shouldBe Right(SubmissionIdsAllInAccountOne)
+    }
+
+    "remove submissions that are not found in either account" in {
+      val account2Submissions = List(
+        submissionIdEmail111.copy(accountNumber = 2),
+        submissionIdEmail222.copy(accountNumber = 2)
+      )
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http) {
+        override def getValidatedSubmissionData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig) = Right(
+          ValidatedSubmissions(
+            accountOneResponse =  SubmissionsResponse(found = List.empty, notFound = List(submissionIdEmail222, submissionIdEmail111)),
+            accountTwoResponse = SubmissionsResponse(found =  List.empty, notFound = List(submissionIdEmail111)),
+          ))
+      }
+
+      formstackService.validateAndFixSubmissionIdEmails(account2Submissions, config)  shouldBe Right(List.empty)
+    }
+  }
 
 
 }
