@@ -32,6 +32,7 @@ object FormstackRequestServiceProdLocalRun extends App {
   
   val submissionIdEmails = List(invalidSubmission)
   val response = FormstackService().submissionData(submissionIdEmails, config)
+
   println("response was:")
   println(response)
 

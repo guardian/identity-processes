@@ -11,6 +11,7 @@ import io.circe.Decoder
 import io.circe.parser.decode
 import scalaj.http.{BaseHttp, Http, HttpResponse}
 
+
 trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
   def formSubmissionsForGivenPage(page: Int, formId: String, minTime: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions]
@@ -114,12 +115,13 @@ import FormstackService._
     accountToken: FormstackAccountToken,
     encryptionPassword: String): Either[Throwable, SubmissionsResponse] = {
     val submissionResults: Either[Throwable, List[getSubmissionResult]] = submissionIdEmails.traverse { submissionIdEmail =>
+
       val response =
         http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
           .header("Authorization", accountToken.secret)
           .param("encryption_password", encryptionPassword)
           .asString
-
+          
       if(!response.is2xx) {
         logger.error(response.body)
       }
@@ -144,6 +146,7 @@ import FormstackService._
       )
     }
   }
+
 
   private def getSubmissionQuestionsAnswers(
     submissions: List[Submission],
