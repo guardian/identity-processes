@@ -105,8 +105,8 @@ import FormstackService._
     case Right(submission) => Right(Some(submission))
   }
 
-  def validateEmail(expectedEmail:String, submission: Submission) = submission.data.exists{
-    subData => extractEmails(subData.value).contains(expectedEmail)
+  def validateEmail(expectedEmail:String, submission: Submission): Boolean = submission.data.exists{
+    subData => extractEmails(subData.value).exists(e => e.equalsIgnoreCase(expectedEmail))
   }
 
   private def getSubmissions(
@@ -219,9 +219,10 @@ import FormstackService._
       validatedSubmissions <- getValidatedSubmissionData(submissionIdEmails, config)
     } yield fixedSubmissionsFor(validatedSubmissions.accountOneResponse, 1) ++ fixedSubmissionsFor(validatedSubmissions.accountTwoResponse, 2)
   }
+
   override def deleteUserData(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
     for {
-      //we regenerate the submissionIdEmails to make sure they all refer to the formstack account where the submission was verified to exist
+      //We "fix" the submissions that referer to the wrong formstack account in dynamo
       fixedSubmissionIdEmails <- validateAndFixSubmissionIdEmails(submissionIdEmails, config)
       deleteResponse <- deleteValidatedSubmissions(fixedSubmissionIdEmails, config)
     } yield deleteResponse

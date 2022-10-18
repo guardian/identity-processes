@@ -215,7 +215,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
 
     }
 
-    "skip submissions that are not found and return the others submissions data" in {
+    "skip submissions that are not found in account 1 and return the others submissions data" in {
       val http = stub[BaseHttp]
       (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(NotFoundRequest(config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(successResponse222, config.accountOneToken))
@@ -257,9 +257,69 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
         (submissionFoundInAccountOne.asString _).verify()
       }
       }
-  }
-  "FormstackService.getValidatedSubmissionData" - {
+  //--
 
+    "skip submissions that are not expected in account 2 but they are not found in either account " in {
+      val http = stub[BaseHttp]
+      //      //account one has both submissions
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
+
+      val submissionNotFoundInAccountTwo = NotFoundRequest(config.accountTwoToken)
+      val submissionNotFoundInAccountOne = NotFoundRequest(config.accountOneToken)
+      //we assume the first call is in token 2 so we return the mocked response that would throw a null pointer exception if the token one is passed because of how the stub is set up
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(submissionNotFoundInAccountTwo).noMoreThanOnce()
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(submissionNotFoundInAccountOne).noMoreThanOnce()
+
+      (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
+
+      val formstackService = FormstackService(http)
+      val mixedSubmissionIds = List(submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2))
+
+      //account 222 is not in the response as it was not found in either account
+      formstackService.submissionData(mixedSubmissionIds, config) shouldBe Right(List(parsedSuccessResponse111))
+
+      //just to verify the two calls that are made to the same endpoint are done in the correct sequence of first attempting account two and then account one
+      inSequence {
+        (submissionNotFoundInAccountTwo.header _).verify("Authorization", config.accountTwoToken.secret)
+        (submissionNotFoundInAccountTwo.asString _).verify()
+        (submissionNotFoundInAccountOne.header _).verify("Authorization", config.accountOneToken.secret)
+        (submissionNotFoundInAccountOne.asString _).verify()
+      }
+    }
+    "Skip submissions not found in account 2 but only found in account 1 with the wrong email " in {
+      val http = stub[BaseHttp]
+      //      //account one has both submissions
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
+
+      val submissionNotFoundInAccountTwo = NotFoundRequest(config.accountTwoToken)
+      val submissionFoundInAccountOne = successRequest(successResponse222, config.accountOneToken)
+      //we assume the first call is in token 2 so we return the mocked response that would throw a null pointer exception if the token one is passed because of how the stub is set up
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(submissionNotFoundInAccountTwo).noMoreThanOnce()
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(submissionFoundInAccountOne).noMoreThanOnce()
+
+      (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
+      (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountOneToken))
+
+      val formstackService = FormstackService(http)
+      val submission222WithADifferentEmail = submissionIdEmail222.copy(
+        email = "thisIsNotTheEmailInFormastack@email.com",
+        accountNumber = 2)
+      val mixedSubmissionIds = List(submissionIdEmail111, submission222WithADifferentEmail)
+
+      //our list of submissions to retrieve are 111 from account 1 and 222 from account 2, but we expect it to get 222 from account 1 as well
+      formstackService.submissionData(mixedSubmissionIds, config) shouldBe Right(List(parsedSuccessResponse111))
+
+      //just to verify the two calls that are made to the same endpoint are done in the correct sequence of first attempting account two and then account one
+      inSequence {
+        (submissionNotFoundInAccountTwo.header _).verify("Authorization", config.accountTwoToken.secret)
+        (submissionNotFoundInAccountTwo.asString _).verify()
+        (submissionFoundInAccountOne.header _).verify("Authorization", config.accountOneToken.secret)
+        (submissionFoundInAccountOne.asString _).verify()
+      }
+    }
+  }
+
+  "FormstackService.getValidatedSubmissionData" - {
 
     "return submissions data from account 1" in {
       val http = stub[BaseHttp]
@@ -393,6 +453,51 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       formstackService.validateAndFixSubmissionIdEmails(account2Submissions, config)  shouldBe Right(List.empty)
     }
   }
+  "FormstackService.validateEmail" - {
 
+    def submissionWithData(data: Map[String,String]) = Submission(
+      id = "someID",
+      timestamp = "",
+      data = data.map {
+        case (key,value) => SubmissionData(key, value)
+      }.toList
+    )
 
+    val submission = submissionWithData(
+      Map(
+        "key11" -> "notTheEmail@email.com",
+        "key1" -> "value1",
+        "key2" -> "expected@email.com",
+        "key3" -> "value3",
+        "key4" -> "alsonotTheEmail@email.com"
+
+      ))
+    "return true if the formstack submission contains the expected email" in {
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http)
+      formstackService.validateEmail("expected@email.com", submission) shouldBe(true)
+    }
+    "return true if the formstack submission contains the expected email, ignoring case" in {
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http)
+      formstackService.validateEmail("ExPecTed@email.com", submission) shouldBe(true)
+    }
+    "return false if the formstack submission does not contain the expected email" in {
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http)
+      formstackService.validateEmail("notInForm@email.com", submission) shouldBe(false)
+    }
+    "return false if the formstack submission does not contain any emails" in {
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http)
+      val noEmailsSubmission = submissionWithData(Map("key1" -> "notAnEmail"))
+      formstackService.validateEmail("notInForm@email.com", noEmailsSubmission) shouldBe(false)
+    }
+    "return false if the formstack submission does not contain any data" in {
+      val http = stub[BaseHttp]
+      val formstackService = new FormstackService(http)
+      val emptySubmission = submission.copy(data = List.empty)
+      formstackService.validateEmail("notInForm@email.com", emptySubmission) shouldBe(false)
+    }
+  }
 }
