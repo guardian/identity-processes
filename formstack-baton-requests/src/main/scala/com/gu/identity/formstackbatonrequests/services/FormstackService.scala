@@ -27,7 +27,7 @@ sealed trait FormstackSkippableError extends Throwable
 case class FormstackDecryptionError(message: String) extends FormstackSkippableError
 case class FormstackAuthError(message: String) extends FormstackSkippableError
 
-case class FormstackService(http:BaseHttp = Http) extends FormstackRequestService with LazyLogging {
+class FormstackService(http:BaseHttp = Http) extends FormstackRequestService with LazyLogging {
 
 import FormstackService._
 

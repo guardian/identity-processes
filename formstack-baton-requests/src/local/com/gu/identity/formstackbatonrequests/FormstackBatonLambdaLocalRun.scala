@@ -14,7 +14,7 @@ import com.gu.identity.formstackbatonrequests.updatedynamo.UpdateDynamoHandler
 
 object FormstackBatonLambdaLocalRun extends App {
 
-  val formstackService = FormstackService()
+  val formstackService = new FormstackService()
   case class InputOutputStreams(inputStream: ByteArrayInputStream, outputStream: ByteArrayOutputStream)
 
   private def requestStreams(request: BatonRequest): InputOutputStreams = {

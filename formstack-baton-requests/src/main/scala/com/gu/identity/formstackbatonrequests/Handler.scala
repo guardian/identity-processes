@@ -79,7 +79,7 @@ object Handler {
     case "PROD" => "PROD"
     case _      => "CODE"
   }
-  val formstackService = FormstackService()
+  val formstackService = new FormstackService()
   def handleUpdateDynamo(inputStream: InputStream, outputStream: OutputStream, context: Context): Unit = {
     val performUpdateConfig = FormstackConfig.getPerformHandlerConfig
     val updateHandler = UpdateDynamoHandler(Dynamo(), S3, formstackService, performUpdateConfig)
