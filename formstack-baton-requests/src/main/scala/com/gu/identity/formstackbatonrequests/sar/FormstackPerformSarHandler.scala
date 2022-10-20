@@ -23,7 +23,7 @@ case class FormstackPerformSarHandler(
   def initiateSar(request: SarPerformRequest): Either[Throwable, S3WriteSuccess] =
     for {
       submissionIds <- dynamoClient.userSubmissions(request.subjectEmail.toLowerCase, config.bcryptSalt, config.submissionTableName)
-      submissionData <- formstackClient.submissionData(submissionIds, config)
+      submissionData <- formstackClient.submissionData(request.subjectEmail.toLowerCase, submissionIds, config)
       writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, submissionData, SAR, config)
     } yield writeToS3Response
 
