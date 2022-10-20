@@ -231,10 +231,10 @@ import FormstackService._
 
   }
 
-    def deleteValidatedSubmissions(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
+  def deleteValidatedSubmissions(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
     logger.info(s"deleting ${submissionIdEmails.length} submissions.")
     val tokens = List(config.accountOneToken, config.accountTwoToken)
-    val deletionResponses: Either[Throwable, List[Option[SubmissionDeletionReponse]] ]= submissionIdEmails.traverse { submissionIdEmail =>
+    submissionIdEmails.traverse { submissionIdEmail =>
       val token = tokens.find( token => token.account == submissionIdEmail.accountNumber).get
       val response =
         http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
@@ -246,10 +246,8 @@ import FormstackService._
         logger.error(response.body)
       }
 
-      decodeIfNotSkippableError[SubmissionDeletionReponse](response)
+      decode[SubmissionDeletionReponse](response.body)
     }
-
-    deletionResponses.map(_.flatten) 
   }
 }
 
