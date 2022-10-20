@@ -171,7 +171,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountOneToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       formstackService.submissionData(testEmail, List(submissionIdEmail111, submissionIdEmail222), config) shouldBe Right(List(parsedSuccessResponse111, parsedSuccessResponse2222))
     }
 
@@ -183,7 +183,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountTwoToken))
       (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountTwoToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val account2SubmissionIds = List(submissionIdEmail111, submissionIdEmail222).map(_.copy(accountNumber = 2))
       formstackService.submissionData(testEmail, submissionIdEmails = account2SubmissionIds, config) shouldBe Right(List(parsedSuccessResponse111, parsedSuccessResponse2222))
     }
@@ -196,7 +196,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountTwoToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val mixedSubmissionIds = List(submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2))
 
       formstackService.submissionData(testEmail, submissionIdEmails = mixedSubmissionIds, config) shouldBe Right(List(parsedSuccessResponse111, parsedSuccessResponse2222))
@@ -210,7 +210,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountTwoToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val mixedSubmissionIds = List(submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2))
       formstackService.submissionData(testEmail, submissionIdEmails = mixedSubmissionIds, config) should be ('left)
 
@@ -223,7 +223,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountOneToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val submissionIds = List(submissionIdEmail111, submissionIdEmail222)
       formstackService.submissionData(testEmail, submissionIdEmails = submissionIds, config) shouldBe Right(List(parsedSuccessResponse2222))
     }
@@ -244,7 +244,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
             (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
             (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountOneToken))
 
-            val formstackService = FormstackService(http)
+            val formstackService = new FormstackService(http)
             val mixedSubmissionIds = List(submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2))
 
             //our list of submissions to retrieve are 111 from account 1 and 222 from account 2, but we expect it to get 222 from account 1 as well
@@ -272,7 +272,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
 
       (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val mixedSubmissionIds = List(submissionIdEmail111, submissionIdEmail222.copy(accountNumber = 2))
 
       //account 222 is not in the response as it was not found in either account
@@ -298,18 +298,17 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/field/field1").returns(successRequest(successFieldBody1, config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/field/field2").returns(successRequest(successFieldBody2, config.accountOneToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val submissionIdEmail222InAccountTwo = submissionIdEmail222.copy(accountNumber = 2)
       //our list of submissions to retrieve are 111 from account 1 and 222 from account 2, but we expect it to get 222 from account 1 as well
       formstackService.submissionData("aDifferentEmailNotInFormastack@email.com", List(submissionIdEmail222InAccountTwo), config) shouldBe Right(List.empty)
-    formstackService.deleteUserData()
-      //just to verify the two calls that are made to the same endpoint are done in the correct sequence of first attempting account two and then account one
-//      inSequence {
-//        (submissionNotFoundInAccountTwo.header _).verify("Authorization", config.accountTwoToken.secret)
-//        (submissionNotFoundInAccountTwo.asString _).verify()
-//        (submissionFoundInAccountOne.header _).verify("Authorization", config.accountOneToken.secret)
-//        (submissionFoundInAccountOne.asString _).verify()
-//      }
+         //just to verify the two calls that are made to the same endpoint are done in the correct sequence of first attempting account two and then account one
+      inSequence {
+        (submissionNotFoundInAccountTwo.header _).verify("Authorization", config.accountTwoToken.secret)
+        (submissionNotFoundInAccountTwo.asString _).verify()
+        (submissionFoundInAccountOne.header _).verify("Authorization", config.accountOneToken.secret)
+        (submissionFoundInAccountOne.asString _).verify()
+      }
     }
   }
 
@@ -320,7 +319,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(successResponse222, config.accountOneToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val expected = ValidatedSubmissions(
         accountOneResponse = FormstackResponses(found = List(submission111, submission222), notFound = List.empty),
         accountTwoResponse = FormstackResponses(found = List.empty, notFound = List.empty),
@@ -332,7 +331,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountTwoToken))
       (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(successResponse222, config.accountTwoToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val expected = ValidatedSubmissions(
         accountOneResponse = FormstackResponses(found = List.empty, notFound = List.empty),
         accountTwoResponse = FormstackResponses(found = List(submission111, submission222), notFound = List.empty),
@@ -348,7 +347,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
       (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(successResponse222, config.accountTwoToken))
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
       val expected = ValidatedSubmissions(
         accountOneResponse = FormstackResponses(found =  List(submission111), notFound = List.empty),
         accountTwoResponse = FormstackResponses(found = List(submission222), notFound = List.empty),
@@ -370,7 +369,7 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
       (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
 
 
-      val formstackService = FormstackService(http)
+      val formstackService = new FormstackService(http)
 
       val subsmissionIdEmail11FromAccount2 = submissionIdEmail222.copy(accountNumber = 2)
       val mixedAccountSubmissionIdEmails = List(
