@@ -79,10 +79,10 @@ object Handler {
     case "PROD" => "PROD"
     case _      => "CODE"
   }
-
+  val formstackService = new FormstackService()
   def handleUpdateDynamo(inputStream: InputStream, outputStream: OutputStream, context: Context): Unit = {
     val performUpdateConfig = FormstackConfig.getPerformHandlerConfig
-    val updateHandler = UpdateDynamoHandler(Dynamo(), S3, FormstackService, performUpdateConfig)
+    val updateHandler = UpdateDynamoHandler(Dynamo(), S3, formstackService, performUpdateConfig)
     updateHandler.handleRequest(inputStream, outputStream, context)
   }
 
@@ -96,7 +96,7 @@ object Handler {
     val performSarHandlerConfig = FormstackConfig.getPerformHandlerConfig
     val performSarHandler =
       if (stage == "PROD")
-        FormstackPerformSarHandler(Dynamo(), FormstackService, S3, performSarHandlerConfig)
+        FormstackPerformSarHandler(Dynamo(), formstackService, S3, performSarHandlerConfig)
       else PerformHandlerStubs.FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
     performSarHandler.handleRequest(inputStream, outputStream, null)
   }
@@ -112,7 +112,7 @@ object Handler {
     val performRerHandlerConfig = FormstackConfig.getPerformHandlerConfig
     val performRerHandler =
       if (stage == "PROD")
-        FormstackPerformRerHandler(Dynamo(), FormstackService, S3, performRerHandlerConfig)
+        FormstackPerformRerHandler(Dynamo(), formstackService, S3, performRerHandlerConfig)
       else PerformHandlerStubs.FormstackPerformRerHandlerStub(S3, performRerHandlerConfig)
     performRerHandler.handleRequest(inputStream, outputStream, null)
   }

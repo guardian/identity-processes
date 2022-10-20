@@ -19,7 +19,7 @@ case class FormstackPerformRerHandler(
   def initiateRer(request: RerPerformRequest): Either[Throwable, S3WriteSuccess] =
     for {
       submissionIds <- dynamoClient.userSubmissions(request.subjectEmail.toLowerCase, config.bcryptSalt, config.submissionTableName)
-      _ <- formstackClient.deleteUserData(submissionIds, config)
+      _ <- formstackClient.deleteUserData(request.subjectEmail.toLowerCase, submissionIds, config)
       _ <- dynamoClient.deleteUserSubmissions(submissionIds, config.bcryptSalt, config.submissionTableName)
       writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, List.empty, RER, config)
     } yield writeToS3Response
