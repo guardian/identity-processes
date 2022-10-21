@@ -445,6 +445,42 @@ class FormstackServiceSpec extends FreeSpec with Matchers with MockFactory {
 
       formstackService.validateAndFixSubmissionIdEmails(testEmail, account2Submissions, config)  shouldBe Right(List.empty)
     }
+
+    "remove submissions with the wrong email" in {
+      val response222WithTheWrongEmail =
+        """
+          |{
+          |  "id": "222",
+          |  "timestamp": "2013-03-07 21:31:09",
+          |  "user_agent": "anotherUserAgent",
+          |  "remote_addr": "1.2.3.4",
+          |  "payment_status": "",
+          |  "form": "4321",
+          |  "latitude": "11",
+          |  "longitude": "12",
+          |  "data": [
+          |    {
+          |      "field": "field2",
+          |      "value": "WRONGEMAIL@email.com"
+          |    }
+          |  ]
+          |}
+          |""".stripMargin
+
+      val http = stub[BaseHttp]
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/111.json").returns(successRequest(successResponse111, config.accountOneToken))
+      (http.apply _).when("https://www.formstack.com/api/v2/submission/222.json").returns(successRequest(response222WithTheWrongEmail, config.accountOneToken))
+
+      val formstackService = new FormstackService(http)
+      val expected = ValidatedSubmissions(
+        accountOneResponse = FormstackResponses(found =  List(submission111), notFound = List(submissionIdEmail222)),
+        accountTwoResponse = FormstackResponses(found = List.empty, notFound = List.empty),
+      )
+      val subIds = List(
+        submissionIdEmail111,
+        submissionIdEmail222)
+      formstackService.getValidatedSubmissionData(testEmail,subIds, config) shouldBe Right(expected)
+    }
   }
   "FormstackService.validateEmail" - {
 
