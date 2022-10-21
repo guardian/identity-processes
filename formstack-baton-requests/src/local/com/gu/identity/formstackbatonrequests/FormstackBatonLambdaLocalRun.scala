@@ -2,20 +2,19 @@ package com.gu.identity.formstackbatonrequests
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.time.LocalDateTime
-
 import BatonModels.{BatonRequest, RerPerformRequest, RerRequest, RerStatusRequest, SAR, SarPerformRequest, SarRequest, SarStatusRequest, UpdateDynamoRequest}
 import io.circe.syntax._
 import circeCodecs._
 import com.gu.identity.formstackbatonrequests.aws.{Dynamo, S3, StepFunction}
 import com.gu.identity.formstackbatonrequests.sar.{FormstackPerformSarHandler, FormstackSarHandler}
-import com.gu.identity.formstackbatonrequests.services.FormstackService
+import com.gu.identity.formstackbatonrequests.services.{FormstackService}
 import com.gu.identity.formstackbatonrequests.updatedynamo.UpdateDynamoHandler
 
 /* This object can be used for local runs of the lambda, for end-to-end testing. */
 
 object FormstackBatonLambdaLocalRun extends App {
 
-
+  val formstackService = new FormstackService()
   case class InputOutputStreams(inputStream: ByteArrayInputStream, outputStream: ByteArrayOutputStream)
 
   private def requestStreams(request: BatonRequest): InputOutputStreams = {
@@ -40,7 +39,7 @@ object FormstackBatonLambdaLocalRun extends App {
 
   def formstackPerformSarTestRun(request: SarRequest): Unit = {
     val performSarLambdaConfig = FormstackConfig.getPerformHandlerConfig
-    val performSarLambda = FormstackPerformSarHandler(Dynamo(), FormstackService, S3, performSarLambdaConfig)
+    val performSarLambda = FormstackPerformSarHandler(Dynamo(), formstackService, S3, performSarLambdaConfig)
     val streams = requestStreams(request)
     performSarLambda.handleRequest(streams.inputStream, streams.outputStream, null)
     val responseString = new String(streams.outputStream.toByteArray)
@@ -58,7 +57,7 @@ object FormstackBatonLambdaLocalRun extends App {
 
   def formstackPerformRerTestRun(request: RerRequest): Unit = {
     val performRerLambdaConfig = FormstackConfig.getPerformHandlerConfig
-    val performRerLambda = FormstackPerformSarHandler(Dynamo(), FormstackService, S3, performRerLambdaConfig)
+    val performRerLambda = FormstackPerformSarHandler(Dynamo(), formstackService, S3, performRerLambdaConfig)
     val streams = requestStreams(request)
     performRerLambda.handleRequest(streams.inputStream, streams.outputStream, null)
     val responseString = new String(streams.outputStream.toByteArray)
@@ -67,7 +66,7 @@ object FormstackBatonLambdaLocalRun extends App {
 
   def updateDynamoTestRun(request: UpdateDynamoRequest): Unit = {
     val updateConfig = FormstackConfig.getPerformHandlerConfig
-    val updateLambda = UpdateDynamoHandler(Dynamo(), S3, FormstackService, updateConfig)
+    val updateLambda = UpdateDynamoHandler(Dynamo(), S3, formstackService, updateConfig)
     val streams = requestStreams(request)
     updateLambda.handleRequest(streams.inputStream, streams.outputStream, null)
     val responseString = new String(streams.outputStream.toByteArray)
@@ -94,7 +93,7 @@ object FormstackBatonLambdaLocalRun extends App {
       dataProvider = "formstack",
       accountNumber = Some(1),
       formPage = 1,
-      count = FormstackService.resultsPerPage,
+      count = FormstackService.formResultsPerPage,
       timeOfStart = LocalDateTime.now
     )
 
