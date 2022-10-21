@@ -185,11 +185,11 @@ import FormstackService._
    */
   def getValidatedSubmissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, ValidatedSubmissions] = {
     logger.info(s"retrieving submission data for ${submissionIdEmails.length} submissions to validate")
-    val accountTwoSubmissions = submissionIdEmails.filter(_.accountNumber == config.accountTwoToken.account)
+    val accountTwoSubmissionIds = submissionIdEmails.filter(_.accountNumber == config.accountTwoToken.account)
     for {
-      accountTwoResults <- getSubmissions(requestEmail, accountTwoSubmissions, config.accountTwoToken, config.encryptionPassword)
-      accountOneSubmissions = submissionIdEmails.filter(_.accountNumber == config.accountOneToken.account)
-      submissionsToFetchFromAccountOne = accountOneSubmissions ++ accountTwoResults.notFound
+      accountTwoResults <- getSubmissions(requestEmail, accountTwoSubmissionIds, config.accountTwoToken, config.encryptionPassword)
+      accountOneSubmissionsIds = submissionIdEmails.filter(_.accountNumber == config.accountOneToken.account)
+      submissionsToFetchFromAccountOne = accountOneSubmissionsIds ++ accountTwoResults.notFound
       accountOneResults <- getSubmissions(requestEmail, submissionsToFetchFromAccountOne, config.accountOneToken, config.encryptionPassword)
     } yield ValidatedSubmissions(
       accountOneResponse = accountOneResults,
@@ -198,25 +198,25 @@ import FormstackService._
 
   override def submissionData(requestEmail: String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = {
     logger.info(s"retrieving submission data for ${submissionIdEmails.length} submissions")
-    val accountTwoSubmissions = submissionIdEmails.filter(_.accountNumber == config.accountTwoToken.account)
+    val accountTwoSubmissionIds = submissionIdEmails.filter(_.accountNumber == config.accountTwoToken.account)
     for {
-      accountTwoResults <- getSubQandAForAccount(requestEmail, accountTwoSubmissions, config.accountTwoToken, config.encryptionPassword)
-      accountOneSubmissions = submissionIdEmails.filter(_.accountNumber == config.accountOneToken.account)
-      submissionsToFetchFromAccountOne = accountOneSubmissions ++ accountTwoResults.notFound
+      accountTwoResults <- getSubQandAForAccount(requestEmail, accountTwoSubmissionIds, config.accountTwoToken, config.encryptionPassword)
+      accountOneSubmissionIds = submissionIdEmails.filter(_.accountNumber == config.accountOneToken.account)
+      submissionsToFetchFromAccountOne = accountOneSubmissionIds ++ accountTwoResults.notFound
       accountOneResults <- getSubQandAForAccount(requestEmail, submissionsToFetchFromAccountOne, config.accountOneToken, config.encryptionPassword)
     } yield accountOneResults.found ++ accountTwoResults.found
   }
 
   def validateAndFixSubmissionIdEmails(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionIdEmail]] = {
-    val submissionIdEmailbyId: Map[String, SubmissionIdEmail] = submissionIdEmails.map(sidEmail => sidEmail.submissionId -> sidEmail).toMap
+    val submissionIdEmailsById: Map[String, SubmissionIdEmail] = submissionIdEmails.map(sidEmail => sidEmail.submissionId -> sidEmail).toMap
 
     def fixedSubmissionsFor(subResponse: FormstackResponses[Submission], originAccount: Int): List[SubmissionIdEmail] = {
       //for each submissions found in this account get the submission and make sure it refers to the correct id
       subResponse.found.map{ validatedSubmission =>
-        submissionIdEmailbyId(validatedSubmission.id).copy(accountNumber = originAccount)
+        submissionIdEmailsById(validatedSubmission.id).copy(accountNumber = originAccount)
       }.toList
-
     }
+
     for {
       validatedSubmissions <- getValidatedSubmissionData(requestEmail, submissionIdEmails, config)
     } yield fixedSubmissionsFor(validatedSubmissions.accountOneResponse, 1) ++ fixedSubmissionsFor(validatedSubmissions.accountTwoResponse, 2)
