@@ -20,7 +20,6 @@ class DynamoUpdateServiceSpec
       "resultsPath",
       "encryptionPassword",
       FormstackAccountToken(1, "accountOneToken"),
-      FormstackAccountToken(2, "accountTwoToken"),
       "bcryptSalt",
       "submissions-table-name",
       "last-updated-table-name"

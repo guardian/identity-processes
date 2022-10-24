@@ -18,7 +18,6 @@ object FormstackRequestServiceProdLocalRun extends App {
       resultsPath = "not used",
       encryptionPassword = encryptionPassword,
       accountOneToken = FormstackAccountToken(1, accountOneToken),
-      accountTwoToken = FormstackAccountToken(2, accountTwoToken),
       bcryptSalt = bcryptSalt,
       submissionTableName = "not used",
       lastUpdatedTableName = "not used")).get

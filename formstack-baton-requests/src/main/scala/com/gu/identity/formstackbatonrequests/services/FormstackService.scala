@@ -21,7 +21,7 @@ trait FormstackRequestService {
 //for not found results we basically have just the id and for the found results we have whatever the particular api call would return
 case class FormstackResponses[T](found:List[T], notFound: List[SubmissionIdEmail])
 //this just used to group results of fetching submissions by which account they were fetched from. This might not agree with the account number dynamodb might assign to the submission
-case class ValidatedSubmissions(accountOneResponse:FormstackResponses[Submission], accountTwoResponse: FormstackResponses[Submission])
+case class ValidatedSubmissions(accountOneResponse:FormstackResponses[Submission])
 
 sealed trait FormstackSkippableError extends Throwable
 case class FormstackDecryptionError(message: String) extends FormstackSkippableError
@@ -185,33 +185,23 @@ import FormstackService._
    */
   def getValidatedSubmissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, ValidatedSubmissions] = {
     logger.info(s"retrieving submission data for ${submissionIdEmails.length} submissions to validate")
-    val accountTwoSubmissionIds = submissionIdEmails.filter(_.accountNumber == config.accountTwoToken.account)
     for {
-      accountTwoResults <- getSubmissions(requestEmail, accountTwoSubmissionIds, config.accountTwoToken, config.encryptionPassword)
-      accountOneSubmissionsIds = submissionIdEmails.filter(_.accountNumber == config.accountOneToken.account)
-      submissionsToFetchFromAccountOne = accountOneSubmissionsIds ++ accountTwoResults.notFound
-      accountOneResults <- getSubmissions(requestEmail, submissionsToFetchFromAccountOne, config.accountOneToken, config.encryptionPassword)
-    } yield ValidatedSubmissions(
-      accountOneResponse = accountOneResults,
-      accountTwoResponse = accountTwoResults)
+      accountOneResults <- getSubmissions(requestEmail, submissionIdEmails, config.accountOneToken, config.encryptionPassword)
+    } yield ValidatedSubmissions(accountOneResults)
   }
 
   override def submissionData(requestEmail: String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = {
     logger.info(s"retrieving submission data for ${submissionIdEmails.length} submissions")
-    val accountTwoSubmissionIds = submissionIdEmails.filter(_.accountNumber == config.accountTwoToken.account)
     for {
-      accountTwoResults <- getSubQandAForAccount(requestEmail, accountTwoSubmissionIds, config.accountTwoToken, config.encryptionPassword)
-      accountOneSubmissionIds = submissionIdEmails.filter(_.accountNumber == config.accountOneToken.account)
-      submissionsToFetchFromAccountOne = accountOneSubmissionIds ++ accountTwoResults.notFound
-      accountOneResults <- getSubQandAForAccount(requestEmail, submissionsToFetchFromAccountOne, config.accountOneToken, config.encryptionPassword)
-    } yield accountOneResults.found ++ accountTwoResults.found
+      accountOneResults <- getSubQandAForAccount(requestEmail, submissionIdEmails, config.accountOneToken, config.encryptionPassword)
+    } yield accountOneResults.found
   }
 
   def validateAndFixSubmissionIdEmails(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionIdEmail]] = {
     val submissionIdEmailsById: Map[String, SubmissionIdEmail] = submissionIdEmails.map(sidEmail => sidEmail.submissionId -> sidEmail).toMap
 
     def fixedSubmissionsFor(subResponse: FormstackResponses[Submission], originAccount: Int): List[SubmissionIdEmail] = {
-      //for each submissions found in this account get the submission and make sure it refers to the correct id
+      //for each submission found in this account get the submission and make sure it refers to the correct id
       subResponse.found.map{ validatedSubmission =>
         submissionIdEmailsById(validatedSubmission.id).copy(accountNumber = originAccount)
       }.toList
@@ -219,7 +209,7 @@ import FormstackService._
 
     for {
       validatedSubmissions <- getValidatedSubmissionData(requestEmail, submissionIdEmails, config)
-    } yield fixedSubmissionsFor(validatedSubmissions.accountOneResponse, 1) ++ fixedSubmissionsFor(validatedSubmissions.accountTwoResponse, 2)
+    } yield fixedSubmissionsFor(validatedSubmissions.accountOneResponse, 1)
   }
 
   override def deleteUserData(requestEmail: String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
@@ -233,9 +223,9 @@ import FormstackService._
 
   def deleteValidatedSubmissions(submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
     logger.info(s"deleting ${submissionIdEmails.length} submissions.")
-    val tokens = List(config.accountOneToken, config.accountTwoToken)
+    val token = config.accountOneToken
     submissionIdEmails.traverse { submissionIdEmail =>
-      val token = tokens.find( token => token.account == submissionIdEmail.accountNumber).get
+
       val response =
         http(s"https://www.formstack.com/api/v2/submission/${submissionIdEmail.submissionId}.json")
           .method("DELETE")
