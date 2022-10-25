@@ -2,7 +2,8 @@ package com.gu.identity.formstackbatonrequests.services
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClientStub, SubmissionTableUpdateDate}
-import com.gu.identity.formstackbatonrequests.services.FormstackServiceStub.{accountFormsForGivenPageSuccess, deleteDataSuccess, submissionDataSuccess}
+import com.gu.identity.formstackbatonrequests.services.stub.FormstackServiceStub.{accountFormsForGivenPageSuccess, deleteDataSuccess, submissionDataSuccess}
+import com.gu.identity.formstackbatonrequests.services.stub.FormstackServiceStub
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{EitherValues, FreeSpec, Matchers}
