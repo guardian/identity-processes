@@ -20,22 +20,17 @@ Parameters:
     Type: CommaDelimitedList
   EncryptionPasswordPath:
     Type: String
-    Default: /identity/formstack-baton-requests/encryption-password
   FormstackAccountOneTokenPath:
     Type: String
-    Default: /identity/formstack-baton-requests/formstack-account-one-token
   FormstackAccountTwoTokenPath:
     Type: String
-    Default: /identity/formstack-baton-requests/formstack-account-two-token
   BcryptSaltPath:
     Type: String
-    Default: /identity/formstack-baton-requests/bcrypt-salt
   LastUpdatedTableName:
     Type: String
-    Default: formstack-submissions-last-updated
   SubmissionsTableName:
     Type: String
-    Default: formstack-submission-ids
+
   BatonAccountId:
     Type: String
   AlarmEmailAddress:
