@@ -20,22 +20,17 @@ Parameters:
     Type: CommaDelimitedList
   EncryptionPasswordPath:
     Type: String
-    Default: /identity/formstack-baton-requests/encryption-password
   FormstackAccountOneTokenPath:
     Type: String
-    Default: /identity/formstack-baton-requests/formstack-account-one-token
   FormstackAccountTwoTokenPath:
     Type: String
-    Default: /identity/formstack-baton-requests/formstack-account-two-token
   BcryptSaltPath:
     Type: String
-    Default: /identity/formstack-baton-requests/bcrypt-salt
   LastUpdatedTableName:
     Type: String
-    Default: formstack-submissions-last-updated
   SubmissionsTableName:
     Type: String
-    Default: formstack-submission-ids
+
   BatonAccountId:
     Type: String
   AlarmEmailAddress:
@@ -154,10 +149,7 @@ Resources:
       Role:
         !GetAtt FormstackBatonSarLambdaRole.Arn
 
-#  There tables are only created in PROD since Formstack doesn't have a CODE environment and we don't want to test in
-#  CODE with real data
   FormstackSubmissionIds:
-    Condition: IsProd
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref SubmissionsTableName
@@ -176,7 +168,6 @@ Resources:
         WriteCapacityUnits: 20
 
   FormstackSubmissionsLastUpdated:
-    Condition: IsProd
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref LastUpdatedTableName

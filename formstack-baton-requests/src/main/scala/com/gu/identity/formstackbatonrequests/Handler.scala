@@ -12,6 +12,7 @@ import com.gu.identity.formstackbatonrequests.aws.{Dynamo, S3, StepFunction}
 import com.gu.identity.formstackbatonrequests.rer.{FormstackPerformRerHandler, FormstackRerHandler}
 import com.gu.identity.formstackbatonrequests.sar.{FormstackPerformSarHandler, FormstackSarHandler}
 import com.gu.identity.formstackbatonrequests.services.FormstackService
+import com.gu.identity.formstackbatonrequests.services.stub.FormstackServiceStub
 import com.gu.identity.formstackbatonrequests.updatedynamo.UpdateDynamoHandler
 import com.typesafe.scalalogging.LazyLogging
 
@@ -73,13 +74,16 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
   }
 }
 
-object Handler {
+object Handler extends LazyLogging{
 
   val stage: String = sys.env.getOrElse("STAGE", "CODE") match {
     case "PROD" => "PROD"
     case _      => "CODE"
   }
-  val formstackService = new FormstackService()
+  def formstackService = if (stage == "PROD") new FormstackService() else {
+    logger.info(s"using mocked formstack service as stage is $stage")
+    FormstackServiceStub.withSuccessResponse
+  }
   def handleUpdateDynamo(inputStream: InputStream, outputStream: OutputStream, context: Context): Unit = {
     val performUpdateConfig = FormstackConfig.getPerformHandlerConfig
     val updateHandler = UpdateDynamoHandler(Dynamo(), S3, formstackService, performUpdateConfig)
