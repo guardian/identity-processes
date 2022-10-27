@@ -646,79 +646,32 @@ Resources:
         - |-
           {
             "Comment": "A step function for performing Formstack RERs",
-            "StartAt": "UpdateDynamoInParallel",
+            "StartAt": "AddAccountOneParam",
             "States": {
-              "UpdateDynamoInParallel": {
-                "Type": "Parallel",
-                "Next": "PerformRer",
-                "Branches": [
+              "AddAccountOneParam": {
+                "Type": "Pass",
+                "Next": "UpdateDynamoWithAccountOne",
+                "Result": "1",
+                "ResultPath": "$.accountNumber"
+              },
+              "UpdateDynamoWithAccountOne": {
+                "Type": "Task",
+                "Resource": "${updateLambdaArn}",
+                "Next": "CheckAccountOneUpdateCompletion"
+              },
+              "CheckAccountOneUpdateCompletion": {
+                "Type": "Choice",
+                "Choices": [
                   {
-                    "StartAt": "AddAccountOneParam",
-                    "States": {
-                      "AddAccountOneParam": {
-                        "Type": "Pass",
-                        "Next": "UpdateDynamoWithAccountOne",
-                        "Result": "1",
-                        "ResultPath": "$.accountNumber"
-                      },
-                      "UpdateDynamoWithAccountOne": {
-                        "Type": "Task",
-                        "Resource": "${updateLambdaArn}",
-                        "Next": "CheckAccountOneUpdateCompletion"
-                      },
-                      "CheckAccountOneUpdateCompletion": {
-                        "Type": "Choice",
-                        "Choices": [
-                          {
-                            "Variable": "$.status",
-                            "StringEquals": "pending",
-                            "Next": "UpdateDynamoWithAccountOne"
-                          }
-                        ],
-                        "Default": "AccountOneUpdateComplete"
-                      },
-                      "AccountOneUpdateComplete": {
-                        "Type": "Pass",
-                        "End": true
-                      }
-                    }
-                  },
-                  {
-                    "StartAt": "AddAccountTwoParam",
-                    "States": {
-                      "AddAccountTwoParam": {
-                        "Type": "Pass",
-                        "Next": "UpdateDynamoWithAccountTwo",
-                        "Result": "2",
-                        "ResultPath": "$.accountNumber"
-                      },
-                      "UpdateDynamoWithAccountTwo": {
-                        "Type": "Task",
-                        "Resource": "${updateLambdaArn}",
-                        "Next": "CheckAccountTwoUpdateCompletion"
-                      },
-                      "CheckAccountTwoUpdateCompletion": {
-                        "Type": "Choice",
-                        "Choices": [
-                          {
-                            "Variable": "$.status",
-                            "StringEquals": "pending",
-                            "Next": "UpdateDynamoWithAccountTwo"
-                          }
-                        ],
-                        "Default": "AccountTwoUpdateComplete"
-                      },
-                      "AccountTwoUpdateComplete": {
-                        "Type": "Pass",
-                        "End": true
-                      }
-                    }
+                    "Variable": "$.status",
+                    "StringEquals": "pending",
+                    "Next": "UpdateDynamoWithAccountOne"
                   }
-                ]
+                ],
+                "Default": "PerformRer"
               },
               "PerformRer": {
                 "Type": "Task",
-                "InputPath": "$[0]",
                 "Resource": "${rerLambdaArn}",
                 "End": true
               }
