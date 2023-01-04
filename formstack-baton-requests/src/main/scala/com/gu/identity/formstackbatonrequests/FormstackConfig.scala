@@ -39,7 +39,7 @@ object FormstackConfig {
         throw new RuntimeException(
           s"Unable to retrieve environment variables for Formstack Init Handler")
       }
-
+//todo account two is not in use anymore
   def getPerformHandlerConfig: PerformLambdaConfig =
     (for {
       resultsBucket <- getEnvironmentVariable("RESULTS_BUCKET")
