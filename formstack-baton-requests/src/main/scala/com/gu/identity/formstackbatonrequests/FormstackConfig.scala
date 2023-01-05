@@ -39,14 +39,12 @@ object FormstackConfig {
         throw new RuntimeException(
           s"Unable to retrieve environment variables for Formstack Init Handler")
       }
-//todo account two is not in use anymore
   def getPerformHandlerConfig: PerformLambdaConfig =
     (for {
       resultsBucket <- getEnvironmentVariable("RESULTS_BUCKET")
       resultsPath <- getEnvironmentVariable("RESULTS_PATH")
       encryptionPassword <- secureStringFromStore("ENCRYPTION_PASSWORD_PATH")
       accountOneToken <- secureStringFromStore("FORMSTACK_ACCOUNT_ONE_TOKEN_PATH")
-      accountTwoToken <- secureStringFromStore("FORMSTACK_ACCOUNT_TWO_TOKEN_PATH")
       bcryptSalt <- secureStringFromStore("BCRYPT_SALT_PATH")
       submissionsTableName <- getEnvironmentVariable("SUBMISSION_TABLE_NAME")
       lastUpdatedTableName <- getEnvironmentVariable("LAST_UPDATED_TABLE_NAME")
