@@ -3,23 +3,21 @@
 Formstack Baton Requests consists of 2 step functions and a number of lambdas, which work together to make Subject Access and Right to Erasure Requests to Formstack.
 
 ## Step functions
-As it can take some time to update DynamoDb with Formstack submissions, we use step functions to overcome the 15 minute time limits of lambdas. 
+As it can take some time to update DynamoDb with Formstack submissions, we use step functions to overcome the 15 minute time limit of lambdas. 
 
 ### FormstackSar
 The `FormstackSar` step function is triggered by the `FormstackSarHandler` with an `UpdateDynamoRequest` and has the followings stages:
-1. Branches into 2 parallel paths, one for Formstack account 1 and one for Formstack account 2. Steps 2, 3 and 4 are then performed for both accounts.
-2. Adds an `accountNumber` parameter to each `UpdateDynamoRequest`
-3. Triggers the `UpdateDynamoHandler` (see more information on this lambda below).
-4. Performs a check to see if the status in the `UpdateDynamoResponse` is `Completed`, if it's not, the `UpdateDynamoHandler` is triggered again to continue the update. If a `Completed` status is found, the update branch is completed for that account's token.
-5. Once updates are completed for both tokens, a the `FormstackPerformSarHandler` is triggered (see more information on this lambda below). Steps 2, 3 and 4 are then performed for both accounts.
+1. Adds an `accountNumber` parameter to each `UpdateDynamoRequest` (This is a leftover from when there used to be 2 formstack accounts)
+2. Triggers the `UpdateDynamoHandler` (see more information on this lambda below).
+3. Performs a check to see if the status in the `UpdateDynamoResponse` is `Completed`, if it's not, the `UpdateDynamoHandler` is triggered again to continue the update. If a `Completed` status is found, the update branch is completed for that account's token.
+4. Once updates are completed for both tokens, a the `FormstackPerformSarHandler` is triggered (see more information on this lambda below). Steps 2, 3 and 4 are then performed for both accounts.
 
 ### FormstackRer
 The `FormstackRer` step function is triggered by the `FormstackRerHandler` with an `UpdateDynamoRequest` and has the followings stages:
-1. Branches into 2 parallel paths, one for Formstack account 1 and one for Formstack account 2.
-2. Adds an `accountNumber` parameter to each `UpdateDynamoRequest`
-3. Triggers the `UpdateDynamoHandler` (see more information on this lambda below).
-4. Performs a check to see if the status in the `UpdateDynamoResponse` is `Completed`, if it's not, the `UpdateDynamoHandler` is triggered again to continue the update. If a `Completed` status is found, the update branch is completed for that account's token.
-5. Once updates are completed for both tokens, a the `FormstackPerformRerHandler` is triggered (see more information on this lambda below).
+1. Adds an `accountNumber` parameter to each `UpdateDynamoRequest` ( this is a leftover from when there used to be 2 formstack accounts)
+2. Triggers the `UpdateDynamoHandler` (see more information on this lambda below).
+3. Performs a check to see if the status in the `UpdateDynamoResponse` is `Completed`, if it's not, the `UpdateDynamoHandler` is triggered again to continue the update. If a `Completed` status is found, the update branch is completed for that account's token.
+4. Once updates are completed for both tokens, a the `FormstackPerformRerHandler` is triggered (see more information on this lambda below).
 
 ## Lambdas
 

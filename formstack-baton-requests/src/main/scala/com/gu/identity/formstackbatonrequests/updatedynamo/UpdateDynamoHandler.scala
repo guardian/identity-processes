@@ -1,13 +1,12 @@
 package com.gu.identity.formstackbatonrequests.updatedynamo
 
 import java.time.{LocalDate, LocalDateTime}
-
 import com.amazonaws.services.dynamodbv2.model.UpdateTableResult
 import com.amazonaws.services.lambda.runtime.Context
 import com.gu.identity.formstackbatonrequests.BatonModels.{Completed, Pending, UpdateDynamoRequest, UpdateDynamoResponse}
 import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, S3Client, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.services.{DynamoUpdateService, FormstackRequestService, UpdateStatus}
-import com.gu.identity.formstackbatonrequests.{FormstackHandler, PerformLambdaConfig}
+import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, FormstackHandler, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 
 case class UpdateDynamoHandler(
@@ -19,20 +18,16 @@ case class UpdateDynamoHandler(
 
   val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(formstackClient, dynamoClient, config)
 
-  def update(accountNumber: Int, formPage: Int, count: Int, timeOfStart: LocalDateTime, context: Context): Either[Throwable, UpdateStatus] = {
-    val token = accountNumber match {
-      case 1 => config.accountOneToken
-      case 2 => config.accountTwoToken
-    }
+  def update(token: FormstackAccountToken, formPage: Int, count: Int, timeOfStart: LocalDateTime, context: Context): Either[Throwable, UpdateStatus] = {
 
-    dynamoClient.mostRecentTimestamp(config.lastUpdatedTableName, accountNumber).flatMap { lastUpdate =>
+    dynamoClient.mostRecentTimestamp(config.lastUpdatedTableName, token.account).flatMap { lastUpdate =>
       val timestampAsDate = LocalDateTime.parse(lastUpdate.date, SubmissionTableUpdateDate.formatter)
       if (timestampAsDate.toLocalDate != LocalDate.now) {
         logger.info(s"Updating Dynamo table with requests since $lastUpdate.")
         for {
           status <- dynamoUpdateService.updateSubmissionsTable(formPage, lastUpdate, count, token, context)
           _ <- if (status.completed) {
-            dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, accountNumber, timeOfStart)
+            dynamoClient.updateMostRecentTimestamp(config.lastUpdatedTableName, token.account, timeOfStart)
           } else Right(())
         } yield status
       } else Right(UpdateStatus(completed = true, None, None, token))
@@ -40,12 +35,13 @@ case class UpdateDynamoHandler(
   }
 
   override def handle(request: UpdateDynamoRequest, context: Context): Either[Throwable, UpdateDynamoResponse] = {
-    val accountNumber = request.accountNumber match {
-      case Some(account) => account
+    val token = request.accountNumber match {
+      case Some(account) if account == 1 => config.accountOneToken
+      case Some(account) => throw new RuntimeException(s"Unexpected account number: $account")
       case None => throw new RuntimeException(s"Unable to retrieve account number from UpdateDynamoRequest")
     }
 
-    update(accountNumber, request.formPage, request.count, request.timeOfStart, context) match {
+    update(token, request.formPage, request.count, request.timeOfStart, context) match {
       case Right(res) =>
         val status = if (res.completed) Completed else Pending
         Right(UpdateDynamoResponse(
