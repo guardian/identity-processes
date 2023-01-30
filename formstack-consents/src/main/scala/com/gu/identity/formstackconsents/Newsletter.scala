@@ -7,7 +7,7 @@ sealed trait Newsletter {
 }
 
 case object Traveller extends Newsletter {
-  val formId = "1945214"
+  val formId = "5136217"
   val listType = "set-lists"
   val consent = "guardian-traveller"
 }
@@ -31,7 +31,7 @@ case object Teachers extends Newsletter {
 }
 
 case object Masterclasses extends Newsletter {
-  val formId = "1898609"
+  val formId = "5136221"
   val listType = "set-consents"
   val consent = "events"
 }
