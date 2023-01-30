@@ -6,6 +6,8 @@ sealed trait Newsletter {
   val consent: String
 }
 
+// used on subsite managed by a third party https://holidays.theguardian.com/newsletter/
+// form url https://guardiannewsandmedia.formstack.com/forms/holidays_newsletter
 case object Traveller extends Newsletter {
   val formId = "5136217"
   val listType = "set-lists"
@@ -30,6 +32,7 @@ case object Teachers extends Newsletter {
   val consent = "teacher-network"
 }
 
+// form url https://guardiannewsandmedia.formstack.com/forms/masterclasses_newsletter
 case object Masterclasses extends Newsletter {
   val formId = "5136221"
   val listType = "set-consents"
