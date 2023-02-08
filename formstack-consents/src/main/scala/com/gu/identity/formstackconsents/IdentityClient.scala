@@ -72,9 +72,11 @@ class IdentityClient(config: Config) extends StrictLogging {
     if (checkHasOptedIn(formstackSubmission)) {
       newsletterOpt.flatMap { newsletter => {
         val response = updateConsent(formstackSubmission, newsletter)
+        logger.info(s"sendConsentToIdentity: got response from updateConsent")
         handleResponseFromIdentity(response, formstackSubmission, newsletter)
       }}
     } else {
+      logger.info(s"sendConsentToIdentity: form is not submitted due to missing consent opt in requirements")
       None // form is not submitted due to missing consent opt in requirements
     }
   }
