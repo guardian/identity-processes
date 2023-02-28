@@ -4,8 +4,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
 import io.circe.CursorOp.DownField
 import io.circe.DecodingFailure
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 
 class SqsServiceTest extends WordSpec with Matchers with MockitoSugar {
 

@@ -2,9 +2,9 @@ package com.gu.identity.paymentfailure
 
 import com.gu.identity.paymentfailure.abtest.{AutoSignInTest, Variant, VariantGenerator}
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mockito.MockitoSugar
 import org.mockito.Matchers._
 import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class DefaultBrazeEmailServiceTest extends WordSpec with Matchers with MockitoSugar {
 

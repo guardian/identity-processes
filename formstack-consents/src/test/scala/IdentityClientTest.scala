@@ -1,6 +1,6 @@
 import com.gu.identity.formstackconsents._
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 
 class IdentityClientTest extends WordSpec with Matchers with MockitoSugar {
 

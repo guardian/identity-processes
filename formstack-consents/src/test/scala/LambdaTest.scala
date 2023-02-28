@@ -1,6 +1,6 @@
 import com.gu.identity.formstackconsents.{FormstackSubmission, Lambda}
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 
 class LambdaTest extends WordSpec with Matchers with MockitoSugar {
 

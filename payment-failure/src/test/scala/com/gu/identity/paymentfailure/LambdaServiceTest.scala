@@ -7,8 +7,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
 import com.amazonaws.services.sqs.model.DeleteMessageResult
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{EitherValues, Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 
 class LambdaServiceTest extends WordSpec with Matchers with MockitoSugar with EitherValues {
 
