@@ -3,7 +3,7 @@ name := "formstack-consents-lambda"
 version := "0.1"
 
 scalaVersion := "2.12.8"
-val circeVersion = "0.11.0"
+val circeVersion = "0.11.2"
 val log4jVersion = "2.20.0"
 
 libraryDependencies ++= Seq(
