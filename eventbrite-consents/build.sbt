@@ -3,7 +3,7 @@ name := "eventbrite-consents-lambda"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.17"
 
 val log4jVersion = "2.20.0"
 val circeVersion = "0.11.0"
