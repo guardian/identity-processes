@@ -22,7 +22,7 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
-  "org.scalactic" %% "scalactic" % "3.0.5",
+  "org.scalactic" %% "scalactic" % "3.0.9",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
 
