@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.9" % "test"
 )
 
 scalacOptions += "-Ypartial-unification"
