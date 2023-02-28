@@ -6,7 +6,7 @@ scalaVersion := "2.12.6"
 val circeVersion = "0.10.1"
 val log4jVersion = "2.20.0"
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
 libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
