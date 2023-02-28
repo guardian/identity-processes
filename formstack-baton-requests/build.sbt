@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-  "org.scalamock" %% "scalamock" % "5.1.0" % "test",
+  "org.scalamock" %% "scalamock" % "5.2.0" % "test",
   "com.github.t3hnar" %% "scala-bcrypt" % "3.1"
 )
 
