@@ -9,7 +9,7 @@ val log4jVersion = "2.20.0"
 libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "com.amazonaws" % "aws-lambda-java-events" % "2.2.2",
-  "org.typelevel" %% "cats-core" % "2.0.0-M1",
+  "org.typelevel" %% "cats-core" % "2.0.0",
   "org.scalaj" %% "scalaj-http" % "2.3.0",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
