@@ -6,7 +6,7 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 val circeVersion = "0.13.0"
-val amazonSdkVersion = "1.12.415"
+val amazonSdkVersion = "1.12.424"
 val log4jVersion = "2.17.0"
 
 libraryDependencies ++= Seq(
