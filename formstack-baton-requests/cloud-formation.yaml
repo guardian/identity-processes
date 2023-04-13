@@ -140,7 +140,7 @@ Resources:
           RESULTS_PATH: !Sub formstack-results/${Stage}
           STATE_MACHINE_ARN: !Ref FormstackSar
       MemorySize: 1024
-      Runtime: java8.al2
+      Runtime: java11
       Timeout: 120
       VpcConfig:
         SecurityGroupIds:
@@ -268,7 +268,7 @@ Resources:
           SUBMISSION_TABLE_NAME: !Ref SubmissionsTableName
           LAST_UPDATED_TABLE_NAME: !Ref LastUpdatedTableName
       MemorySize: 1024
-      Runtime: java8.al2
+      Runtime: java11
       Timeout: 900
       VpcConfig:
         SecurityGroupIds:
@@ -341,7 +341,7 @@ Resources:
           RESULTS_PATH: !Sub formstack-results/${Stage}
           STATE_MACHINE_ARN: !Ref FormstackRer
       MemorySize: 1024
-      Runtime: java8.al2
+      Runtime: java11
       Timeout: 120
       VpcConfig:
         SecurityGroupIds:
@@ -438,7 +438,7 @@ Resources:
           SUBMISSION_TABLE_NAME: !Ref SubmissionsTableName
           LAST_UPDATED_TABLE_NAME: !Ref LastUpdatedTableName
       MemorySize: 1024
-      Runtime: java8.al2
+      Runtime: java11
       Timeout: 900
       VpcConfig:
         SecurityGroupIds:
@@ -536,7 +536,7 @@ Resources:
           SUBMISSION_TABLE_NAME: !Ref SubmissionsTableName
           LAST_UPDATED_TABLE_NAME: !Ref LastUpdatedTableName
       MemorySize: 1024
-      Runtime: java8.al2
+      Runtime: java11
       Timeout: 900
       VpcConfig:
         SecurityGroupIds:
