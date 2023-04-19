@@ -1,6 +1,6 @@
 # Eventbrite consents sync Lambda
 
-The service is a Scala lambda which sends emails to users who tick the 'hear more about guardian news and media' check box in Evenbrite.
+The service is a Scala lambda which sends emails to users who tick the 'hear more about guardian news and media' check box in Eventbrite.
 
 ## Lambda Details
 
