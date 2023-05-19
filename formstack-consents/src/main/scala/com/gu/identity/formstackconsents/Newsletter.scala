@@ -23,7 +23,7 @@ case object Traveller extends Newsletter {
 case object TheGuideGlastonbury2024 extends Newsletter {
   val formId = "5296655"
   val listType = "set-lists"
-  val consent = "the-guide"
+  val consent = "the-guide-staying-in"
 }
 
 case object Students extends Newsletter {
