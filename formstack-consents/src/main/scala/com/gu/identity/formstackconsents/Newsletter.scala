@@ -14,6 +14,18 @@ case object Traveller extends Newsletter {
   val consent = "guardian-traveller"
 }
 
+// Being used on a promotional competetion to win tickets to Glastonbury 2024. Includes a name
+// field as well as email. All entrants will be signed up for The Guide newsletter.
+// The for will be embeded on an article page behind this custom URL: 
+// https://www.theguardian.com/glastonbury-prize-draw-2024
+// (as of 19/05/2023, the custom URL has been set up, but the the article is not built yet.)
+// form url https://guardiannewsandmedia.formstack.com/forms/the_guide_glastonbury_competition
+case object TheGuideGlastonbury2024 extends Newsletter {
+  val formId = "5296655"
+  val listType = "set-lists"
+  val consent = "the-guide-staying-in"
+}
+
 case object Students extends Newsletter {
   val formId = "2946711"
   val listType = "set-lists"
