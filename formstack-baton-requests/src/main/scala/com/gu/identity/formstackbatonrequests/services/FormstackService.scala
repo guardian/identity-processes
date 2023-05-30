@@ -9,7 +9,7 @@ import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLam
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Decoder
 import io.circe.parser.decode
-import scalaj.http.{BaseHttp, Http, HttpResponse}
+import scalaj.http.{BaseHttp, Http, HttpOptions, HttpResponse}
 
 trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
@@ -25,7 +25,14 @@ sealed trait FormstackSkippableError extends Throwable
 case class FormstackDecryptionError(message: String) extends FormstackSkippableError
 case class FormstackAuthError(message: String) extends FormstackSkippableError
 
-class FormstackService(http:BaseHttp = Http) extends FormstackRequestService with LazyLogging {
+object CustomHttp extends BaseHttp(
+  options = Seq(
+    HttpOptions.connTimeout(2000),
+    HttpOptions.readTimeout(10000),
+    HttpOptions.followRedirects(false)
+  )
+)
+class FormstackService(http:BaseHttp = CustomHttp) extends FormstackRequestService with LazyLogging {
 
 import FormstackService._
 
