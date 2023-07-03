@@ -2,7 +2,7 @@ on:
   pull_request:
     paths:
       - './formstack-baton-requests/*'
-      - '.github/*'
+      - './.github/*'
   push:
     paths:
       - './formstack-baton-requests/*'
