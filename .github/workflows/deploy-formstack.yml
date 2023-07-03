@@ -37,6 +37,6 @@ jobs:
           dryRun: true
           contentDirectories: |
             formstack-baton-requests-cfn:
-              - ./${{env.DIRECTORY_NAME}}/cfn.yaml
+              - ./${{env.DIRECTORY_NAME}}/cloud-formation.yaml
             formstack-baton-requests:
               - target/scala-2.12/main.jar
