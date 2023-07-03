@@ -1,6 +1,8 @@
 on:
   pull_request:
   push:
+    paths:
+      - 'formstack-baton-requests/*'
     branches:
       - main
 env:
