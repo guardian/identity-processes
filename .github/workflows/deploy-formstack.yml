@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+env:
+  DIRECTORY_NAME: formstack-baton-requests
 
 jobs:
   CI:
@@ -24,17 +26,17 @@ jobs:
           distribution: 'corretto'
           cache: 'sbt'
       - name: Build App
-        working-directory: formstack-baton-requests
+        working-directory: $DIRECTORY_NAME
         run: sbt clean compile riffRaffUpload
       - name: Upload to Riff Raff
         uses: guardian/actions-riff-raff@v2
         with:
           app: formstack-baton-requests
           buildNumberOffset: 203
-          configPath: ./formstack-baton-requests/riff-raff.yaml
+          configPath: ./$DIRECTORY_NAME/riff-raff.yaml
           dryRun: true
           contentDirectories: |
-            cloudformation:
-              - cfn.yaml
-            eventbrite-baton-requests:
-              - target/scala-2.12/eventbrite-baton-requests.jar
+            formstack-baton-requests-cfn:
+              - ./$DIRECTORY_NAME/cfn.yaml
+            formstack-baton-requests:
+              - target/scala-2.12/main.jar
