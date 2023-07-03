@@ -1,10 +1,10 @@
 on:
   pull_request:
     paths:
-      - 'formstack-baton-requests/*'
+      - './formstack-baton-requests/*'
   push:
     paths:
-      - 'formstack-baton-requests/*'
+      - './formstack-baton-requests/*'
     branches:
       - main
 env:
