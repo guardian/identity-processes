@@ -34,7 +34,6 @@ jobs:
           app: formstack-baton-requests
           buildNumberOffset: 274
           configPath: ./${{env.DIRECTORY_NAME}}/riff-raff.yaml
-          dryRun: true
           contentDirectories: |
             formstack-baton-requests-cfn:
               - ./${{env.DIRECTORY_NAME}}/cloud-formation.yaml
