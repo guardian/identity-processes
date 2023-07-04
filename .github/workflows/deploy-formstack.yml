@@ -28,7 +28,7 @@ jobs:
           cache: 'sbt'
       - name: Build App
         working-directory: ${{env.DIRECTORY_NAME}}
-        run: sbt clean compile assembly
+        run: sbt clean compile riffRaffArtifactResources
       - name: Upload to Riff Raff
         uses: guardian/actions-riff-raff@v2
         with:
