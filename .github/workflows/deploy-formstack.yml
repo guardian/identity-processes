@@ -10,6 +10,7 @@ jobs:
   CI:
     name: Deploy formstack-baton-requests
     runs-on: ubuntu-latest
+    # Allow GitHub to request an OIDC JWT ID token, to use with aws-actions/configure-aws-credentials
     permissions:
       id-token: write
       contents: read
