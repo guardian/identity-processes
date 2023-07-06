@@ -1,0 +1,42 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+env:
+  DIRECTORY_NAME: formstack-baton-requests
+
+jobs:
+  CI:
+    name: Deploy formstack-baton-requests
+    runs-on: ubuntu-latest
+    # Allow GitHub to request an OIDC JWT ID token, to use with aws-actions/configure-aws-credentials
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          aws-region: eu-west-1
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'corretto'
+          cache: 'sbt'
+      - name: Build App
+        working-directory: ${{env.DIRECTORY_NAME}}
+        run: sbt clean compile assembly
+      - name: Upload to Riff Raff
+        uses: guardian/actions-riff-raff@v2
+        with:
+          app: formstack-baton-requests
+          buildNumberOffset: 274
+          configPath: ./${{env.DIRECTORY_NAME}}/riff-raff.yaml
+          contentDirectories: |
+            formstack-baton-requests-cfn:
+              - ./${{env.DIRECTORY_NAME}}/cloud-formation.yaml
+            formstack-baton-requests:
+              - ./${{env.DIRECTORY_NAME}}/target/scala-2.12/main.jar
