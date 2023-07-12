@@ -1,8 +1,15 @@
 on:
   pull_request:
+    paths:
+      - 'formstack-baton-requests/**'
+      - '.github/workflows/deploy-formstack.yml'
   push:
     branches:
       - main
+    paths:
+      - 'formstack-baton-requests/**'
+      - '.github/workflows/deploy-formstack.yml'
+
 env:
   DIRECTORY_NAME: formstack-baton-requests
 
