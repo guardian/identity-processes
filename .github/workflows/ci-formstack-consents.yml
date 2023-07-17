@@ -1,0 +1,54 @@
+name: CI - Formstack consents lambda
+
+on:
+  pull_request:
+    paths:
+      - 'formstack-consents/**'
+      - '.github/workflows/ci-formstack-consents.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'formstack-consents/**'
+      - '.github/workflows/ci-formstack-consents.yml'
+  workflow_dispatch:
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # required by aws-actions/configure-aws-credentials
+      id-token: write
+      contents: read        
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Java 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'corretto'
+          cache: 'sbt'
+
+      - name: Test and build 
+        run: sbt clean compile test assembly
+        working-directory: formstack-consents
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Upload to RiffRaff
+        uses: guardian/actions-riff-raff@v2
+        with:
+          projectName: formstack-consents-lambda
+          buildNumberOffset: 108
+          configPath: formstack-consents/riff-raff.yaml
+          contentDirectories: |
+            formstack-consents-lambda:
+              - formstack-consents/target/scala-2.12/main.jar
+            formstack-consents-cfn:
+              - formstack-consents/cloud-formation.yaml
