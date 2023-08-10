@@ -1,8 +1,7 @@
 package com.gu.identity.formstackbatonrequests.aws
 
 import java.time.format.DateTimeFormatter
-import java.time.LocalDateTime
-
+import java.time.{LocalDateTime, ZoneId, ZoneOffset}
 import com.typesafe.scalalogging.LazyLogging
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClient}
 import com.gu.scanamo.Scanamo
@@ -10,6 +9,7 @@ import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
 import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult, ProvisionedThroughput, UpdateTableRequest, UpdateTableResult}
+import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate.formatter
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 
 import scala.util.Try
@@ -22,7 +22,12 @@ trait DynamoClient {
   def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]]
 }
 
-case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String)
+case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String){
+  def toEasternTime:String = {
+    val utcDate = LocalDateTime.parse(date, formatter).atZone(ZoneOffset.UTC)
+    utcDate.withZoneSameInstant(ZoneId.of("America/New_York")).format(formatter)
+  }
+}
 
 object SubmissionTableUpdateDate {
   val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")

@@ -55,7 +55,7 @@ import FormstackService._
   override def formSubmissionsForGivenPage(
     page: Int,
     formId: String,
-    minTime: SubmissionTableUpdateDate,
+    minTimeUTC: SubmissionTableUpdateDate,
     encryptionPassword: String,
     accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = {
     val response = http(s"https://www.formstack.com/api/v2/form/$formId/submission.json")
@@ -72,7 +72,8 @@ import FormstackService._
           ("data", "true"),
           ("expand_data", "true"),
           ("sort", "DESC"),
-          ("min_time", minTime.date)
+          // this api call expects eastern time zone, see https://developers.formstack.com/reference/form-id-submission-get
+          ("min_time", minTimeUTC.toEasternTime)
         )
       ).asString
 
