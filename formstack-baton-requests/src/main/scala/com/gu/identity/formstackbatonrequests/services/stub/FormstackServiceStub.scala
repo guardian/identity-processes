@@ -13,7 +13,7 @@ class FormstackServiceStub(
   submissionDataResponse: Either[Throwable, List[FormstackSubmissionQuestionAnswer]],
   deleteDataResponse: Either[Throwable, List[SubmissionDeletionReponse]]) extends FormstackRequestService {
   override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = accountFormsForGivenPageResponse
-  override def formSubmissionsForGivenPage(page: Int, formId: String, minTime: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = formSubmissionsForGivenPageResponse
+  override def formSubmissionsForGivenPage(page: Int, formId: String, minTimeUTC: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = formSubmissionsForGivenPageResponse
   override def submissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = submissionDataResponse
   override def deleteUserData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = deleteDataResponse
 }
