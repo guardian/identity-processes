@@ -11,7 +11,6 @@ object FormstackRequestServiceProdLocalRun extends App {
     (for {
       encryptionPassword <- ParameterStoreClient.readSecureString("/identity/formstack-baton-requests/encryption-password")
       accountOneToken <- ParameterStoreClient.readSecureString("/identity/formstack-baton-requests/formstack-account-one-token")
-      accountTwoToken <- ParameterStoreClient.readSecureString("/identity/formstack-baton-requests/formstack-account-two-token")
       bcryptSalt <- ParameterStoreClient.readSecureString("/identity/formstack-baton-requests/bcrypt-salt")
     } yield PerformLambdaConfig(
       resultsBucket = "not used",

@@ -5,17 +5,32 @@ import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission,
 import com.gu.identity.formstackbatonrequests.sar.{FormstackLabelValue, FormstackSubmissionQuestionAnswer, SubmissionIdEmail}
 import com.gu.identity.formstackbatonrequests.services.FormstackRequestService
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
+import com.typesafe.scalalogging.LazyLogging
 import io.circe.syntax._
+
+import java.time.LocalDateTime
 
 class FormstackServiceStub(
   accountFormsForGivenPageResponse: Either[Throwable, FormsResponse],
   formSubmissionsForGivenPageResponse: Either[Throwable, FormSubmissions],
   submissionDataResponse: Either[Throwable, List[FormstackSubmissionQuestionAnswer]],
-  deleteDataResponse: Either[Throwable, List[SubmissionDeletionReponse]]) extends FormstackRequestService {
-  override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = accountFormsForGivenPageResponse
-  override def formSubmissionsForGivenPage(page: Int, formId: String, minTimeUTC: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = formSubmissionsForGivenPageResponse
-  override def submissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = submissionDataResponse
-  override def deleteUserData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = deleteDataResponse
+  deleteDataResponse: Either[Throwable, List[SubmissionDeletionReponse]]) extends FormstackRequestService  with LazyLogging{
+  override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = {
+    logger.info(s"called FormstackServiceStub.accountFormsForGivenPage(page=$page, accountToken= ***")
+    accountFormsForGivenPageResponse
+  }
+  override def formSubmissionsForGivenPage(page: Int, formId: String, minTimeUTC: LocalDateTime, maxTimeUTC: Option[LocalDateTime], encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = {
+    logger.info(s"called FormstackServiceStub.formSubmissionsForGivenPage(page=$page, formId=$formId, minTimeUTC=$minTimeUTC, maxDate=$maxTimeUTC, encryptionPassword=***, accountToken=***")
+    formSubmissionsForGivenPageResponse
+  }
+  override def submissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = {
+    logger.info("called FormstackServiceStub.submissionData")
+    submissionDataResponse
+  }
+  override def deleteUserData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
+    logger.info("called FormstackServiceStub.deleteUserData")
+    deleteDataResponse
+  }
 }
 
 object FormstackServiceStub {

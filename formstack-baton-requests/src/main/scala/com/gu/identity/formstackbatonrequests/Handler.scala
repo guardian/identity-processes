@@ -36,7 +36,7 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
         Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
       case RerPerformRequest(_, _, dataProvider) =>
         Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
-      case UpdateDynamoRequest(_, _, _, dataProvider, _, _, _, _) =>
+      case UpdateDynamoRequest(_, _, _, dataProvider, _, _, _, _, _) =>
         Either.cond(supportedProviders.contains(dataProvider), (), DecodingFailure(s"invalid dataProvider: $dataProvider", List.empty))
     }
   }

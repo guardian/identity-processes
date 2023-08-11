@@ -2,14 +2,14 @@ package com.gu.identity.formstackbatonrequests.services
 
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult
 import com.amazonaws.services.lambda.runtime.Context
-import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, SubmissionTableUpdateDate}
+import com.gu.identity.formstackbatonrequests.aws.DynamoClient
 import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission, FormSubmissions}
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 import com.gu.identity.formstackbatonrequests.services.Util.extractEmails
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import com.typesafe.scalalogging.LazyLogging
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 
 
 case class UpdateStatus(completed: Boolean, formsPage: Option[Int], count: Option[Int], token: FormstackAccountToken)
@@ -58,7 +58,8 @@ case class DynamoUpdateService(
 
   private def writeSubmissionsPage(
                                     form: Form,
-                                    lastUpdate: SubmissionTableUpdateDate,
+                                    minTimeUTC: LocalDateTime,
+                                    maxTimeUTC: Option[LocalDateTime],
                                     token: FormstackAccountToken
                                   )(
                                     submissionPage: Int = 1
@@ -71,7 +72,8 @@ case class DynamoUpdateService(
       response <- formstackClient.formSubmissionsForGivenPage(
         page = submissionPage,
         formId = form.id,
-        minTimeUTC = lastUpdate,
+        minTimeUTC = minTimeUTC,
+        maxTimeUTC = maxTimeUTC,
         encryptionPassword = config.encryptionPassword,
         accountToken = token
       ).left.flatMap(skipSafeErrors)
@@ -104,14 +106,16 @@ case class DynamoUpdateService(
 
   private def writeSubmissions(
                                 form: Form,
-                                lastUpdate: SubmissionTableUpdateDate,
+                                minTimeUTC: LocalDateTime,
+                                maxTimeUTC: Option[LocalDateTime],
                                 submissionPage: Int = 1,
                                 token: FormstackAccountToken
                               ): Either[Throwable, Unit] = {
 
     val writeSubmissionsPageFunction = writeSubmissionsPage(
       form: Form,
-      lastUpdate: SubmissionTableUpdateDate,
+      minTimeUTC: LocalDateTime,
+      maxTimeUTC: Option[LocalDateTime],
       token: FormstackAccountToken
     ) _
 
@@ -132,7 +136,11 @@ case class DynamoUpdateService(
     }
   }
 
-  def updateSubmissionsTable(formsPage: Int, lastUpdate: SubmissionTableUpdateDate, count: Int, token: FormstackAccountToken, context: Context): Either[Throwable, UpdateStatus] = {
+  /**
+   * Update the submissions table with submissions that happened between minTimeUTC and optionally maxTimeUTC.
+   * In normal operation minTimeUTC will be the last updated timestamp and maxTime will be None in order to bring the table fully up to date.
+   */
+  def updateSubmissionsTable(formsPage: Int, minTimeUTC: LocalDateTime, maxTimeUTC: Option[LocalDateTime], count: Int, token: FormstackAccountToken, context: Context): Either[Throwable, UpdateStatus] = {
     logger.info(s"----Getting page $formsPage of forms----")
     formstackClient.accountFormsForGivenPage(formsPage, token) match {
       case Left(err) => Left(err)
@@ -141,19 +149,19 @@ case class DynamoUpdateService(
         val formResults: Seq[Either[Throwable, Unit]] = forms.map { form =>
           // The amount of new submissions to these forms often exceeds an apparent formstack limit on how many can be fetched in a single query (even if the api call is paginated)
           // The submissions would be ignored anyway since the form doesn't have any relevant data, so we just skip them at the form level to avoid the problem for now.
-           if (form.name.toLowerCase.startsWith("ybtj")) {
+          if (form.name.toLowerCase.startsWith("ybtj")) {
             logger.info(s"skipping ybtj form id: ${form.id} name: ${form.name}")
             Right(())
           } else {
             logger.info(s"Processing results for form ${form.id}")
-            writeSubmissions(form, lastUpdate, token = token)
+            writeSubmissions(form = form, minTimeUTC = minTimeUTC, maxTimeUTC = maxTimeUTC, token = token)
           }
         }
         val errors = formResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString))
         } else if (count < response.total & context.getRemainingTimeInMillis > 300000) {
-          updateSubmissionsTable(formsPage + 1, lastUpdate, count + FormstackService.formResultsPerPage, token, context)
+          updateSubmissionsTable(formsPage + 1, minTimeUTC, maxTimeUTC, count + FormstackService.formResultsPerPage, token, context)
         } else if (count < response.total) {
           Right(UpdateStatus(completed = false, Some(formsPage + 1), Some(count + FormstackService.formResultsPerPage), token))
         } else Right(UpdateStatus(completed = true, None, None, token))
