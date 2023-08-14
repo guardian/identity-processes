@@ -13,7 +13,7 @@ import scalaj.http.{BaseHttp, Http, HttpOptions, HttpResponse}
 
 trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
-  def formSubmissionsForGivenPage(page: Int, formId: String, minTime: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions]
+  def formSubmissionsForGivenPage(page: Int, formId: String, minTimeUTC: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions]
   def submissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]]
   def deleteUserData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]]
 }
@@ -55,7 +55,7 @@ import FormstackService._
   override def formSubmissionsForGivenPage(
     page: Int,
     formId: String,
-    minTime: SubmissionTableUpdateDate,
+    minTimeUTC: SubmissionTableUpdateDate,
     encryptionPassword: String,
     accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = {
     val response = http(s"https://www.formstack.com/api/v2/form/$formId/submission.json")
@@ -72,7 +72,8 @@ import FormstackService._
           ("data", "true"),
           ("expand_data", "true"),
           ("sort", "DESC"),
-          ("min_time", minTime.date)
+          // this api call expects eastern time zone, see https://developers.formstack.com/reference/form-id-submission-get
+          ("min_time", minTimeUTC.toEasternTime)
         )
       ).asString
 

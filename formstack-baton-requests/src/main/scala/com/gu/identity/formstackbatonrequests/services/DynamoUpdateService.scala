@@ -71,7 +71,7 @@ case class DynamoUpdateService(
       response <- formstackClient.formSubmissionsForGivenPage(
         page = submissionPage,
         formId = form.id,
-        minTime = lastUpdate,
+        minTimeUTC = lastUpdate,
         encryptionPassword = config.encryptionPassword,
         accountToken = token
       ).left.flatMap(skipSafeErrors)
