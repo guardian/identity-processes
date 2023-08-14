@@ -1,3 +1,4 @@
+name: CI - Formstack Baton Requests
 on:
   pull_request:
     paths:
@@ -9,6 +10,7 @@ on:
     paths:
       - 'formstack-baton-requests/**'
       - '.github/workflows/deploy-formstack.yml'
+  workflow_dispatch:
 
 env:
   DIRECTORY_NAME: formstack-baton-requests
@@ -39,7 +41,7 @@ jobs:
       - name: Upload to Riff Raff
         uses: guardian/actions-riff-raff@v2
         with:
-          app: formstack-baton-requests
+          projectName: formstack-baton-requests
           buildNumberOffset: 274
           configPath: ./${{env.DIRECTORY_NAME}}/riff-raff.yaml
           contentDirectories: |
