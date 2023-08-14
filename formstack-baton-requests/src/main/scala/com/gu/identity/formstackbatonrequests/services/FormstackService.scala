@@ -83,12 +83,12 @@ import FormstackService._
 
     /* There are a couple of forms that the Formstack API can't seem to decrypt. There seems to be no way around this
      *  so we capture this specific error and skip these forms. */
-    // We also skip responses from Formstack that contain "Incorrect password". These are undocumented, and we do not know why they happen.
+    // We also skip responses from Formstack that contain "Form encryption password invalid". These are undocumented, and we do not know why they happen.
 
     response.body match {
       case message if message.contains("An error occurred while decrypting the submissions") =>
         Left(FormstackDecryptionError(s"${response.body} | form id: ${formId}"))
-      case message if message.contains("Incorrect password") =>
+      case message if message.contains("Form encryption password invalid") =>
         Left(FormstackAuthError(s"${response.body} | form id: ${formId}"))
       case _ => decode[FormSubmissions](response.body)
     }
