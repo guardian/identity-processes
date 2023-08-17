@@ -39,6 +39,14 @@ Parameters:
 
 Conditions:
   IsProd: !Equals [ !Ref Stage, PROD ]
+Mappings:
+  StageVariables:
+    PROD:
+      SubmissionsTableWriteCapacityUnits: 20
+      SubmissionsTableReadCapacityUnits: 5
+    CODE:
+      SubmissionsTableWriteCapacityUnits: 1
+      SubmissionsTableReadCapacityUnits: 1
 
 Resources:
   TopicSendEmail:
@@ -153,6 +161,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref SubmissionsTableName
+      DeletionProtectionEnabled: true
       AttributeDefinitions:
         - AttributeName: email
           AttributeType: S
@@ -164,13 +173,14 @@ Resources:
         - AttributeName: submissionId
           KeyType: RANGE
       ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 20
+        ReadCapacityUnits: !FindInMap [StageVariables, !Ref 'Stage', SubmissionsTableReadCapacityUnits]
+        WriteCapacityUnits: !FindInMap [StageVariables, !Ref 'Stage', SubmissionsTableWriteCapacityUnits]
 
   FormstackSubmissionsLastUpdated:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref LastUpdatedTableName
+      DeletionProtectionEnabled: true
       AttributeDefinitions:
         - AttributeName: formstackSubmissionTableMetadata
           AttributeType: S
