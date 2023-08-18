@@ -599,8 +599,10 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action: "lambda:InvokeFunction"
-                Resource: "*"
-
+                Resource:
+                  - !GetAtt PerformFormstackSarLambda.Arn
+                  - !GetAtt UpdateDynamoLambda.Arn
+                  - !GetAtt PerformFormstackRerLambda.Arn
   FormstackSar:
     Type: "AWS::StepFunctions::StateMachine"
     Properties:
