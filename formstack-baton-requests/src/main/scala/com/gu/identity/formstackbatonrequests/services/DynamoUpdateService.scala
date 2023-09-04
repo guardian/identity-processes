@@ -138,9 +138,16 @@ case class DynamoUpdateService(
       case Left(err) => Left(err)
       case Right(response) =>
         val forms = response.forms
-        val formResults = forms.map { form =>
-          logger.info(s"Processing results for form ${form.id}")
-          writeSubmissions(form, lastUpdate, token = token)
+        val formResults: Seq[Either[Throwable, Unit]] = forms.map { form =>
+          // The amount of new submissions to these forms often exceeds an apparent formstack limit on how many can be fetched in a single query (even if the api call is paginated)
+          // The submissions would be ignored anyway since the form doesn't have any relevant data, so we just skip them at the form level to avoid the problem for now.
+           if (form.name.toLowerCase.startsWith("ybtj")) {
+            logger.info(s"skipping ybtj form id: ${form.id} name: ${form.name}")
+            Right(())
+          } else {
+            logger.info(s"Processing results for form ${form.id}")
+            writeSubmissions(form, lastUpdate, token = token)
+          }
         }
         val errors = formResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
