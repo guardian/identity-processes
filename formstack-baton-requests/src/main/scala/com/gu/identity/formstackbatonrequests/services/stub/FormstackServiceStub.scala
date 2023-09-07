@@ -20,7 +20,7 @@ class FormstackServiceStub(
 
 object FormstackServiceStub {
   val accountFormsForGivenPageSuccess =
-    Right(FormsResponse(List(Form("123"), Form("234"), Form("345")), 3))
+    Right(FormsResponse(List(Form("123", "form123"), Form("234", "form234"), Form("345","form345")), 3))
 
   val formSubmissionsForGivenPageSuccess =
     Right(FormSubmissions(

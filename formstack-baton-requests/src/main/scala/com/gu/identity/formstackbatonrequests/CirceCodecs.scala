@@ -103,7 +103,7 @@ object circeCodecs {
   }
 
   /* Codecs for decoding accountFormsForGivenPage response */
-  @JsonCodec case class Form(id: String)
+  @JsonCodec case class Form(id: String, name: String)
   @JsonCodec case class FormsResponse(forms: List[Form], total: Int)
 
   /* Codecs for decoding formSubmissionsForGivenPage response */
