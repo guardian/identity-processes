@@ -633,7 +633,7 @@ Resources:
         !Sub
         - |-
           {
-            "Comment": "A step function for updating the Formstack dynamodb table.",
+            "Comment": "Triggered manually if we need to update the Formstack dynamodb table in smaller increments. Used if the full update performed by the other state machines is so big that it causes errors.",
             "StartAt": "AddParams",
             "States": {
                "AddParams": {
