@@ -1,7 +1,7 @@
 package com.gu.identity.formstackbatonrequests.services
 
 import cats.implicits._
-import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate
+import com.gu.identity.formstackbatonrequests.aws.DateHelpers
 import com.gu.identity.formstackbatonrequests.circeCodecs._
 import com.gu.identity.formstackbatonrequests.sar.{FormstackLabelValue, FormstackSubmissionQuestionAnswer, SubmissionIdEmail}
 import com.gu.identity.formstackbatonrequests.services.Util.extractEmails
@@ -11,9 +11,11 @@ import io.circe.Decoder
 import io.circe.parser.decode
 import scalaj.http.{BaseHttp, Http, HttpOptions, HttpResponse}
 
+import java.time.LocalDateTime
+
 trait FormstackRequestService {
   def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse]
-  def formSubmissionsForGivenPage(page: Int, formId: String, minTimeUTC: SubmissionTableUpdateDate, encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions]
+  def formSubmissionsForGivenPage(page: Int, formId: String, minTimeUTC: LocalDateTime, maxTimeUTC: Option[LocalDateTime], encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions]
   def submissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]]
   def deleteUserData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]]
 }
@@ -55,9 +57,14 @@ import FormstackService._
   override def formSubmissionsForGivenPage(
     page: Int,
     formId: String,
-    minTimeUTC: SubmissionTableUpdateDate,
+    minTimeUTC: LocalDateTime,
+    maxTimeUTC: Option[LocalDateTime],
     encryptionPassword: String,
     accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = {
+
+
+    val maybeMaxTimeFilter = maxTimeUTC.map{ m => ("max_time", DateHelpers.toEasternTimeString(m) )}
+
     val response = http(s"https://www.formstack.com/api/v2/form/$formId/submission.json")
       .headers(
         Seq(
@@ -73,8 +80,8 @@ import FormstackService._
           ("expand_data", "true"),
           ("sort", "DESC"),
           // this api call expects eastern time zone, see https://developers.formstack.com/reference/form-id-submission-get
-          ("min_time", minTimeUTC.toEasternTime)
-        )
+          ("min_time", DateHelpers.toEasternTimeString(minTimeUTC)),
+        ) ++ maybeMaxTimeFilter
       ).asString
 
     if(!response.is2xx) {

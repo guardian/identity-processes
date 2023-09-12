@@ -1,15 +1,17 @@
 package com.gu.identity.formstackbatonrequests.services
 
 import com.amazonaws.services.lambda.runtime.Context
+import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, DynamoClientStub}
 import com.gu.identity.formstackbatonrequests.aws.DynamoClientStub.writeSubmissionsSuccess
-import com.gu.identity.formstackbatonrequests.aws.{DynamoClient, DynamoClientStub, SubmissionTableUpdateDate}
 import com.gu.identity.formstackbatonrequests.circeCodecs.{Form, FormSubmission, FormSubmissions, FormsResponse, ResponseValue}
 import com.gu.identity.formstackbatonrequests.services.stub.FormstackServiceStub
-import com.gu.identity.formstackbatonrequests.services.stub.FormstackServiceStub.{accountFormsForGivenPageSuccess, deleteDataSuccess, submissionDataSuccess}
+import com.gu.identity.formstackbatonrequests.services.stub.FormstackServiceStub.{accountFormsForGivenPageSuccess, deleteDataSuccess, formSubmissionsForGivenPageSuccess, submissionDataSuccess}
 import com.gu.identity.formstackbatonrequests.{FormstackAccountToken, PerformLambdaConfig}
 import io.circe.syntax._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{EitherValues, FreeSpec, Matchers}
+
+import java.time.LocalDateTime
 
 class DynamoUpdateServiceSpec
   extends FreeSpec
@@ -52,11 +54,61 @@ class DynamoUpdateServiceSpec
       account = 0,
       secret = "baz"
     )
-    val dummySubmissionsTableUpdateDate = SubmissionTableUpdateDate(
-      formstackSubmissionTableMetadata = "foo",
-      date = "bar"
-    )
+    val dummySubmissionsTableUpdateDate =  LocalDateTime.of(2023,1,1,9,23,33)
+    val dummyMaxDate = LocalDateTime.of(2023,1,2,11,30,15)
 
+    "call formstack service with the right parameters" in {
+       val formstackService = mock[FormstackRequestService]
+      val formsPage1 = List(Form("123", "form_123"), Form("234", "form_234"))
+      val formsPage2 = List(Form("345", "form_345)"))
+      val firstageOfFormsResponse =  Right(FormsResponse(formsPage1, 2))
+      //the code will detect that its the last page when the set amount of forms returned is lower than the "count" parameter which represents the max amount of forms per page
+      val lastPageOfFormsResponse =  Right(FormsResponse(formsPage2, 2))
+
+
+      (formstackService.accountFormsForGivenPage _).expects(1, dummyToken).returning(firstageOfFormsResponse)
+      (formstackService.accountFormsForGivenPage _).expects(2, dummyToken).returning(lastPageOfFormsResponse)
+      formsPage1.foreach{ f =>
+      (formstackService.formSubmissionsForGivenPage _).expects(1, f.id, dummySubmissionsTableUpdateDate, Some(dummyMaxDate), mockConfig.encryptionPassword, dummyToken).returning(formSubmissionsForGivenPageSuccess)
+      (formstackService.formSubmissionsForGivenPage _).expects(2, f.id, dummySubmissionsTableUpdateDate, Some(dummyMaxDate), mockConfig.encryptionPassword, dummyToken).returning(formSubmissionsForGivenPageSuccess)
+      (formstackService.formSubmissionsForGivenPage _).expects(3, f.id, dummySubmissionsTableUpdateDate, Some(dummyMaxDate), mockConfig.encryptionPassword, dummyToken).returning(formSubmissionsForGivenPageSuccess)
+      }
+
+      formsPage2.foreach{ f =>
+      (formstackService.formSubmissionsForGivenPage _).expects(1, f.id, dummySubmissionsTableUpdateDate, Some(dummyMaxDate), mockConfig.encryptionPassword, dummyToken).returning(formSubmissionsForGivenPageSuccess)
+      (formstackService.formSubmissionsForGivenPage _).expects(2, f.id, dummySubmissionsTableUpdateDate, Some(dummyMaxDate), mockConfig.encryptionPassword, dummyToken).returning(formSubmissionsForGivenPageSuccess)
+      (formstackService.formSubmissionsForGivenPage _).expects(3, f.id, dummySubmissionsTableUpdateDate, Some(dummyMaxDate), mockConfig.encryptionPassword, dummyToken).returning(formSubmissionsForGivenPageSuccess)
+      }
+      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+        formstackClient = formstackService,
+        dynamoClient = DynamoClientStub.withSuccessResponse,
+        config = mockConfig
+      )
+
+      val mockContext = stub[Context]
+
+      (mockContext.getRemainingTimeInMillis _)
+        .when()
+        .anyNumberOfTimes()
+        .returns(millisLongerThan30s)
+
+      val expectedUpdateStatus = UpdateStatus(
+        completed = true,
+        formsPage = None,
+        count = None,
+        token = dummyToken
+      )
+
+      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+        formsPage = dummyFormsPage,
+        minTimeUTC = dummySubmissionsTableUpdateDate,
+        maxTimeUTC = Some(dummyMaxDate),
+        count = dummyCount,
+        token = dummyToken,
+        context = mockContext
+      )
+      statusUpdate.right.value shouldBe expectedUpdateStatus
+    }
     "successfully calls updateSubmissionsTable with > 30s of lambda runtime available" in {
       val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
         formstackClient = FormstackServiceStub.withSuccessResponse,
@@ -80,7 +132,8 @@ class DynamoUpdateServiceSpec
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
-        lastUpdate = dummySubmissionsTableUpdateDate,
+        minTimeUTC = dummySubmissionsTableUpdateDate,
+        maxTimeUTC = None,
         count = dummyCount,
         token = dummyToken,
         context = mockContext
@@ -111,7 +164,8 @@ class DynamoUpdateServiceSpec
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
-        lastUpdate = dummySubmissionsTableUpdateDate,
+        minTimeUTC = dummySubmissionsTableUpdateDate,
+        maxTimeUTC = None,
         count = dummyCount,
         token = dummyToken,
         context = mockContext
@@ -136,7 +190,8 @@ class DynamoUpdateServiceSpec
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
-        lastUpdate = dummySubmissionsTableUpdateDate,
+        minTimeUTC = dummySubmissionsTableUpdateDate,
+        maxTimeUTC = None,
         count = dummyCount,
         token = dummyToken,
         context = mockContext
@@ -171,7 +226,8 @@ class DynamoUpdateServiceSpec
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
-        lastUpdate = dummySubmissionsTableUpdateDate,
+        minTimeUTC = dummySubmissionsTableUpdateDate,
+        maxTimeUTC = None,
         count = dummyCount,
         token = dummyToken,
         context = mockContext
@@ -205,7 +261,8 @@ class DynamoUpdateServiceSpec
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
-        lastUpdate = dummySubmissionsTableUpdateDate,
+        minTimeUTC = dummySubmissionsTableUpdateDate,
+        maxTimeUTC = None,
         count = dummyCount,
         token = dummyToken,
         context = mockContext
@@ -240,7 +297,7 @@ class DynamoUpdateServiceSpec
       (formstackService.accountFormsForGivenPage _ ).when(1, dummyToken).returns(accountFormsResponse)
 
       nonSkippedForms.foreach{ form =>
-      (formstackService.formSubmissionsForGivenPage _ ).when(*,form.id,*,*,*).returns(formSubmissionsForGivenPageSuccess(form.id))
+      (formstackService.formSubmissionsForGivenPage _ ).when(*,form.id,*,*,*,*).returns(formSubmissionsForGivenPageSuccess(form.id))
       }
 
       val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
@@ -258,7 +315,8 @@ class DynamoUpdateServiceSpec
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
-        lastUpdate = dummySubmissionsTableUpdateDate,
+        minTimeUTC = dummySubmissionsTableUpdateDate,
+        maxTimeUTC = None,
         count = 4, // how many forms per page of forms
         token = dummyToken,
         context = mockContext
@@ -266,8 +324,8 @@ class DynamoUpdateServiceSpec
 
       statusUpdate.right.value shouldBe UpdateStatus(true,None,None, dummyToken)
 
-      nonSkippedForms.foreach{ form => (formstackService.formSubmissionsForGivenPage _).verify(*,form.id,*,*,*).once() }
-      (formstackService.formSubmissionsForGivenPage _).verify(*,skippedForm.id,*,*,*).never()
+      nonSkippedForms.foreach{ form => (formstackService.formSubmissionsForGivenPage _).verify(*,form.id,*,*,*,*).once() }
+      (formstackService.formSubmissionsForGivenPage _).verify(*,skippedForm.id,*,*,*,*).never()
 
       (dynamoclient.writeSubmissions _).verify(*,*,*).repeat(2)
     }

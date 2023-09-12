@@ -75,7 +75,9 @@ object BatonModels {
     accountNumber: Option[Int],
     formPage: Int,
     count: Int,
-    timeOfStart: LocalDateTime
+    timeOfStart: LocalDateTime,
+    //how many seconds worth of data since the last updated time we will process. None means no limit, just bring dynamodb up to date
+    maxUpdateSeconds: Option[Int] = None
   ) extends BatonRequest
 
   case class UpdateDynamoResponse(

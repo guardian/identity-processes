@@ -603,6 +603,81 @@ Resources:
                   - !GetAtt PerformFormstackSarLambda.Arn
                   - !GetAtt UpdateDynamoLambda.Arn
                   - !GetAtt PerformFormstackRerLambda.Arn
+  DynamoUpdateStatesExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "formstack-dynamo-update-step-function-role-${Stage}"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: !Sub 'states.${AWS::Region}.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: "run-lambda"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "lambda:InvokeFunction"
+                Resource:
+                  - !GetAtt UpdateDynamoLambda.Arn
+
+  FormstackUpdateDynamo:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: !Join ['-', ['FormstackUpdateDynamo', !Ref Stage]]
+      DefinitionString:
+        !Sub
+        - |-
+          {
+            "Comment": "Triggered manually if we need to update the Formstack dynamodb table in smaller increments. Used if the full update performed by the other state machines is so big that it causes errors.",
+            "StartAt": "AddParams",
+            "States": {
+               "AddParams": {
+                    "Type": "Pass",
+                    "Parameters": {
+                      "timeOfStart.$": "States.ArrayGetItem(States.StringSplit($$.Execution.StartTime, 'Z'),0)",
+                      "requestType": "SAR",
+                      "initiationReference": "updateDynamo",
+                      "subjectEmail": "unused_email@guardian.co.uk",
+                      "dataProvider": "formstack",
+                      "accountNumber": 1,
+                      "formPage": 1,
+                      "count": 25,
+                      "maxUpdateSeconds.$": "$.maxUpdateSeconds"
+                    },
+                    "Next": "UpdateDynamoWithAccountOne"
+                  },
+               "UpdateDynamoWithAccountOne": {
+                 "Type": "Task",
+                 "Resource": "${updateLambdaArn}",
+                 "Next": "CheckAccountOneUpdateCompletion"
+               },
+               "CheckAccountOneUpdateCompletion": {
+                 "Type": "Choice",
+                 "Choices": [
+                   {
+                     "Variable": "$.status",
+                     "StringEquals": "pending",
+                     "Next": "UpdateDynamoWithAccountOne"
+                   }
+                 ],
+                 "Default": "Done"
+               },
+          
+              "Done": {
+                "Type": "Pass",
+                "End": true
+              }
+            }
+          }
+        -
+          updateLambdaArn: !GetAtt UpdateDynamoLambda.Arn
+      RoleArn: !GetAtt DynamoUpdateStatesExecutionRole.Arn
+
   FormstackSar:
     Type: "AWS::StepFunctions::StateMachine"
     Properties:

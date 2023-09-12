@@ -9,7 +9,6 @@ import com.github.t3hnar.bcrypt._
 import com.gu.scanamo.syntax._
 import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult, ProvisionedThroughput, UpdateTableRequest, UpdateTableResult}
-import com.gu.identity.formstackbatonrequests.aws.SubmissionTableUpdateDate.formatter
 import com.gu.identity.formstackbatonrequests.sar.SubmissionIdEmail
 
 import scala.util.Try
@@ -17,20 +16,28 @@ import scala.util.Try
 trait DynamoClient {
   def writeSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[BatchWriteItemResult]]
   def mostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int): Either[Throwable, SubmissionTableUpdateDate]
-  def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, currentDateTime: LocalDateTime): Either[Throwable, Unit]
+  def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, newTimestamp: LocalDateTime): Either[Throwable, Unit]
   def userSubmissions(email: String, salt: String, submissionsTableName: String): Either[Throwable, List[SubmissionIdEmail]]
   def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]]
 }
 
-case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String){
-  def toEasternTime:String = {
-    val utcDate = LocalDateTime.parse(date, formatter).atZone(ZoneOffset.UTC)
-    utcDate.withZoneSameInstant(ZoneId.of("America/New_York")).format(formatter)
-  }
+case class SubmissionTableUpdateDate(formstackSubmissionTableMetadata: String, date: String) {
+  def asLocalTimestamp: LocalDateTime = LocalDateTime.parse(date, DateHelpers.formatter)
+
 }
 
-object SubmissionTableUpdateDate {
+object DateHelpers {
   val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+  /**
+   * Converts an utc localdatetime into the time zone and format that the formstack API expects
+   * @param utcLocalDateTime a local datetime that is assumed to be in UTC time zone
+   * @return the provided utc datetime but translated into eastern time zone and formatted as a string in the format "yyyy-MM-dd HH:mm:ss". This is what the formstack API expects as an input
+   */
+  def toEasternTimeString(utcLocalDateTime: LocalDateTime): String = {
+    val utcZonedDateTime = utcLocalDateTime.atZone(ZoneOffset.UTC)
+    utcZonedDateTime.withZoneSameInstant(ZoneId.of("America/New_York")).format(formatter)
+  }
 }
 
 case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) extends DynamoClient with LazyLogging {
@@ -59,8 +66,8 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
       .getOrElse(Right(SubmissionTableUpdateDate(s"account${accountNumber}LastUpdated", "1970-01-01 00:00:00")))
   }
 
-  override def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, currentDateTime: LocalDateTime): Either[Throwable, Unit] = {
-    val formattedDateTime = currentDateTime.format(SubmissionTableUpdateDate.formatter)
+  override def updateMostRecentTimestamp(lastUpdatedTableName: String, accountNumber: Int, newTimestamp: LocalDateTime): Either[Throwable, Unit] = {
+    val formattedDateTime = newTimestamp.format(DateHelpers.formatter)
     logger.info(s"updating most recent timestamp in $lastUpdatedTableName to $formattedDateTime")
     val recentUpdate = SubmissionTableUpdateDate(s"account${accountNumber}LastUpdated", formattedDateTime)
     Scanamo.put[SubmissionTableUpdateDate](dynamoClient)(lastUpdatedTableName)(recentUpdate)
