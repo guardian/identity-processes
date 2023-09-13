@@ -35,7 +35,7 @@ class FormstackServiceStub(
 
 object FormstackServiceStub {
   val accountFormsForGivenPageSuccess =
-    Right(FormsResponse(List(Form("123", "form123"), Form("234", "form234"), Form("345","form345")), 3))
+    Right(FormsResponse(List(Form("123", "form123"), Form("234", "form234"), Form("345","form345"),Form("2-123", "form123"), Form("2-234", "form234"), Form("2-345","form345")), 6))
 
   val formSubmissionsForGivenPageSuccess =
     Right(FormSubmissions(
@@ -61,4 +61,5 @@ object FormstackServiceStub {
 
   def withFailedResponse = new FormstackServiceStub(genericFormstackErrorLeft, genericFormstackErrorLeft, genericFormstackErrorLeft, genericFormstackErrorLeft)
   def withSuccessResponse = new FormstackServiceStub(accountFormsForGivenPageSuccess, formSubmissionsForGivenPageSuccess, submissionDataSuccess, deleteDataSuccess)
+  def withSuccessResponse1 = new FormstackServiceStub(accountFormsForGivenPageSuccess, formSubmissionsForGivenPageSuccess, submissionDataSuccess, deleteDataSuccess)
 }

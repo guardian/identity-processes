@@ -82,7 +82,7 @@ object Handler extends LazyLogging{
   }
   def formstackService = if (stage == "PROD") new FormstackService() else {
     logger.info(s"using mocked formstack service as stage is $stage")
-    FormstackServiceStub.withSuccessResponse
+    FormstackServiceStub.withSuccessResponse1
   }
   def handleUpdateDynamo(inputStream: InputStream, outputStream: OutputStream, context: Context): Unit = {
     val performUpdateConfig = FormstackConfig.getPerformHandlerConfig
