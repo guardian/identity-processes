@@ -32,10 +32,39 @@ class FormstackServiceStub(
     deleteDataResponse
   }
 }
+class FormstackServiceStub1(
+  accountFormsForGivenPageResponse: List[Either[Throwable, FormsResponse]],
+  formSubmissionsForGivenPageResponse: Either[Throwable, FormSubmissions],
+  submissionDataResponse: Either[Throwable, List[FormstackSubmissionQuestionAnswer]],
+  deleteDataResponse: Either[Throwable, List[SubmissionDeletionReponse]]) extends FormstackRequestService  with LazyLogging{
+  override def accountFormsForGivenPage(page: Int, accountToken: FormstackAccountToken): Either[Throwable, FormsResponse] = {
+    logger.info(s"called FormstackServiceStub.accountFormsForGivenPage(page=$page, accountToken= ***")
+    if (page == 1)
+      accountFormsForGivenPageResponse(0)
+    else
+      accountFormsForGivenPageResponse(1)
+  }
+  override def formSubmissionsForGivenPage(page: Int, formId: String, minTimeUTC: LocalDateTime, maxTimeUTC: Option[LocalDateTime], encryptionPassword: String, accountToken: FormstackAccountToken): Either[Throwable, FormSubmissions] = {
+    logger.info(s"called FormstackServiceStub.formSubmissionsForGivenPage(page=$page, formId=$formId, minTimeUTC=$minTimeUTC, maxDate=$maxTimeUTC, encryptionPassword=***, accountToken=***")
+    formSubmissionsForGivenPageResponse
+  }
+  override def submissionData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[FormstackSubmissionQuestionAnswer]] = {
+    logger.info("called FormstackServiceStub.submissionData")
+    submissionDataResponse
+  }
+  override def deleteUserData(requestEmail:String, submissionIdEmails: List[SubmissionIdEmail], config: PerformLambdaConfig): Either[Throwable, List[SubmissionDeletionReponse]] = {
+    logger.info("called FormstackServiceStub.deleteUserData")
+    deleteDataResponse
+  }
+}
 
 object FormstackServiceStub {
   val accountFormsForGivenPageSuccess =
-    Right(FormsResponse(List(Form("123", "form123"), Form("234", "form234"), Form("345","form345"),Form("2-123", "form123"), Form("2-234", "form234"), Form("2-345","form345")), 6))
+    Right(FormsResponse(List(Form("123", "form123"), Form("234", "form234"), Form("345","form345")), 3))
+  val accountFormsForGivenPageSuccess1 =
+    Right(FormsResponse(List(Form("123", "form123"), Form("234", "form234"), Form("345","form345")), 6))
+  val accountFormsForGivenPageSuccess2 =
+    Right(FormsResponse(List(Form("22123", "form123"), Form("22234", "form234"), Form("22345","form345")), 6))
 
   val formSubmissionsForGivenPageSuccess =
     Right(FormSubmissions(
@@ -61,5 +90,5 @@ object FormstackServiceStub {
 
   def withFailedResponse = new FormstackServiceStub(genericFormstackErrorLeft, genericFormstackErrorLeft, genericFormstackErrorLeft, genericFormstackErrorLeft)
   def withSuccessResponse = new FormstackServiceStub(accountFormsForGivenPageSuccess, formSubmissionsForGivenPageSuccess, submissionDataSuccess, deleteDataSuccess)
-  def withSuccessResponse1 = new FormstackServiceStub(accountFormsForGivenPageSuccess, formSubmissionsForGivenPageSuccess, submissionDataSuccess, deleteDataSuccess)
+  def withSuccessResponse1 = new FormstackServiceStub1(List(accountFormsForGivenPageSuccess1, accountFormsForGivenPageSuccess2), formSubmissionsForGivenPageSuccess, submissionDataSuccess, deleteDataSuccess)
 }
