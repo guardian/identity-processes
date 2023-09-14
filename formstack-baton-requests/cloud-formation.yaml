@@ -638,6 +638,7 @@ Resources:
             "States": {
                "AddParams": {
                     "Type": "Pass",
+                    "Comment": "adds initial constant fields needed to call updateDynamo. This should match the values passed in FormstackSarHandler.initiate",
                     "Parameters": {
                       "timeOfStart.$": "States.ArrayGetItem(States.StringSplit($$.Execution.StartTime, 'Z'),0)",
                       "requestType": "SAR",

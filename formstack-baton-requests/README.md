@@ -19,6 +19,19 @@ The `FormstackRer` step function is triggered by the `FormstackRerHandler` with 
 3. Performs a check to see if the status in the `UpdateDynamoResponse` is `Completed`, if it's not, the `UpdateDynamoHandler` is triggered again to continue the update. If a `Completed` status is found, the update branch is completed for that account's token.
 4. Once updates are completed for both tokens, a the `FormstackPerformRerHandler` is triggered (see more information on this lambda below).
 
+### FormstackUpdateDynamo
+The `FormstackUpdateDynamo` step function is not used in regular operations and can only be triggered manually. 
+
+This is just a convenience tool for devs to trigger partial dynamodb updates in situations where fully updating in one go causes problems (usually related to formstack api limits or lambda timeouts).
+The RAR and SAR state machines do full updates as they need to work with recent data. If there's too many submissions to process (usually because it hasn't run in a while) the process can be blocked if the state machines fail this first step.
+
+Developers can use this state machine to break down a big full update into multiple smaller partial ones. Each advancing the "lastUpdated" date by a smaller time increment instead of jumping to the current time.
+
+The input to this state machine accepts a `maxUpdateSeconds` parameter that represents the number of seconds worth of data that we are going to bring into dynamo.
+
+For example if the state machine is triggered with `"maxUpdateSeconds": 300` then the submissions for the 5 minutes after the current "last updated" date will be inserted into dynamo and the "last updated" date will be moved forward by 5 minutes.
+
+**Important note**: As this is rarely used, before triggering this step machine please make sure the [hard coded parameters](cloud-formation.yaml#L642-L651) in the step function match the values hard coded in [FormstackSarHandler.initiate](src/main/scala/com/gu/identity/formstackbatonrequests/sar/FormstackSarHandler.scala#L20-L29) to ensure they replicate what the regular process would do. 
 ## Lambdas
 
 ### UpdateDynamoHandler
@@ -28,6 +41,8 @@ The UpdateDynamoHandler updates DynamoDb with submissions received by Formstack 
 3. The submissions are filtered down to those containing email addresses. These email addresses, along with the corresponding submission IDs, are written to the submissions table in DynamoDb. 
 4. After each page of forms returned by the Formstack API have been processed, the UpdateDynamoHandler checks the remaining time the lambda has to run. If it is less than 5 minutes but there are still more forms to be processed, an UpdateDynamoResponse is returned with a `Pending` status. Otherwise, it has a `Completed` status.
 5. Once a `Completed` status is returned, the DynamoDb table storing the last run date is updated for that account.
+
+**Note:** The optional "maxUpdateSeconds" parameter should be left empty for regular SAR and RER operation to ensure the lambda does a full update. This parameter is only meant for use by devs to do partial updates during backfills or troubleshooting issues. For more details see the [FormstackUpdate Dynamo step functions](#formstackupdatedynamo) section of this document.
 
 ### FormstackSarHandler
 The `FormstackSarHandler` is called from [Baton](https://github.com/guardian/baton) with two types of requests.
