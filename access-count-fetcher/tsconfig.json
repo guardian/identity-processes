@@ -1,0 +1,10 @@
+{
+  "extends": "@guardian/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "noUnusedLocals": false, // what an annoying default to not let me run things with commented out code!! TODO see how to only set this when not running locally
+    "noUncheckedIndexedAccess": false
+  }
+}

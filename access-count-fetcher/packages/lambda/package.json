@@ -1,0 +1,25 @@
+{
+  "name": "lambda",
+  "version": "0.0.0",
+  "scripts": {
+    "test": "jest --detectOpenHandles --config ../../jest.config.js --selectProjects lambda",
+    "start": "DOTENV_CONFIG_PATH=.env ts-node src/run-locally.ts",
+    "prebuild": "rm -rf dist",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --outdir=dist",
+    "postbuild": "cd dist && zip -r access-count-fetcher.zip ."
+  },
+  "dependencies": {
+    "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
+    "moment": "^2.29.4",
+    "ioredis": "^5.3.2",
+    "@aws-sdk/credential-providers": "^3.414.0",
+    "@aws-sdk/client-s3": "^3.417.0",
+    "@aws-sdk/client-ssm": "^3.414.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.3.1",
+    "esbuild": "^0.19.2",
+    "ioredis-mock": "^8.8.3"
+  }
+}

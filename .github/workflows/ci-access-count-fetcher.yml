@@ -1,0 +1,69 @@
+# Find full documentation here https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - 'access-count-fetcher/**'
+      - '.github/workflows/access-count-fetcher.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'access-count-fetcher/**'
+      - '.github/workflows/access-count-fetcher.yml'
+  workflow_dispatch:
+
+env:
+  DIRECTORY_NAME: access-count-fetcher
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # required by aws-actions/configure-aws-credentials
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{env.DIRECTORY_NAME}}
+
+      - name: Lint
+        run: npm run lint
+        working-directory: ${{env.DIRECTORY_NAME}}
+
+      - name: test
+        run: npm test
+        working-directory: ${{env.DIRECTORY_NAME}}
+      - name: Build
+        run: npm run build
+        working-directory: ${{env.DIRECTORY_NAME}}
+      - name: Synth CDK
+        run: npm -w cdk run synth
+        working-directory: ${{env.DIRECTORY_NAME}}
+
+
+      - uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Upload to riff-raff
+        uses: guardian/actions-riff-raff@v2
+        with:
+          projectName: identity::access-count-fetcher
+          configPath: ${{env.DIRECTORY_NAME}}/packages/cdk/cdk.out/riff-raff.yaml
+          contentDirectories: |
+            cdk.out:
+              - ${{env.DIRECTORY_NAME}}/packages/cdk/cdk.out
+            access-count-fetcher:
+              - ${{env.DIRECTORY_NAME}}/packages/lambda/dist/access-count-fetcher.zip
