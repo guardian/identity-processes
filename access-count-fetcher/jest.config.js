@@ -1,6 +1,7 @@
 module.exports = {
 	verbose: true,
 	testEnvironment: 'node',
+	passWithNoTests: true,
 	projects: [
 		{
 			displayName: 'cdk',
@@ -9,7 +10,6 @@ module.exports = {
 			},
 			setupFilesAfterEnv: ['<rootDir>/packages/cdk/jest.setup.js'],
 			testMatch: ['<rootDir>/packages/cdk/**/*.test.ts'],
-
 		},
 		{
 			displayName: 'lambda',

@@ -2,7 +2,7 @@
   "name": "access-count-fetcher",
   "version": "1.0.0",
   "scripts": {
-    "test": "npm run test --passWithNoTests --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "lint": "eslint packages/** --ext .ts --no-error-on-unmatched-pattern",
     "format": "prettier --write packages/**/*.ts",
     "build": "npm run build --workspaces --if-present"
