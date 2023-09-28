@@ -1,5 +1,5 @@
 # Find full documentation here https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
-name: CI
+name: CI - access-count-fetcher
 
 on:
   pull_request:
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: 'access-count-fetcher/.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
