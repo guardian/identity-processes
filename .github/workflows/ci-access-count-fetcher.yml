@@ -7,8 +7,9 @@ on:
       - 'access-count-fetcher/**'
       - '.github/workflows/access-count-fetcher.yml'
   push:
+    #TODO this should be set to 'main'
     branches:
-      - main
+      - pv/access_counter
     paths:
       - 'access-count-fetcher/**'
       - '.github/workflows/access-count-fetcher.yml'
