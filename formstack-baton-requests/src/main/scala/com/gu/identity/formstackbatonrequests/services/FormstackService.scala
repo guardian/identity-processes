@@ -29,8 +29,8 @@ case class FormstackAuthError(message: String) extends FormstackSkippableError
 
 object CustomHttp extends BaseHttp(
   options = Seq(
-    HttpOptions.connTimeout(2000),
-    HttpOptions.readTimeout(10000),
+    HttpOptions.connTimeout(5000),
+    HttpOptions.readTimeout(30000),
     HttpOptions.followRedirects(false)
   )
 )
