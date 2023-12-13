@@ -175,6 +175,9 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: !FindInMap [StageVariables, !Ref 'Stage', SubmissionsTableReadCapacityUnits]
         WriteCapacityUnits: !FindInMap [StageVariables, !Ref 'Stage', SubmissionsTableWriteCapacityUnits]
+      Tags:
+        - Key: devx-backup-enabled
+          Value: true
 
   FormstackSubmissionsLastUpdated:
     Type: AWS::DynamoDB::Table
@@ -190,6 +193,9 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+      Tags:
+        - Key: devx-backup-enabled
+          Value: true
 
   PerformFormstackSarLambdaRole:
     Type: AWS::IAM::Role
