@@ -65,7 +65,7 @@ case object EdinburghFestivalDataCollection extends Newsletter {
 }
 
 case object FeastAppBetaSignup extends Newsletter {
-  val formId = "TBD"
+  val formId = "5581302"
   val listType = "set-consents"
   val consent = "feast_app_beta"
 }
