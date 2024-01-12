@@ -64,6 +64,12 @@ case object EdinburghFestivalDataCollection extends Newsletter {
   val consent = "supporter"
 }
 
+case object FeastAppBetaSignup extends Newsletter {
+  val formId = "5581302"
+  val listType = "set-consents"
+  val consent = "feast_app_beta"
+}
+
 // Some marketing Forms have an opt in checkbox for consent collection.
 // Formstack form can be setup with conditional logic to trigger the lambda webhook,
 // but we want tp check again when the submission is decoded as a precaution.

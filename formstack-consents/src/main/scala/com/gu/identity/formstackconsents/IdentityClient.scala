@@ -13,7 +13,18 @@ import scala.util.Try
 
 class IdentityClient(config: Config) extends StrictLogging {
 
-  val newsletters: List[Newsletter] = List(Traveller, Students, Universities, Teachers, Masterclasses, SocietyWeekly, EdinburghFestivalDataCollection, EventMarketingConsentCollection, TheGuideGlastonbury2024)
+  val newsletters: List[Newsletter] = List(
+    Traveller,
+    Students,
+    Universities,
+    Teachers,
+    Masterclasses,
+    SocietyWeekly,
+    EdinburghFestivalDataCollection,
+    EventMarketingConsentCollection,
+    TheGuideGlastonbury2024,
+    FeastAppBetaSignup,
+  )
 
   val optInForms: List[MarketingConsent] = List(EventMarketingConsentCollection)
 
