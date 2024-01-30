@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
   // Force a version of jackson-databind that addresses this vulnerability:
   // https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-469674
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.1",
-  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.1",
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.5",
 )
 
 // Enables the @JsonCodec - https://circe.github.io/circe/
