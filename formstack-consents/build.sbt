@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion,
-  "com.typesafe" % "config" % "1.3.3",
+  "com.typesafe" % "config" % "1.3.4",
   "joda-time" % "joda-time" % "2.3",
   "org.joda" % "joda-convert" % "1.6",
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
