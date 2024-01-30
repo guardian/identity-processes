@@ -2,7 +2,7 @@ name := "formstack-consents-lambda"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.18"
 val circeVersion = "0.11.2"
 val log4jVersion = "2.22.1"
 

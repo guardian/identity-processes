@@ -4,7 +4,7 @@ name := "formstack-baton-requests"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.18"
 val circeVersion = "0.14.6"
 val amazonSdkVersion = "1.12.643"
 val log4jVersion = "2.17.2"
