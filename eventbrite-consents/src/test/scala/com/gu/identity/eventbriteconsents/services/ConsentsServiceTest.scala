@@ -6,10 +6,10 @@ import com.gu.identity.eventbriteconsents.clients.{EventbriteClient, EventbriteC
 import com.gu.identity.eventbriteconsents.config.LambdaConfig
 import com.gu.identity.eventbriteconsents.models.{EventbriteAnswer, EventbriteAttendee, EventbritePagination, EventbriteProfile, EventbriteResponse}
 import org.scalatest.FlatSpec
-import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.mockito.Matchers.{eq => eql}
+import org.scalatestplus.mockito.MockitoSugar
 
 class ConsentsServiceTest extends FlatSpec with MockitoSugar {
   def createFixtures() = new {

@@ -4,17 +4,17 @@ organization := "com.gu"
 
 scalaVersion := "2.12.6"
 val circeVersion = "0.10.1"
-val log4jVersion = "2.20.0"
+val log4jVersion = "2.22.1"
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
 libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
   "com.amazonaws" % "aws-lambda-java-events" % "2.2.9",
   "com.amazonaws" % "aws-java-sdk-sqs" % "1.12.643",
-  "com.beachape" %% "enumeratum" % "1.5.13",
-  "com.beachape" %% "enumeratum-circe" % "1.5.21",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "com.beachape" %% "enumeratum" % "1.5.15",
+  "com.beachape" %% "enumeratum-circe" % "1.5.23",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
@@ -25,13 +25,13 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalaj" %% "scalaj-http" % "2.3.0",
-  "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+  "org.scalactic" %% "scalactic" % "3.0.9",
+  "org.scalatest" %% "scalatest" % "3.0.9" % "test",
 
   // Force a version of jackson-databind that addresses this vulnerability:
   // https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-469674
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.1",
-  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.1",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5.1",
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.5",
 )
 
 // Enables the @JsonCodec - https://circe.github.io/circe/
