@@ -7,7 +7,7 @@ version := "0.1"
 scalaVersion := "2.12.8"
 val circeVersion = "0.14.6"
 val amazonSdkVersion = "1.12.643"
-val log4jVersion = "2.17.0"
+val log4jVersion = "2.17.2"
 
 libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
