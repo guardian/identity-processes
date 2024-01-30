@@ -4,7 +4,7 @@ organization := "com.gu"
 
 scalaVersion := "2.12.6"
 val circeVersion = "0.10.1"
-val log4jVersion = "2.20.0"
+val log4jVersion = "2.22.1"
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
 
