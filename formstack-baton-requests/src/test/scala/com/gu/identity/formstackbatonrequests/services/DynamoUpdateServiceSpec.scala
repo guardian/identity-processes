@@ -45,8 +45,8 @@ class DynamoUpdateServiceSpec
       }
     }
 
-    val millisLongerThan10m = 600001
-    val millisLessThan10m = 599999
+    val millisLongerThan10m = 850001
+    val millisLessThan10m = 849999
 
     val dummyFormsPage = 1
     val dummyCount = 0
