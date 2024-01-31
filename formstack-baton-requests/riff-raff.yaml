@@ -11,7 +11,7 @@ deployments:
   formstack-baton-requests:
     type: aws-lambda
     parameters:
-      bucket: identity-lambda
+      bucketSsmLookup: true
       functionNames: [
         formstack-baton-sar-lambda-,
         formstack-baton-perform-sar-lambda-,
