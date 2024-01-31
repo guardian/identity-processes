@@ -228,6 +228,6 @@ import FormstackService._
 }
 
 object FormstackService{
-  val formResultsPerPage = 1
+  val formResultsPerPage = 25
   val submissionResultsPerPage = 100
 }

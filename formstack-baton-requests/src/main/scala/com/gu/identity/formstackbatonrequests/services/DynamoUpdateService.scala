@@ -160,8 +160,8 @@ case class DynamoUpdateService(
         val errors = formResults.collect { case Left(err) => err }
         if (errors.nonEmpty) {
           Left(new Exception(errors.toString))
-        } else if (count < response.total & context.getRemainingTimeInMillis > 600000) {
-          updateSubmissionsTable(formsPage + 1, minTimeUTC, maxTimeUTC, count + FormstackService.formResultsPerPage, token, context)
+//        } else if (count < response.total & context.getRemainingTimeInMillis > 600000) {
+//          updateSubmissionsTable(formsPage + 1, minTimeUTC, maxTimeUTC, count + FormstackService.formResultsPerPage, token, context)
         } else if (count < response.total) {
           Right(UpdateStatus(completed = false, Some(formsPage + 1), Some(count + FormstackService.formResultsPerPage), token))
         } else Right(UpdateStatus(completed = true, None, None, token))

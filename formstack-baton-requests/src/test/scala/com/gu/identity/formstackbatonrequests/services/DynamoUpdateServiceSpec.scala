@@ -123,37 +123,37 @@ class DynamoUpdateServiceSpec
 //      )
 //      statusUpdate.right.value shouldBe expectedUpdateStatus
 //    }
-    "successfully calls updateSubmissionsTable with > 10m of lambda runtime available" in {
-      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
-        formstackClient = FormstackServiceStub.withSuccessResponse,
-        dynamoClient = DynamoClientStub.withSuccessResponse,
-        config = mockConfig
-      )
-
-      val mockContext = stub[Context]
-
-      (mockContext.getRemainingTimeInMillis _)
-        .when()
-        .anyNumberOfTimes()
-        .returns(millisLongerThan10m)
-
-      val expectedUpdateStatus = UpdateStatus(
-        completed = true,
-        formsPage = None,
-        count = None,
-        token = dummyToken
-      )
-
-      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
-        formsPage = dummyFormsPage,
-        minTimeUTC = dummySubmissionsTableUpdateDate,
-        maxTimeUTC = None,
-        count = dummyCount,
-        token = dummyToken,
-        context = mockContext
-      )
-      statusUpdate.right.value shouldBe expectedUpdateStatus
-    }
+//    "successfully calls updateSubmissionsTable with > 10m of lambda runtime available" in {
+//      val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
+//        formstackClient = FormstackServiceStub.withSuccessResponse,
+//        dynamoClient = DynamoClientStub.withSuccessResponse,
+//        config = mockConfig
+//      )
+//
+//      val mockContext = stub[Context]
+//
+//      (mockContext.getRemainingTimeInMillis _)
+//        .when()
+//        .anyNumberOfTimes()
+//        .returns(millisLongerThan10m)
+//
+//      val expectedUpdateStatus = UpdateStatus(
+//        completed = true,
+//        formsPage = None,
+//        count = None,
+//        token = dummyToken
+//      )
+//
+//      val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
+//        formsPage = dummyFormsPage,
+//        minTimeUTC = dummySubmissionsTableUpdateDate,
+//        maxTimeUTC = None,
+//        count = dummyCount,
+//        token = dummyToken,
+//        context = mockContext
+//      )
+//      statusUpdate.right.value shouldBe expectedUpdateStatus
+//    }
 
     "successfully calls updateSubmissionsTable with < 10m of lambda runtime available" in {
       val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
