@@ -10,7 +10,7 @@ addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
 
 libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
-  "com.amazonaws" % "aws-lambda-java-events" % "2.2.9",
+  "com.amazonaws" % "aws-lambda-java-events" % "3.11.4",
   "com.amazonaws" % "aws-java-sdk-sqs" % "1.12.668",
   "com.beachape" %% "enumeratum" % "1.5.13",
   "com.beachape" %% "enumeratum-circe" % "1.5.21",
