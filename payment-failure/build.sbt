@@ -21,6 +21,8 @@ libraryDependencies ++= Seq(
   // This provides a logback appender which can be used to ensure that multi-line log messages
   // are considered as single log events in cloudwatch. The logback.xml defines a root logger using this appender.
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
+  //brought in just to override the older version that jlib-awslambda-logback brings in which has a vulnerability
+  "ch.qos.logback" % "logback-classic" % "1.3.14",
   "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
