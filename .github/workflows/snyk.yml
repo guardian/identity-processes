@@ -8,11 +8,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  security:
+
+  security-identity:
     uses: guardian/.github/.github/workflows/sbt-node-snyk.yml@main
     with:
-      DEBUG: true
       ORG: guardian-identity
       SKIP_NODE: true
+      EXCLUDE: payment-failure
     secrets:
-       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  security-retention:
+    uses: guardian/.github/.github/workflows/sbt-node-snyk.yml@main
+    with:
+      ORG: guardian-reader-revenue
+      SKIP_NODE: true
+      EXCLUDE: eventbrite-consents, formstack-baton-requests, formstack-consents
+    secrets:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
