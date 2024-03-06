@@ -21,7 +21,6 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "ch.qos.logback" % "logback-classic" % "1.3.14",
-  "ch.qos.logback" % "logback-core" % "1.3.14",
   "org.scalaj" %% "scalaj-http" % "2.4.2",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
