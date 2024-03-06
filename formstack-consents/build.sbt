@@ -21,6 +21,7 @@ libraryDependencies ++= Seq(
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
   "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
+  "ch.qos.logback" % "logback-classic" % "1.3.14",
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test"
@@ -35,7 +36,7 @@ addCompilerPlugin(
 assemblyJarName := "main.jar"
 
 assembly / assemblyMergeStrategy := {
-  case PathList("module-info.class") => MergeStrategy.discard
+  case x if x.endsWith("module-info.class") => MergeStrategy.discard
   case x =>
     val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
