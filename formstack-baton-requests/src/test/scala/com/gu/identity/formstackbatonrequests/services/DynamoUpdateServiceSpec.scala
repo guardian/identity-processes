@@ -45,8 +45,8 @@ class DynamoUpdateServiceSpec
       }
     }
 
-    val millisLongerThan10m = 600001
-    val millisLessThan10m = 599999
+    val millisLongerThan30s = 300001
+    val millisLessThan30s = 290000
 
     val dummyFormsPage = 1
     val dummyCount = 0
@@ -90,7 +90,7 @@ class DynamoUpdateServiceSpec
       (mockContext.getRemainingTimeInMillis _)
         .when()
         .anyNumberOfTimes()
-        .returns(millisLongerThan10m)
+        .returns(millisLongerThan30s)
 
       val expectedUpdateStatus = UpdateStatus(
         completed = true,
@@ -109,7 +109,7 @@ class DynamoUpdateServiceSpec
       )
       statusUpdate.right.value shouldBe expectedUpdateStatus
     }
-    "successfully calls updateSubmissionsTable with > 10m of lambda runtime available" in {
+    "successfully calls updateSubmissionsTable with > 30s of lambda runtime available" in {
       val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
         formstackClient = FormstackServiceStub.withSuccessResponse,
         dynamoClient = DynamoClientStub.withSuccessResponse,
@@ -121,7 +121,7 @@ class DynamoUpdateServiceSpec
       (mockContext.getRemainingTimeInMillis _)
         .when()
         .anyNumberOfTimes()
-        .returns(millisLongerThan10m)
+        .returns(millisLongerThan30s)
 
       val expectedUpdateStatus = UpdateStatus(
         completed = true,
@@ -141,7 +141,7 @@ class DynamoUpdateServiceSpec
       statusUpdate.right.value shouldBe expectedUpdateStatus
     }
 
-    "successfully calls updateSubmissionsTable with < 10m of lambda runtime available" in {
+    "successfully calls updateSubmissionsTable with < 30s of lambda runtime available" in {
       val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(
         formstackClient = FormstackServiceStub.withSuccessResponse,
         dynamoClient = DynamoClientStub.withSuccessResponse,
@@ -153,7 +153,7 @@ class DynamoUpdateServiceSpec
       (mockContext.getRemainingTimeInMillis _)
         .when()
         .anyNumberOfTimes()
-        .returns(millisLessThan10m)
+        .returns(millisLessThan30s)
 
       val expectedUpdateStatus = UpdateStatus(
         completed = false,
@@ -186,7 +186,7 @@ class DynamoUpdateServiceSpec
       (mockContext.getRemainingTimeInMillis _)
         .when()
         .anyNumberOfTimes()
-        .returns(millisLessThan10m)
+        .returns(millisLessThan30s)
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
@@ -222,7 +222,7 @@ class DynamoUpdateServiceSpec
       (mockContext.getRemainingTimeInMillis _)
         .when()
         .anyNumberOfTimes()
-        .returns(millisLessThan10m)
+        .returns(millisLessThan30s)
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
@@ -257,7 +257,7 @@ class DynamoUpdateServiceSpec
       (mockContext.getRemainingTimeInMillis _)
         .when()
         .anyNumberOfTimes()
-        .returns(millisLessThan10m)
+        .returns(millisLessThan30s)
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
@@ -311,7 +311,7 @@ class DynamoUpdateServiceSpec
       (mockContext.getRemainingTimeInMillis _)
         .when()
         .anyNumberOfTimes()
-        .returns(millisLongerThan10m)
+        .returns(millisLongerThan30s)
 
       val statusUpdate = dynamoUpdateService.updateSubmissionsTable(
         formsPage = dummyFormsPage,
