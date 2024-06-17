@@ -4,19 +4,19 @@ name := "formstack-baton-requests"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
-val circeVersion = "0.13.0"
+scalaVersion := "2.12.18"
+val circeVersion = "0.14.6"
 val amazonSdkVersion = "1.12.643"
-val log4jVersion = "2.17.0"
+val log4jVersion = "2.17.2"
 
 libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
-  "com.gu" %% "scanamo" % "1.0.0-M6" excludeAll ExclusionRule(organization = "com.amazonaws"), //brings obsolete aws version 1.11.256
+  "com.gu" %% "scanamo" % "1.0.0-M8" excludeAll ExclusionRule(organization = "com.amazonaws"), //brings obsolete aws version 1.11.256
   "com.amazonaws" % "aws-java-sdk-dynamodb" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-s3" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-stepfunctions" % amazonSdkVersion,
   "com.amazonaws" % "aws-java-sdk-ssm" % amazonSdkVersion,
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
   "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
@@ -25,9 +25,9 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-  "org.scalamock" %% "scalamock" % "5.1.0" % "test",
-  "com.github.t3hnar" %% "scala-bcrypt" % "3.1"
+  "org.scalatest" %% "scalatest" % "3.0.9" % "test",
+  "org.scalamock" %% "scalamock" % "5.2.0" % "test",
+  "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0"
 )
 
 scalacOptions += "-Ypartial-unification"

@@ -3,13 +3,13 @@ name := "eventbrite-consents-lambda"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.18"
 
-val log4jVersion = "2.20.0"
-val circeVersion = "0.11.0"
+val log4jVersion = "2.22.1"
+val circeVersion = "0.11.2"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.amazonaws" % "aws-lambda-java-events" % "2.2.9",
   "org.scalaj" %% "scalaj-http" % "2.3.0",
   "io.circe" %% "circe-core" % circeVersion,
@@ -21,8 +21,8 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
   "org.apache.logging.log4j" % "log4j-core" %log4jVersion,
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
-  "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+  "org.scalactic" %% "scalactic" % "3.0.9",
+  "org.scalatest" %% "scalatest" % "3.0.9" % "test"
 )
 
 scalacOptions += "-Ypartial-unification"

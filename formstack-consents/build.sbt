@@ -2,29 +2,29 @@ name := "formstack-consents-lambda"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
-val circeVersion = "0.11.0"
-val log4jVersion = "2.20.0"
+scalaVersion := "2.12.18"
+val circeVersion = "0.11.2"
+val log4jVersion = "2.22.1"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.amazonaws" % "aws-lambda-java-events" % "2.2.9",
-  "org.typelevel" %% "cats-core" % "2.0.0-M1",
+  "org.typelevel" %% "cats-core" % "2.0.0",
   "org.scalaj" %% "scalaj-http" % "2.3.0",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion,
-  "com.typesafe" % "config" % "1.3.3",
-  "joda-time" % "joda-time" % "2.3",
-  "org.joda" % "joda-convert" % "1.6",
+  "com.typesafe" % "config" % "1.3.4",
+  "joda-time" % "joda-time" % "2.12.6",
+  "org.joda" % "joda-convert" % "1.9.2",
   ("org.jlib" % "jlib-awslambda-logback" % "1.0.0").exclude("org.slf4j", "log4j-over-slf4j"),
   "org.apache.logging.log4j" % "log4j-api" % log4jVersion,
   "org.apache.logging.log4j" % "log4j-core" % log4jVersion,
   "ch.qos.logback" % "logback-classic" % "1.3.14",
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
-  "org.scalactic" %% "scalactic" % "3.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+  "org.scalactic" %% "scalactic" % "3.0.9",
+  "org.scalatest" %% "scalatest" % "3.0.9" % "test"
 )
 
 scalacOptions += "-Ypartial-unification"
