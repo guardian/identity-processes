@@ -4,7 +4,7 @@ on:
     branches:
       - main
       - sbt-dependency-graph-527bb4aadaeaf147
-  workflow_dispatch: 
+  workflow_dispatch:
 jobs:
   dependency-graph:
     runs-on: ubuntu-latest
@@ -15,6 +15,8 @@ jobs:
       - name: Submit dependencies
         id: submit
         uses: scalacenter/sbt-dependency-submission@7ebd561e5280336d3d5b445a59013810ff79325e # v3.0.1
+        with:
+          working-directory: ./eventbrite-consents,./formstack-baton-request,./formstack-consents,./payment-failure
       - name: Log snapshot for user validation
         id: validate
         run: cat ${{ steps.submit.outputs.snapshot-json-path }} | jq
