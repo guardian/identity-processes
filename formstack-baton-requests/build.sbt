@@ -6,7 +6,7 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 val circeVersion = "0.13.0"
-val amazonSdkVersion = "1.12.643"
+val amazonSdkVersion = "1.12.767"
 val log4jVersion = "2.17.0"
 
 libraryDependencies ++= Seq(
@@ -27,7 +27,9 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % circeVersion,
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
   "org.scalamock" %% "scalamock" % "5.1.0" % "test",
-  "com.github.t3hnar" %% "scala-bcrypt" % "3.1"
+  "com.github.t3hnar" %% "scala-bcrypt" % "3.1",
+  //override jackson-databind version from aws sdk
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.15.4"
 )
 
 scalacOptions += "-Ypartial-unification"
