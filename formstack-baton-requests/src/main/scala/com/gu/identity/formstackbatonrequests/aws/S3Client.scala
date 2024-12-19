@@ -82,7 +82,6 @@ object S3 extends S3Client with LazyLogging {
 
   private def writeToS3(resultsBucket: String, filePath: String, contents: String): Either[Throwable, S3WriteSuccess] = Try {
     s3Client.putObject(resultsBucket, filePath, contents)
-    s3Client.setObjectAcl(resultsBucket, filePath, CannedAccessControlList.BucketOwnerRead)
   }.toEither.map(_ => S3WriteSuccess())
 
   private def formatResults(results: List[FormstackSubmissionQuestionAnswer]): String = {

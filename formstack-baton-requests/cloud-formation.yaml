@@ -241,7 +241,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                  - s3:PutObjectAcl
                   - s3:GetObject
                 Resource: !Sub arn:aws:s3:::${ResultsBucket}/formstack-results/${Stage}/*
         - PolicyName: GetParamsPolicy
@@ -410,7 +409,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                  - s3:PutObjectAcl
                   - s3:GetObject
                 Resource: !Sub arn:aws:s3:::${ResultsBucket}/formstack-results/${Stage}/*
         - PolicyName: GetParamsPolicy
@@ -502,7 +500,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                  - s3:PutObjectAcl
                 Resource: !Sub arn:aws:s3:::${ResultsBucket}/formstack-results/${Stage}/*
         - PolicyName: GetParamsPolicy
           PolicyDocument:
