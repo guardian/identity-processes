@@ -85,13 +85,14 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
   }
 
   override def deleteUserSubmissions(submissionIdsAndEmails: List[SubmissionIdEmail], salt: String, submissionsTableName: String): Either[Throwable, List[DeleteItemResult]] = {
-    logger.info(s"deleting ${submissionIdsAndEmails.length} submissions from $submissionsTableName")
-    submissionIdsAndEmails.traverse { submissionIdAndEmail =>
-      Try(Scanamo
-        .delete(dynamoClient)(submissionsTableName)
-        ('email -> submissionIdAndEmail.email and 'submissionId -> submissionIdAndEmail.submissionId)).toEither
-    }
-  }
+//    logger.info(s"deleting ${submissionIdsAndEmails.length} submissions from $submissionsTableName")
+//    submissionIdsAndEmails.traverse { submissionIdAndEmail =>
+//      Try(Scanamo
+//        .delete(dynamoClient)(submissionsTableName)
+//        ('email -> submissionIdAndEmail.email and 'submissionId -> submissionIdAndEmail.submissionId)).toEither
+//    }
+//  }
+    throw new RuntimeException("SHOULD NOT BE TRYING TO DELETE STUFF")
 }
 
 object Dynamo {

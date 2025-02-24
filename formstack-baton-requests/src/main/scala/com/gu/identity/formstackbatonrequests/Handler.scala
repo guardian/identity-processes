@@ -75,11 +75,11 @@ trait FormstackHandler[Req, Res] extends LazyLogging {
 }
 
 object Handler extends LazyLogging{
-
-  val stage: String = sys.env.getOrElse("STAGE", "CODE") match {
-    case "PROD" => "PROD"
-    case _      => "CODE"
-  }
+val stage = "PROD"
+//  val stage: String = sys.env.getOrElse("STAGE", "CODE") match {
+//    case "PROD" => "PROD"
+//    case _      => "CODE"
+//  }
   def formstackService = if (stage == "PROD") new FormstackService() else {
     logger.info(s"using mocked formstack service as stage is $stage")
     FormstackServiceStub.withSuccessResponse
