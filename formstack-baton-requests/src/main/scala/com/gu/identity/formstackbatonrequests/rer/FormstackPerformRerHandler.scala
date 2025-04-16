@@ -16,23 +16,13 @@ case class FormstackPerformRerHandler(
 
   val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(formstackClient, dynamoClient, config)
 
-  def initiateRer(request: RerPerformRequest): Either[Throwable, S3WriteSuccess] =
-    for {
-      submissionIds <- dynamoClient.userSubmissions(request.subjectEmail.toLowerCase, config.bcryptSalt, config.submissionTableName)
-      _ <- formstackClient.deleteUserData(request.subjectEmail.toLowerCase, submissionIds, config)
-      _ <- dynamoClient.deleteUserSubmissions(submissionIds, config.bcryptSalt, config.submissionTableName)
-      writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, List.empty, RER, config)
-    } yield writeToS3Response
+  def initiateRer(request: RerPerformRequest): Either[Throwable, S3WriteSuccess] = ???
+//    for {
+//      submissionIds <- dynamoClient.userSubmissions(request.subjectEmail.toLowerCase, config.bcryptSalt, config.submissionTableName)
+//      _ <- formstackClient.deleteUserData(request.subjectEmail.toLowerCase, submissionIds, config)
+//      _ <- dynamoClient.deleteUserSubmissions(submissionIds, config.bcryptSalt, config.submissionTableName)
+//      writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, List.empty, RER, config)
+//    } yield writeToS3Response
 
-  override def handle(request: RerRequest, context: Context): Either[Throwable, RerResponse] =
-    request match {
-      case r: RerPerformRequest =>
-        initiateRer(r) match {
-          case Right(_) => Right(RerPerformResponse(r.initiationReference, r.subjectEmail, Completed))
-          case Left(err) =>
-            s3Client.writeFailedResults(r.initiationReference, err.getMessage, RER, config)
-                .flatMap(_ => Left(err))
-        }
-      case _ => Left(new Exception("Unable to retrieve email and initiation reference from request"))
-    }
+  override def handle(request: RerRequest, context: Context): Either[Throwable, RerResponse] = ???
 }

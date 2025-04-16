@@ -20,22 +20,7 @@ case class FormstackPerformSarHandler(
 
   val dynamoUpdateService: DynamoUpdateService = DynamoUpdateService(formstackClient, dynamoClient, config)
 
-  def initiateSar(request: SarPerformRequest): Either[Throwable, S3WriteSuccess] =
-    for {
-      submissionIds <- dynamoClient.userSubmissions(request.subjectEmail.toLowerCase, config.bcryptSalt, config.submissionTableName)
-      submissionData <- formstackClient.submissionData(request.subjectEmail.toLowerCase, submissionIds, config)
-      writeToS3Response <- s3Client.writeSuccessResult(request.initiationReference, submissionData, SAR, config)
-    } yield writeToS3Response
+  def initiateSar(request: SarPerformRequest): Either[Throwable, S3WriteSuccess] = ???
 
-  override def handle(request: SarRequest, context: Context): Either[Throwable, SarResponse] =
-    request match {
-      case r: SarPerformRequest =>
-        initiateSar(r) match {
-          case Right(_) => Right(SarPerformResponse(Completed, r.initiationReference, r.subjectEmail))
-          case Left(err) =>
-            s3Client.writeFailedResults(r.initiationReference, err.getMessage, SAR, config)
-                .flatMap(_ => Left(err))
-        }
-      case _ => Left(new Exception("Unable to retrieve email and initiation reference from request"))
-    }
+  override def handle(request: SarRequest, context: Context): Either[Throwable, SarResponse] = ???
 }

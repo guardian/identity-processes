@@ -90,19 +90,15 @@ val stage = "PROD"
     updateHandler.handleRequest(inputStream, outputStream, context)
   }
 
-  def handleSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
-    val sarHandlerConfig = FormstackConfig.getInitHandlerConfig
-    val sarHandler = FormstackSarHandler(S3, StepFunction, sarHandlerConfig)
-    sarHandler.handleRequest(inputStream, outputStream, null)
-  }
+  def handleSar(inputStream: InputStream, outputStream: OutputStream): Unit =  ???
 
   def handlePerformSar(inputStream: InputStream, outputStream: OutputStream): Unit = {
-    val performSarHandlerConfig = FormstackConfig.getPerformHandlerConfig
-    val performSarHandler =
-      if (stage == "PROD")
-        FormstackPerformSarHandler(Dynamo(), formstackService, S3, performSarHandlerConfig)
-      else PerformHandlerStubs.FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
-    performSarHandler.handleRequest(inputStream, outputStream, null)
+//    val performSarHandlerConfig = FormstackConfig.getPerformHandlerConfig
+//    val performSarHandler =
+//      if (stage == "PROD")
+//        FormstackPerformSarHandler(Dynamo(), formstackService, S3, performSarHandlerConfig)
+//      else PerformHandlerStubs.FormstackPerformSarHandlerStub(S3, performSarHandlerConfig)
+//    performSarHandler.handleRequest(inputStream, outputStream, null)
   }
 
 

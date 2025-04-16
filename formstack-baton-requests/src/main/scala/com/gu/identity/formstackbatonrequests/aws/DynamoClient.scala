@@ -91,8 +91,9 @@ case class Dynamo(dynamoClient: AmazonDynamoDB = Dynamo.defaultDynamoClient) ext
 //        .delete(dynamoClient)(submissionsTableName)
 //        ('email -> submissionIdAndEmail.email and 'submissionId -> submissionIdAndEmail.submissionId)).toEither
 //    }
-//  }
-    throw new RuntimeException("SHOULD NOT BE TRYING TO DELETE STUFF")
+        throw new RuntimeException("SHOULD NOT BE TRYING TO DELETE STUFF")
+
+  }
 }
 
 object Dynamo {
