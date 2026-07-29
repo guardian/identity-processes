@@ -30,8 +30,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
 
   // Force a version of jackson that addresses vulnerabilities
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.15.0",
-  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.15.0",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.18.8",
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.18.8",
 )
 
 // Enables the @JsonCodec - https://circe.github.io/circe/
