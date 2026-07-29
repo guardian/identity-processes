@@ -31,7 +31,7 @@ jobs:
           java-version: '11'
           distribution: 'corretto'
           cache: 'sbt'
-
+      - uses: sbt/setup-sbt@v1
       - name: Test and build 
         run: sbt clean compile test assembly
         working-directory: payment-failure
