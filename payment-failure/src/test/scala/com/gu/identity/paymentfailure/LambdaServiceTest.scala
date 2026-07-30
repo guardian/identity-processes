@@ -5,7 +5,7 @@ import java.util
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
-import com.amazonaws.services.sqs.model.DeleteMessageResult
+import software.amazon.awssdk.services.sqs.model.DeleteMessageResponse
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{EitherValues, Matchers, WordSpec}
@@ -27,7 +27,7 @@ class LambdaServiceTest extends WordSpec with Matchers with MockitoSugar with Ei
   val brazeResponse = mock[BrazeResponse]
   when(sendEmailService.sendEmail(emailData)).thenReturn(Right(brazeResponse))
 
-  val deleteMessageResult = mock[DeleteMessageResult]
+  val deleteMessageResult = DeleteMessageResponse.builder().build();
   when(sqsService.deleteMessage(message)).thenReturn(Right(deleteMessageResult))
 
   when(sqsService.processDeleteMessageResult(deleteMessageResult)).thenReturn(Right(()))
