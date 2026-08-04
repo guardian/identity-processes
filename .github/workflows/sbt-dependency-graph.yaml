@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Setup Java and sbt
         uses: guardian/setup-scala@v1
+        with:
+          major-java-version: 11
       - name: Checkout branch
         id: checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
