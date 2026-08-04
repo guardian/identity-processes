@@ -41,14 +41,9 @@ addCompilerPlugin(
 
 assemblyJarName := "main.jar"
 
-// Fixes the clashes caused by:
-// - ch.qos.logback/logback-classic/jars/logback-classic-1.3.0-alpha4.jar:module-info.class
-// - ch.qos.logback/logback-core/jars/logback-core-1.3.0-alpha4.jar:module-info.class
-// - org.slf4j/slf4j-api/jars/slf4j-api-1.8.0-beta1.jar:module-info.class
-// Uses the advice in the stack overflow answer by Elesion Olalekan Fuad and the comment by note:
-// https://stackoverflow.com/questions/25144484/sbt-assembly-deduplication-found-error
 assembly / assemblyMergeStrategy := {
   case x if x.endsWith("module-info.class") => MergeStrategy.discard
+  case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
   case x =>
     val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
