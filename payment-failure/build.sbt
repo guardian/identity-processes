@@ -9,9 +9,9 @@ val log4jVersion = "2.20.0"
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
 
 libraryDependencies ++= Seq(
-  "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
-  "com.amazonaws" % "aws-lambda-java-events" % "2.2.9",
-  "com.amazonaws" % "aws-java-sdk-sqs" % "1.12.643",
+  "com.amazonaws" % "aws-lambda-java-core" % "1.4.0",
+  "com.amazonaws" % "aws-lambda-java-events" % "3.16.1",
+  "software.amazon.awssdk" % "sqs" % "2.49.6",
   "com.beachape" %% "enumeratum" % "1.5.13",
   "com.beachape" %% "enumeratum-circe" % "1.5.21",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
@@ -41,14 +41,9 @@ addCompilerPlugin(
 
 assemblyJarName := "main.jar"
 
-// Fixes the clashes caused by:
-// - ch.qos.logback/logback-classic/jars/logback-classic-1.3.0-alpha4.jar:module-info.class
-// - ch.qos.logback/logback-core/jars/logback-core-1.3.0-alpha4.jar:module-info.class
-// - org.slf4j/slf4j-api/jars/slf4j-api-1.8.0-beta1.jar:module-info.class
-// Uses the advice in the stack overflow answer by Elesion Olalekan Fuad and the comment by note:
-// https://stackoverflow.com/questions/25144484/sbt-assembly-deduplication-found-error
 assembly / assemblyMergeStrategy := {
   case x if x.endsWith("module-info.class") => MergeStrategy.discard
+  case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
   case x =>
     val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
