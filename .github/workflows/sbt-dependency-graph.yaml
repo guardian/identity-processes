@@ -21,11 +21,6 @@ jobs:
         with:
           working-directory: ./eventbrite-consents
       - name: Submit dependencies
-        id: submit-formstack-baton-request
-        uses: scalacenter/sbt-dependency-submission@7ebd561e5280336d3d5b445a59013810ff79325e # v3.0.1
-        with:
-          working-directory: ./formstack-baton-requests
-      - name: Submit dependencies
         id: submit-formstack-consents
         uses: scalacenter/sbt-dependency-submission@7ebd561e5280336d3d5b445a59013810ff79325e # v3.0.1
         with:
