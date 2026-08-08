@@ -23,7 +23,13 @@ object Lambda extends StrictLogging {
 
   def verifySecretKey(formstackSharedSecret: String, secretKeyFromRequest: String): Option[Boolean] = {
     val isValid = formstackSharedSecret == secretKeyFromRequest
-    if (isValid) { Some(true) } else { None }
+    if (isValid) { 
+      logger.info(s"verifySecretKey: isValid is true")
+      Some(true) 
+    } else { 
+      logger.info(s"verifySecretKey: isValid is false")
+      None 
+    }
   }
 
   def decodeFormstackSubmission(eventBody: String): Option[FormstackSubmission] = {
