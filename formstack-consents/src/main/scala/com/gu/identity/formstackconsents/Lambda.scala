@@ -3,7 +3,9 @@ package com.gu.identity.formstackconsents
 import com.amazonaws.services.lambda.runtime.events.{APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent}
 import com.typesafe.scalalogging.StrictLogging
 import cats.implicits._
-import io.circe.{Decoder, HCursor}
+import io.circe.DecodingFailure.Reason
+import io.circe.DecodingFailure.Reason.MissingField
+import io.circe.{Decoder, DecodingFailure, HCursor}
 import io.circe.parser._
 
 object Lambda extends StrictLogging {
@@ -77,7 +79,7 @@ object FormstackSubmission {
 
     field match {
       case Right(_) => Some(true) // assumes single opt in checkbox so value is irrelevant
-      case Left(error) if error.message == "Attempt to decode value on failed cursor" => None // field does not exist b/c no opt in required eg. newsletters
+      case Left(error) if error.reason == MissingField => None // field does not exist b/c no opt in required eg. newsletters
       case Left(_) => Some(false) // field is null
       }
   }
