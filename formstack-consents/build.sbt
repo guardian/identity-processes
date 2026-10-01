@@ -3,7 +3,7 @@ name := "formstack-consents-lambda"
 version := "0.1"
 
 scalaVersion := "2.12.8"
-val circeVersion = "0.11.0"
+val circeVersion = "0.14.16"
 val log4jVersion = "2.20.0"
 
 libraryDependencies ++= Seq(
@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
-  "io.circe" %% "circe-generic-extras" % circeVersion,
+  "io.circe" %% "circe-generic-extras" % "0.14.4",
   "com.typesafe" % "config" % "1.3.3",
   "joda-time" % "joda-time" % "2.3",
   "org.joda" % "joda-convert" % "1.6",
