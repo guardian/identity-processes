@@ -16,11 +16,6 @@ jobs:
         with:
           major-java-version: 11
       - name: Submit dependencies
-        id: submit-eventbrite-consents
-        uses: scalacenter/sbt-dependency-submission@7ebd561e5280336d3d5b445a59013810ff79325e # v3.0.1
-        with:
-          working-directory: ./eventbrite-consents
-      - name: Submit dependencies
         id: submit-formstack-consents
         uses: scalacenter/sbt-dependency-submission@7ebd561e5280336d3d5b445a59013810ff79325e # v3.0.1
         with:
